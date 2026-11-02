@@ -1,0 +1,69 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+
+### CUSTOM ###
+# Runtime config with local secrets
+**/src/main/resources/application.yml
+**/src/main/resources/application-*.yml
+!**/src/main/resources/application.example.yml
+!**/src/main/resources/application-*.example.yml
+zero-code-microservice/**/src/main/resources/application*.yml
+!zero-code-microservice/**/src/main/resources/application*.example.yml
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+cookies.txt
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+*.csr
+
+tmp/
+temp/
+.temp/
+*.tmp
+*.log
+.DS_Store
+
+# Frontend (root-level safeguard)
+zero-code-frontend/node_modules/
+zero-code-frontend/dist/
