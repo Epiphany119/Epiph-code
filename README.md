@@ -1,8 +1,8 @@
 <div align="center">
 
-# Zero Code Studio
+# Epiph-code Studio
 
-<img src="docs/images/logo-ai.svg" alt="Zero Code Studio Logo" width="140" />
+<img src="docs/images/logo-ai.svg" alt="Epiph-code Studio Logo" width="140" />
 
 **一个支持任务计划、上下文压缩与可视化生成过程的 AI 代码生成平台**
 
@@ -30,7 +30,7 @@
 
 ## 项目简介
 
-Zero Code Studio 是一个以工程化为目标的 AI 代码生成平台。  
+Epiph-code Studio 是一个以工程化为目标的 AI 代码生成平台。  
 它不仅能生成网页代码，还能在生成过程中展示模型思考、工具调用、TODO 计划推进和最终回复，并将每一轮对话沉淀为可回放的结构化事件。
 
 当前版本重点增强了长链路 Agent 能力：通过 `updatePlan` 管理带依赖关系的任务计划，通过 Redis + MySQL 保留运行态记忆和事件日志，并通过三层上下文压缩降低长对话中的 token 压力。
@@ -322,8 +322,8 @@ context-compaction:
 也可以通过环境变量覆盖：
 
 ```bash
-export ZERO_CODE_COMPACTION_TOKEN_THRESHOLD=102400
-export ZERO_CODE_COMPACTION_MAX_SUMMARY_CHARS=300000
+export EPIPH_CODE_COMPACTION_TOKEN_THRESHOLD=102400
+export EPIPH_CODE_COMPACTION_MAX_SUMMARY_CHARS=300000
 ```
 
 ### 压缩摘要策略
@@ -473,7 +473,7 @@ export ZERO_CODE_COMPACTION_MAX_SUMMARY_CHARS=300000
 ### 前端启动
 
 ```bash
-cd zero-code-frontend
+cd epiph-code-frontend
 npm install
 npm run dev
 ```
@@ -495,9 +495,9 @@ npm run dev
 
 - 单体模式：后端启动根目录 Spring Boot 应用，接口地址为 `http://localhost:8123/api`。
 - 微服务模式：前端应统一访问微服务网关 / 聚合入口，例如 `http://localhost:8080/api`，不要直接访问 `8124`、`8125`、`8127` 等单个服务端口。
-- 开发代理切换：修改 `zero-code-frontend/vite.config.ts` 中 `/api` 的 `target`，单体为 `http://localhost:8123`，微服务为 `http://localhost:8080`。
-- 接口代码生成切换：修改 `zero-code-frontend/openapi2ts.config.ts` 中的 `schemaPath`，单体为 `http://localhost:8123/api/v3/api-docs`，微服务为 `http://localhost:8080/api/v3/api-docs`。
-- 临时覆盖方式：在 `zero-code-frontend/.env.local` 设置 `VITE_API_BASE_URL=http://localhost:8123/api` 或 `http://localhost:8080/api`；如需使用可视化编辑预览，优先保持默认同源 `/api` 并通过 Vite 代理切换后端。
+- 开发代理切换：修改 `epiph-code-frontend/vite.config.ts` 中 `/api` 的 `target`，单体为 `http://localhost:8123`，微服务为 `http://localhost:8080`。
+- 接口代码生成切换：修改 `epiph-code-frontend/openapi2ts.config.ts` 中的 `schemaPath`，单体为 `http://localhost:8123/api/v3/api-docs`，微服务为 `http://localhost:8080/api/v3/api-docs`。
+- 临时覆盖方式：在 `epiph-code-frontend/.env.local` 设置 `VITE_API_BASE_URL=http://localhost:8123/api` 或 `http://localhost:8080/api`；如需使用可视化编辑预览，优先保持默认同源 `/api` 并通过 Vite 代理切换后端。
 
 ---
 
@@ -564,7 +564,7 @@ MIT
 
 ## 🏅 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=LQF-dev/Zero-code&type=Date)](https://www.star-history.com/#LQF-dev/Zero-code&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Epiphany119/Epiph-code&type=Date)](https://www.star-history.com/#Epiphany119/Epiph-code&Date)
 
 ---
 
@@ -582,4 +582,4 @@ MIT
 
 - 新增`上下文压缩机制`：设计思路是把 Redis 中的结构化会话记忆作为运行态上下文，在调用模型前优先压缩旧工具结果；当上下文继续增长到阈值后，再通过摘要压缩保留关键需求、决策、文件状态和未完成任务，减少长链路 Agent 反复回放大段工具结果的问题。
 - 新增`DeepSeek V4-Pro 模型适配`：设计思路是顺应 DeepSeek V4 的统一模型模式，不再用 `deepseek-chat` / `deepseek-reasoner` 两套模型区分普通与推理，而是统一使用 `deepseek-v4-pro`，普通链路显式关闭 `thinking`，Vue 工程化生成链路开启 `thinking` 并配置更高推理强度。
-- 新增`项目结构拆分`：设计思路是让单体、微服务、前端三个工程边界更清晰。根目录只保留聚合构建与公共说明，单体应用放入 `zero-code-monolith`，微服务应用保留在 `zero-code-microservice`，前端保留在 `zero-code-frontend`，便于后续独立演进和部署。
+- 新增`项目结构拆分`：设计思路是让单体、微服务、前端三个工程边界更清晰。根目录只保留聚合构建与公共说明，单体应用放入 `epiph-code-monolith`，微服务应用保留在 `epiph-code-microservice`，前端保留在 `epiph-code-frontend`，便于后续独立演进和部署。

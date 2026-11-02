@@ -39,8 +39,8 @@ build/
 **/src/main/resources/application-*.yml
 !**/src/main/resources/application.example.yml
 !**/src/main/resources/application-*.example.yml
-zero-code-microservice/**/src/main/resources/application*.yml
-!zero-code-microservice/**/src/main/resources/application*.example.yml
+epiph-code-microservice/**/src/main/resources/application*.yml
+!epiph-code-microservice/**/src/main/resources/application*.example.yml
 
 # Local environment and credentials
 .env
@@ -65,5 +65,5 @@ temp/
 .DS_Store
 
 # Frontend (root-level safeguard)
-zero-code-frontend/node_modules/
-zero-code-frontend/dist/
+epiph-code-frontend/node_modules/
+epiph-code-frontend/dist/

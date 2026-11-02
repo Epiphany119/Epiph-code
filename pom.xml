@@ -9,15 +9,15 @@
 		<relativePath/>
 	</parent>
 	<groupId>com.ai</groupId>
-	<artifactId>zero-code</artifactId>
+	<artifactId>epiph-code</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>zero-code</name>
-	<description>zero-code parent</description>
+	<name>epiph-code</name>
+	<description>epiph-code parent</description>
 
 	<modules>
-		<module>zero-code-monolith</module>
-		<module>zero-code-microservice</module>
+		<module>epiph-code-monolith</module>
+		<module>epiph-code-microservice</module>
 	</modules>
 
 	<properties>
