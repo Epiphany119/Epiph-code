@@ -19,6 +19,7 @@ import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
 
 @Slf4j
 public class CodeGeneratorNode {
+    private static final Duration CODE_GENERATION_TIMEOUT = Duration.ofMinutes(30);
 
     public static AsyncNodeAction<MessagesState<String>> create() {
         return node_async(state -> {
@@ -45,10 +46,10 @@ public class CodeGeneratorNode {
             if (streamConsumer != null) {
                 codeStream
                         .doOnNext(streamConsumer::accept)
-                        .blockLast(Duration.ofMinutes(10)); // 最多等待 10 分钟
+                        .blockLast(CODE_GENERATION_TIMEOUT);
             } else {
                 // 同步等待流式输出完成
-                codeStream.blockLast(Duration.ofMinutes(10)); // 最多等待 10 分钟
+                codeStream.blockLast(CODE_GENERATION_TIMEOUT);
             }
             // 根据类型设置生成目录
             String generatedCodeDir = String.format("%s/%s_%s", AppConstant.CODE_OUTPUT_ROOT_DIR, generationType.getValue(), appId);

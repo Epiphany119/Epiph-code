@@ -56,10 +56,10 @@ const handleViewWork = () => {
 
 <style scoped>
 .app-card {
-  border-radius: 14px;
+  border-radius: 18px;
   overflow: hidden;
-  border: 1px solid var(--zc-border);
-  background: #fff;
+  border: 1px solid #e6e8ef;
+  background: var(--zc-bg-card);
   transition:
     transform 0.22s ease,
     border-color 0.22s ease,
@@ -67,9 +67,9 @@ const handleViewWork = () => {
 }
 
 .app-card:hover {
-  transform: translateY(-4px);
-  border-color: #d6c7b9;
-  box-shadow: 0 12px 24px rgba(74, 56, 35, 0.12);
+  transform: translateY(-5px);
+  border-color: #d6c4b8;
+  box-shadow: 0 18px 34px rgba(39, 43, 58, 0.13);
 }
 
 .app-card--featured {
@@ -77,8 +77,8 @@ const handleViewWork = () => {
 }
 
 .app-preview {
-  height: 176px;
-  background: linear-gradient(145deg, #f6f2eb, #f3eee5);
+  height: 190px;
+  background: linear-gradient(135deg, #eef0f7 0%, #f8ebe3 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -95,20 +95,21 @@ const handleViewWork = () => {
 .app-placeholder {
   width: 60px;
   height: 60px;
-  border-radius: 14px;
+  border-radius: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   font-weight: 700;
-  color: #7d4b30;
-  background: linear-gradient(135deg, #f0dfcf 0%, #f6ece2 100%);
+  color: #fff;
+  background: linear-gradient(135deg, #c88967 0%, #a9694d 100%);
+  box-shadow: 0 10px 22px rgba(154, 93, 62, 0.2);
 }
 
 .app-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(48, 38, 28, 0.08), rgba(48, 38, 28, 0.5));
+  background: linear-gradient(180deg, rgba(34, 38, 52, 0.05), rgba(34, 38, 52, 0.62));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -121,7 +122,7 @@ const handleViewWork = () => {
 }
 
 .app-info {
-  padding: 14px;
+  padding: 16px;
   display: flex;
   align-items: center;
   gap: 10px;

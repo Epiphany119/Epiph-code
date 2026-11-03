@@ -510,35 +510,43 @@ npm run dev
 
 ## 项目截图
 
-### 登录
+### 登录页
 
-![登录页](docs/images/login_page.png)
+![Epiph-code 登录页](docs/images/login_page.png)
 
 ### 首页
 
-![首页](docs/images/home_page.png)
-### TODO任务列表展示
+![Epiph-code 首页](docs/images/home_page.png)
 
-![TODO任务列表展示](docs/images/TODO.png)
-![TODO任务列表展示](docs/images/TODO2.png)
+### 登录后的首页
 
-### 应用对话生成页
+![登录后的首页](docs/images/home_page_logged_in.png)
 
+### 工作流生成进度
 
-![应用对话生成页](docs/images/chat_page.png)
+![工作流生成进度](docs/images/workflow_generation_progress.png)
 
-### 可视化编辑模式
+### 生成的网站预览
 
-![可视化编辑模式](docs/images/element_select.png)
+![生成的网站预览](docs/images/generated_blog_preview.png)
 
-### 工具调用过程展示
+### 部署成功
 
-![工具调用过程展示](docs/images/chat_page.png)
+![网站部署成功](docs/images/deployment_success.png)
 
-### 一键部署结果页
+### 部署后的网站效果
 
-![一键部署结果页 1](docs/images/deploy_1.png)
-![一键部署结果页 2](docs/images/deploy_2.png)
+![部署后的网站效果](docs/images/deployed_blog.png)
+
+### 帖子详情页
+
+![帖子详情页：文章内容](docs/images/article_detail_top.png)
+
+![帖子详情页：评论区](docs/images/article_detail_comments.png)
+
+### 应用信息
+
+![应用信息页](docs/images/app_settings.png)
 
 
 ---

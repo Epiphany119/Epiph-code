@@ -10,8 +10,6 @@ import com.ai.epiphcode.ai.model.message.ThinkingMessage;
 import com.ai.epiphcode.ai.model.message.ToolExecutedMessage;
 import com.ai.epiphcode.ai.model.message.ToolRequestMessage;
 import com.ai.epiphcode.config.AiCodeGeneratorServiceFactory;
-import com.ai.epiphcode.constant.AppConstant;
-import com.ai.epiphcode.core.builder.VueProjectBuilder;
 import com.ai.epiphcode.core.parser.CodeParser;
 import com.ai.epiphcode.core.parser.CodeParserExecutor;
 import com.ai.epiphcode.core.saver.CodeFileSaverExecutor;
@@ -43,8 +41,6 @@ public class AiCodeGeneratorFacade {
 
     @Resource
     private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
-    @Resource
-    private VueProjectBuilder vueProjectBuilder;
 
 
 
@@ -178,9 +174,6 @@ public class AiCodeGeneratorFacade {
                             emittedChunkCount.incrementAndGet();
                         }
                         log.info("TokenStream 完成，appId={}, emittedChunkCount={}", appId, emittedChunkCount.get());
-                        // 执行 Vue 项目构建（同步执行，确保预览时项目已就绪）
-                        String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + "vue_project_" + appId;
-                        vueProjectBuilder.buildProject(projectPath);
                         sink.complete();
                     })
 
