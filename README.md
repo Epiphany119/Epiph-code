@@ -549,25 +549,6 @@ MIT
 
 ---
 
-## Author
-
-**Eric**
-
-- 学历：UNSW IT 硕士 + 西南大学本科。
-- 职业：Java 后端程序员。
-- 博客：[代码丰](https://blog.csdn.net/qq_44716086)。
-- 微信号：LQF-dev（随时欢迎骚扰）。
-
-- 如果这个项目对你有帮助，欢迎点个 ⭐
-
----
-
-## 🏅 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Epiphany119/Epiph-code&type=Date)](https://www.star-history.com/#Epiphany119/Epiph-code&Date)
-
----
-
 ## 更新记录
 
 ### 2026-04-30
