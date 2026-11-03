@@ -514,10 +514,6 @@ npm run dev
 
 ![Epiph-code 登录页](docs/images/login_page.png)
 
-### 首页
-
-![Epiph-code 首页](docs/images/home_page.png)
-
 ### 登录后的首页
 
 ![登录后的首页](docs/images/home_page_logged_in.png)
