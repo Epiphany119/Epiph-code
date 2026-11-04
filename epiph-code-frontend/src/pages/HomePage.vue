@@ -11,6 +11,7 @@ const router = useRouter()
 const loginUserStore = useLoginUserStore()
 
 const userPrompt = ref('')
+const selectedAgent = ref('default')
 const creating = ref(false)
 
 const myApps = ref<API.AppVO[]>([])
@@ -72,7 +73,10 @@ const createApp = async () => {
     if (res.data.code === 0 && res.data.data) {
       message.success('应用创建成功')
       const appId = String(res.data.data)
-      await router.push(`/app/chat/${appId}`)
+      await router.push({
+        path: `/app/chat/${appId}`,
+        query: { agent: selectedAgent.value },
+      })
     } else {
       message.error('创建失败：' + res.data.message)
     }
@@ -180,7 +184,19 @@ onMounted(() => {
             <span class="prompt-panel-kicker">START A PROJECT</span>
             <h2>描述你的应用</h2>
           </div>
-          <span class="prompt-step">01 <span>/</span> START</span>
+          <div class="prompt-panel-tools">
+            <a-select
+              v-model:value="selectedAgent"
+              class="prompt-agent-select"
+              size="small"
+              aria-label="选择生成 Agent"
+              :disabled="creating"
+            >
+              <a-select-option value="default">默认 Agent</a-select-option>
+              <a-select-option value="deepseek">DeepSeek Flash</a-select-option>
+            </a-select>
+            <span class="prompt-step">01 <span>/</span> START</span>
+          </div>
         </div>
 
         <a-textarea
@@ -495,6 +511,21 @@ onMounted(() => {
   font-size: 21px;
   font-weight: 700;
   letter-spacing: -0.03em;
+}
+
+.prompt-panel-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.prompt-agent-select {
+  width: 150px;
+}
+
+.prompt-agent-select :deep(.ant-select-selector) {
+  border-radius: 9px !important;
 }
 
 .prompt-step {
@@ -866,6 +897,15 @@ onMounted(() => {
 }
 
 @media (max-width: 420px) {
+  .prompt-panel-head {
+    flex-wrap: wrap;
+  }
+
+  .prompt-panel-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .hero-features {
     grid-template-columns: minmax(0, 1fr);
     gap: 11px;

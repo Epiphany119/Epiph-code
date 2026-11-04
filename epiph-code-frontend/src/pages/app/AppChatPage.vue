@@ -414,7 +414,9 @@ const toggleFinalReply = (index: number) => {
   expandedReplies.value = s
 }
 const userInput = ref('')
-const selectedAgent = ref('default')
+const selectedAgent = ref(
+  String(route.query.agent || '') === 'deepseek' ? 'deepseek' : 'default',
+)
 const isGenerating = ref(false)
 const messagesContainer = ref<HTMLElement>()
 const shouldAutoScroll = ref(true)
