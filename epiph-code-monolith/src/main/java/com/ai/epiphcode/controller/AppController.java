@@ -412,6 +412,7 @@ public class AppController {
     public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
                                                        @RequestParam String message,
                                                        @RequestParam(defaultValue = "classic") String mode,
+                                                       @RequestParam(defaultValue = "default") String agent,
                                                        @RequestParam(required = false) String clientRequestId,
                                                        HttpServletRequest request) {
         // 参数校验
@@ -421,8 +422,8 @@ public class AppController {
         User loginUser = userService.getLoginUser(request);
         // 浏览器 EventSource 断线自动重连会重复发起同一 URL，这里用 clientRequestId 做幂等防重
         if (StrUtil.isNotBlank(clientRequestId)) {
-            String dedupeKey = String.format("sse:chat:dedupe:%d:%d:%s:%s",
-                    loginUser.getId(), appId, clientRequestId, mode);
+            String dedupeKey = String.format("sse:chat:dedupe:%d:%d:%s:%s:%s",
+                    loginUser.getId(), appId, clientRequestId, mode, agent);
             RBucket<String> bucket = redissonClient.getBucket(dedupeKey);
             boolean firstRequest = bucket.trySet("1", 30, TimeUnit.MINUTES);
             if (!firstRequest) {
@@ -435,7 +436,7 @@ public class AppController {
             }
         }
         // 调用服务生成代码（流式）
-        Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser, mode);
+        Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser, mode, agent);
         // 转换为 ServerSentEvent 格式
         return contentFlux
                 .map(chunk -> {

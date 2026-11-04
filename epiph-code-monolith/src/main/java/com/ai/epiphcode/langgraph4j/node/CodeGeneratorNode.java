@@ -5,6 +5,7 @@ import com.ai.epiphcode.core.AiCodeGeneratorFacade;
 import com.ai.epiphcode.langgraph4j.model.QualityResult;
 import com.ai.epiphcode.langgraph4j.state.WorkflowContext;
 import com.ai.epiphcode.langgraph4j.state.WorkflowStreamConsumerRegistry;
+import com.ai.epiphcode.model.enums.ChatAgentEnum;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import com.ai.epiphcode.utils.SpringContextUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,8 @@ public class CodeGeneratorNode {
                 appId = 0L;
             }
             // 调用流式代码生成
-            Flux<String> codeStream = codeGeneratorFacade.generateAndSaveCodeStream(userMessage, generationType, appId);
+            ChatAgentEnum agent = context.getAgent() == null ? ChatAgentEnum.DEFAULT : context.getAgent();
+            Flux<String> codeStream = codeGeneratorFacade.generateAndSaveCodeStream(userMessage, generationType, appId, agent);
             Consumer<String> streamConsumer = context.getStreamConsumer();
             if (streamConsumer == null && context.getStreamSessionId() != null) {
                 WorkflowStreamConsumerRegistry streamConsumerRegistry =

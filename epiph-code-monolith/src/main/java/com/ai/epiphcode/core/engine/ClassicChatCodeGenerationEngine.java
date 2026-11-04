@@ -6,6 +6,7 @@ import com.ai.epiphcode.exception.BusinessException;
 import com.ai.epiphcode.exception.ErrorCode;
 import com.ai.epiphcode.constant.AppConstant;
 import com.ai.epiphcode.model.entity.User;
+import com.ai.epiphcode.model.enums.ChatAgentEnum;
 import com.ai.epiphcode.model.enums.ChatGenModeEnum;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import jakarta.annotation.Resource;
@@ -31,8 +32,8 @@ public class ClassicChatCodeGenerationEngine implements ChatCodeGenerationEngine
     }
 
     @Override
-    public Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum) {
-        Flux<String> generated = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
+    public Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent) {
+        Flux<String> generated = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId, agent);
         if (codeGenTypeEnum != CodeGenTypeEnum.VUE_PROJECT) {
             return generated;
         }

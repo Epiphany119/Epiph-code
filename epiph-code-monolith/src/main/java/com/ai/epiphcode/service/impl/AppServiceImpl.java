@@ -20,6 +20,7 @@ import com.ai.epiphcode.model.dto.app.AppAddRequest;
 import com.ai.epiphcode.model.dto.app.AppQueryRequest;
 import com.ai.epiphcode.model.entity.App;
 import com.ai.epiphcode.model.entity.User;
+import com.ai.epiphcode.model.enums.ChatAgentEnum;
 import com.ai.epiphcode.model.enums.ChatGenModeEnum;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import com.ai.epiphcode.model.vo.AppVO;
@@ -160,7 +161,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
 
 
     @Override
-    public Flux<String> chatToGenCode(Long appId, String message, User loginUser, String mode) {
+    public Flux<String> chatToGenCode(Long appId, String message, User loginUser, String mode, String agent) {
         // 1. 参数校验
         ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
         ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户消息不能为空");
@@ -178,6 +179,8 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "不支持的代码生成类型");
         }
         ChatGenModeEnum chatGenMode = ChatGenModeEnum.getByValue(mode);
+        ChatAgentEnum chatAgent = ChatAgentEnum.getByValue(agent);
+        ThrowUtils.throwIf(chatAgent == null, ErrorCode.PARAMS_ERROR, "不支持的 Agent");
         // 一旦某应用进入 workflow，后续请求强制 workflow，避免模式来回切换污染会话
         if (isWorkflowLocked(appId)) {
             chatGenMode = ChatGenModeEnum.WORKFLOW;
@@ -190,7 +193,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         // 5. 初始化本轮聚合上下文（流式阶段仅聚合，不落库）
         turnAccumulatorManager.startTurn(appId, loginUser.getId(), memoryId, turnId, codeGenTypeEnum.getValue(), message);
         // 6. 根据模式选择生成引擎
-        Flux<String> contentFlux = generationEngine.generate(appId, message, loginUser, codeGenTypeEnum);
+        Flux<String> contentFlux = generationEngine.generate(appId, message, loginUser, codeGenTypeEnum, chatAgent);
         // 7. 由处理器在 onComplete/onError 统一触发轮次落库
         return streamHandlerExecutor.doExecute(contentFlux, appId, loginUser, codeGenTypeEnum, turnId);
     }

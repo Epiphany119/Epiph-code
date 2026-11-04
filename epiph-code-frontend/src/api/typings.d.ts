@@ -167,6 +167,7 @@ declare namespace API {
     appId: number
     message: string
     mode?: string
+    agent?: string
     clientRequestId?: string
   }
 

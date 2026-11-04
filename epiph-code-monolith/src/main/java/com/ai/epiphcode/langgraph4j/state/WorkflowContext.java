@@ -4,6 +4,7 @@ package com.ai.epiphcode.langgraph4j.state;
 import com.ai.epiphcode.langgraph4j.model.ImageCollectionPlan;
 import com.ai.epiphcode.langgraph4j.model.ImageResource;
 import com.ai.epiphcode.langgraph4j.model.QualityResult;
+import com.ai.epiphcode.model.enums.ChatAgentEnum;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -65,6 +66,11 @@ public class WorkflowContext implements Serializable {
      * 代码生成类型
      */
     private CodeGenTypeEnum generationType;
+
+    /**
+     * 当前轮次选中的主代码生成 Agent。
+     */
+    private ChatAgentEnum agent;
 
     /**
      * 生成的代码目录

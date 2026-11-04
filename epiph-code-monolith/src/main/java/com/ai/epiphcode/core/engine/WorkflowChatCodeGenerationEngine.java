@@ -2,6 +2,7 @@ package com.ai.epiphcode.core.engine;
 
 import com.ai.epiphcode.langgraph4j.CodeGenWorkflow;
 import com.ai.epiphcode.model.entity.User;
+import com.ai.epiphcode.model.enums.ChatAgentEnum;
 import com.ai.epiphcode.model.enums.ChatGenModeEnum;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import jakarta.annotation.Resource;
@@ -23,8 +24,8 @@ public class WorkflowChatCodeGenerationEngine implements ChatCodeGenerationEngin
     }
 
     @Override
-    public Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum) {
-        return codeGenWorkflow.executeWorkflowForChat(message, appId, codeGenTypeEnum);
+    public Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent) {
+        return codeGenWorkflow.executeWorkflowForChat(message, appId, codeGenTypeEnum, agent);
     }
 }
 

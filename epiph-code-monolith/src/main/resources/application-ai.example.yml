@@ -34,11 +34,28 @@ langchain4j:
     reasoning-thinking-type: ${EPIPH_CODE_REASONING_THINKING_TYPE:}
     reasoning-effort: ${EPIPH_CODE_REASONING_EFFORT:}
 
+# DeepSeek 代码生成 Agent（选择 DeepSeek 时按需创建模型；密钥留空不会影响默认 Agent 启动）
+  deepseek:
+    base-url: ${EPIPH_CODE_DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    api-key: ${EPIPH_CODE_DEEPSEEK_API_KEY:}
+    chat-model-name: ${EPIPH_CODE_DEEPSEEK_CHAT_MODEL_NAME:deepseek-flash}
+    reasoning-model-name: ${EPIPH_CODE_DEEPSEEK_REASONING_MODEL_NAME:deepseek-flash}
+    max-tokens: ${EPIPH_CODE_DEEPSEEK_MAX_TOKENS:8192}
+    reasoning-max-tokens: ${EPIPH_CODE_DEEPSEEK_REASONING_MAX_TOKENS:32768}
+    timeout: ${EPIPH_CODE_DEEPSEEK_TIMEOUT:600s}
+    chat-thinking-type: ${EPIPH_CODE_DEEPSEEK_CHAT_THINKING_TYPE:disabled}
+    reasoning-thinking-type: ${EPIPH_CODE_DEEPSEEK_REASONING_THINKING_TYPE:enabled}
+    reasoning-return-thinking: true
+    reasoning-send-thinking: true
+    reasoning-thinking-field: reasoning_content
+    reasoning-effort: ${EPIPH_CODE_DEEPSEEK_REASONING_EFFORT:}
+    log-requests: true
+    log-responses: true
 # 上下文压缩配置
 context-compaction:
   # 触发自动压缩的 token 估算阈值
   # 建议设为所用模型最大上下文长度的 80%
-  # 例如：DeepSeek V4-Pro 最大上下文 1M tokens → 800000
+  # 例如：DeepSeek Flash 最大上下文 1M tokens → 800000
   #       GLM-4 最大上下文 128K tokens → 102400
   #       Qwen 最大上下文 128K tokens → 102400
   token-threshold: ${EPIPH_CODE_COMPACTION_TOKEN_THRESHOLD:800000}

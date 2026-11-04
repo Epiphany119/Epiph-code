@@ -7,6 +7,7 @@ import com.ai.epiphcode.langgraph4j.model.QualityResult;
 import com.ai.epiphcode.langgraph4j.node.*;
 import com.ai.epiphcode.langgraph4j.state.WorkflowContext;
 import com.ai.epiphcode.langgraph4j.state.WorkflowStreamConsumerRegistry;
+import com.ai.epiphcode.model.enums.ChatAgentEnum;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -253,6 +254,11 @@ public class CodeGenWorkflow {
      * 仅透传代码生成分片，不输出 workflow_start/step 等业务外事件。
      */
     public Flux<String> executeWorkflowForChat(String originalPrompt, Long appId, CodeGenTypeEnum codeGenTypeEnum) {
+        return executeWorkflowForChat(originalPrompt, appId, codeGenTypeEnum, ChatAgentEnum.DEFAULT);
+    }
+
+    public Flux<String> executeWorkflowForChat(String originalPrompt, Long appId,
+                                               CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent) {
         return Flux.create(sink -> Thread.startVirtualThread(() -> {
             String streamSessionId = UUID.randomUUID().toString();
             try {
@@ -270,6 +276,7 @@ public class CodeGenWorkflow {
                         chunkConsumer,
                         streamSessionId
                 );
+                initialContext.setAgent(agent == null ? ChatAgentEnum.DEFAULT : agent);
                 for (NodeOutput<MessagesState<String>> ignored : workflow.stream(
                         Map.of(WorkflowContext.WORKFLOW_CONTEXT_KEY, initialContext))) {
                     // 聊天链路不额外输出工作流步骤文本，避免污染最终回复

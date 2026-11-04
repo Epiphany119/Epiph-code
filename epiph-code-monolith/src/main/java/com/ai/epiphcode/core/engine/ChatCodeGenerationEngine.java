@@ -1,6 +1,7 @@
 package com.ai.epiphcode.core.engine;
 
 import com.ai.epiphcode.model.entity.User;
+import com.ai.epiphcode.model.enums.ChatAgentEnum;
 import com.ai.epiphcode.model.enums.ChatGenModeEnum;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import reactor.core.publisher.Flux;
@@ -18,6 +19,6 @@ public interface ChatCodeGenerationEngine {
     /**
      * 生成代码流
      */
-    Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum);
+    Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent);
 }
 

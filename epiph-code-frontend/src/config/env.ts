@@ -17,6 +17,11 @@ export const getDeployUrl = (deployKey: string) => {
   return `${DEPLOY_BASE_URL.replace(/\/+$/, '')}/${encodeURIComponent(deployKey)}/`
 }
 
+// Same-origin URL for an iframe inside the studio; it uses the saved deployKey.
+export const getStaticDeployPreviewUrl = (deployKey: string) => {
+  return `${STATIC_BASE_URL.replace(/\/+$/, '')}/${encodeURIComponent(deployKey)}/`
+}
+
 // 获取静态资源预览URL
 export const getStaticPreviewUrl = (codeGenType: string, appId: string) => {
   const baseUrl = `${STATIC_BASE_URL}/${codeGenType}_${appId}/`

@@ -15,6 +15,7 @@ import com.ai.epiphcode.core.parser.CodeParserExecutor;
 import com.ai.epiphcode.core.saver.CodeFileSaverExecutor;
 import com.ai.epiphcode.exception.BusinessException;
 import com.ai.epiphcode.exception.ErrorCode;
+import com.ai.epiphcode.model.enums.ChatAgentEnum;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.PartialThinking;
@@ -83,11 +84,16 @@ public class AiCodeGeneratorFacade {
      * @param appId           应用 ID
      */
     public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum, Long appId) {
+        return generateAndSaveCodeStream(userMessage, codeGenTypeEnum, appId, ChatAgentEnum.DEFAULT);
+    }
+
+    public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum,
+                                                  Long appId, ChatAgentEnum agent) {
         if (codeGenTypeEnum == null) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成类型为空");
         }
         // 根据 appId 获取对应的 AI 服务实例
-        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, codeGenTypeEnum);
+        AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, codeGenTypeEnum, agent);
         return switch (codeGenTypeEnum) {
             case HTML -> {
                 Flux<String> codeStream = aiCodeGeneratorService.generateHtmlCodeStream(userMessage);
@@ -132,7 +138,8 @@ public class AiCodeGeneratorFacade {
                 File savedDir = CodeFileSaverExecutor.executeSaver(parsedResult, codeGenType, appId);
                 log.info("保存成功，路径为：" + savedDir.getAbsolutePath());
             } catch (Exception e) {
-                log.error("保存失败: {}", e.getMessage());
+                log.error("生成代码解析或保存失败", e);
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "代码解析或保存失败，请查看后端日志");
             }
         });
     }

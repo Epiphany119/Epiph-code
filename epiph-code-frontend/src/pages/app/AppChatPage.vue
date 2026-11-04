@@ -172,6 +172,14 @@
         <!-- 用户消息输入框 -->
         <div class="input-container">
           <div class="input-wrapper">
+            <div class="input-agent-bar">
+              <span class="input-agent-label">选择 Agent</span>
+              <a-select v-model:value="selectedAgent" size="small" :disabled="isGenerating || !isOwner">
+                <a-select-option value="default">默认 Agent</a-select-option>
+                <a-select-option value="deepseek">DeepSeek Flash</a-select-option>
+              </a-select>
+              <span class="input-agent-hint">选择本轮代码生成模型</span>
+            </div>
             <a-tooltip v-if="!isOwner" title="无法在别人的作品下对话哦~" placement="top">
               <a-textarea
                   v-model:value="userInput"
@@ -294,7 +302,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import AppDetailModal from '@/components/AppDetailModal.vue'
 import DeploySuccessModal from '@/components/DeploySuccessModal.vue'
 import aiAvatar from '@/assets/aiAvatar.svg'
-import { API_BASE_URL, getStaticPreviewUrl } from '@/config/env'
+import { API_BASE_URL, getStaticDeployPreviewUrl, getStaticPreviewUrl } from '@/config/env'
 import { VisualEditor, type ElementInfo } from '@/utils/visualEditor'
 
 import {
@@ -406,6 +414,7 @@ const toggleFinalReply = (index: number) => {
   expandedReplies.value = s
 }
 const userInput = ref('')
+const selectedAgent = ref('default')
 const isGenerating = ref(false)
 const messagesContainer = ref<HTMLElement>()
 const shouldAutoScroll = ref(true)
@@ -1022,8 +1031,9 @@ const fetchAppInfo = async () => {
 
       // 先加载对话历史
       await loadChatHistory()
-      // 如果有至少2条对话记录，展示对应的网站
-      if (messages.value.length >= 2) {
+      // 公开的已部署视图直接展示部署产物；控制台预览仍等待至少一轮对话。
+      const isPublishedView = String(route.query.view || '') === '1'
+      if (messages.value.length >= 2 || (isPublishedView && appInfo.value.deployKey)) {
         updatePreview()
       }
       // 检查是否需要自动发送初始提示词
@@ -1137,6 +1147,7 @@ const generateCode = async (userMessage: string, aiMessageIndex: number, clientR
       appId: appId.value || '',
       message: userMessage,
       mode: getCurrentGenerationMode(),
+      agent: selectedAgent.value,
       clientRequestId,
     })
     if (appId.value && getCurrentGenerationMode() === 'workflow') {
@@ -1285,7 +1296,11 @@ const handleError = (error: unknown, aiMessageIndex: number) => {
 const updatePreview = () => {
   if (appId.value) {
     const codeGenType = appInfo.value?.codeGenType || CodeGenTypeEnum.HTML
-    const newPreviewUrl = getStaticPreviewUrl(codeGenType, appId.value)
+    const isPublishedView = String(route.query.view || '') === '1'
+    const deployKey = appInfo.value?.deployKey
+    const newPreviewUrl = isPublishedView && deployKey
+      ? getStaticDeployPreviewUrl(deployKey)
+      : getStaticPreviewUrl(codeGenType, appId.value)
     previewUrl.value = newPreviewUrl
     previewReady.value = true
   }
@@ -1806,6 +1821,28 @@ onUnmounted(() => {
 
 .input-wrapper {
   position: relative;
+}
+
+.input-agent-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 10px;
+}
+
+.input-agent-label {
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input-agent-bar .ant-select {
+  min-width: 176px;
+}
+
+.input-agent-hint {
+  color: #9aa1ac;
+  font-size: 12px;
 }
 
 .input-wrapper .ant-input {
