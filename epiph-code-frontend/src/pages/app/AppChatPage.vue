@@ -264,7 +264,7 @@
             </div>
           </div>
           <span v-if="previewUrl" class="preview-status preview-status--ready">
-            <i></i> {{ isGenerating ? '正在更新' : '实时预览' }}
+            <i></i> {{ isGenerating || deploying ? '正在更新' : '实时预览' }}
           </span>
           <span v-else-if="isGenerating" class="preview-status">
             <i></i> 正在生成
@@ -1359,7 +1359,9 @@ const generateCode = async (userMessage: string, aiMessageIndex: number, clientR
 
       // 延迟更新预览，确保后端已完成处理
       setTimeout(async () => {
-        await fetchAppInfo()
+        if (appInfo.value?.deployKey) {
+          await syncDeployedVersion()
+        }
         await updatePreview(5)
       }, 1000)
     })
@@ -1537,6 +1539,24 @@ const downloadCode = async () => {
 }
 
 // 部署应用
+const syncDeployedVersion = async () => {
+  if (!appId.value || !appInfo.value?.deployKey) return
+
+  deploying.value = true
+  try {
+    const res = await deployAppApi({ appId: appId.value as unknown as number })
+    if (res.data.code !== 0 || !res.data.data) {
+      throw new Error(res.data.message || '部署同步失败')
+    }
+    message.success('已部署版本已同步')
+  } catch (error) {
+    console.error('已部署版本同步失败：', error)
+    message.warning('代码已更新，但线上版本同步失败，请点击“部署”重试')
+  } finally {
+    deploying.value = false
+  }
+}
+
 const deployApp = async () => {
   if (!appId.value) {
     message.error('应用ID不存在')

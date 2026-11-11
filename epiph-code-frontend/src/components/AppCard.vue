@@ -78,6 +78,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 const previewStatus = ref<'checking' | 'ready' | 'missing'>('checking')
+const previewRevision = ref(Date.now())
 let checkId = 0
 
 const previewUrl = computed(() => {
@@ -91,8 +92,7 @@ const iframeSrc = computed(() => {
   if (!previewUrl.value) {
     return ''
   }
-  const version = props.app.updateTime || props.app.createTime || props.app.id || 'latest'
-  return `${previewUrl.value}?v=${encodeURIComponent(String(version))}`
+  return `${previewUrl.value}?v=${previewRevision.value}`
 })
 
 const hasLivePreview = computed(() => previewStatus.value === 'ready' && !!previewUrl.value)
@@ -100,6 +100,7 @@ watch(
   previewUrl,
   async (url) => {
     const currentCheck = ++checkId
+    previewRevision.value = Date.now()
     previewStatus.value = 'checking'
     if (!url) {
       previewStatus.value = 'missing'
@@ -119,6 +120,13 @@ watch(
     }
   },
   { immediate: true },
+)
+
+watch(
+  () => [props.app.updateTime, props.app.deployKey],
+  () => {
+    previewRevision.value = Date.now()
+  },
 )
 
 const handleViewChat = () => {

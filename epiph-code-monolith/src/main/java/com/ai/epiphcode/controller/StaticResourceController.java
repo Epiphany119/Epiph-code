@@ -73,6 +73,7 @@ public class StaticResourceController {
             Resource resource = new FileSystemResource(file);
             return ResponseEntity.ok()
                     .header("Content-Type", getContentTypeWithCharset(filePath.toString()))
+                    .header(HttpHeaders.CACHE_CONTROL, "no-cache, must-revalidate")
                     .body(resource);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
