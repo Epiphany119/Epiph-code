@@ -1,6 +1,7 @@
 package com.ai.epiphcode.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.ai.epiphcode.core.handler.TurnAccumulator;
 import com.ai.epiphcode.core.handler.TurnAccumulatorManager;
 import com.ai.epiphcode.model.entity.ChatEventLog;
@@ -160,7 +161,11 @@ public class TurnFlushService {
                 .eventType(failed ? ChatEventTypeEnum.ERROR.getValue() : ChatEventTypeEnum.ASSISTANT_FINAL.getValue())
                 .content(StrUtil.blankToDefault(finalAssistantText, ""))
                 .reasoningContent(thinking)
-                .rawEventJson(failed ? errorMessage : null)
+                .rawEventJson(failed
+                        ? errorMessage
+                        : accumulator.hasTokenUsage()
+                                ? JSONUtil.toJsonStr(accumulator.tokenUsageSnapshot())
+                                : null)
                 .userId(accumulator.getUserId())
                 .build());
 

@@ -24,8 +24,9 @@ public class WorkflowChatCodeGenerationEngine implements ChatCodeGenerationEngin
     }
 
     @Override
-    public Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent) {
-        return codeGenWorkflow.executeWorkflowForChat(message, appId, codeGenTypeEnum, agent);
+    public Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum,
+                                 ChatAgentEnum agent, String turnId) {
+        return codeGenWorkflow.executeWorkflowForChat(message, appId, codeGenTypeEnum, agent, turnId);
     }
 }
 

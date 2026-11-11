@@ -25,6 +25,9 @@ public interface ChatEventLogService extends IService<ChatEventLog> {
      */
     List<ChatEventLog> listEventsByTurnId(String turnId);
 
+    /** 获取指定会话最近一轮的 AI 最终事件。 */
+    ChatEventLog getLatestAssistantFinalEvent(String memoryId);
+
     /**
      * 按 appId 逻辑删除事件日志（isDelete 标记为 1）。
      */

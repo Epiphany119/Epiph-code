@@ -5,6 +5,7 @@ import com.ai.epiphcode.exception.ErrorCode;
 import com.ai.epiphcode.exception.ThrowUtils;
 import com.ai.epiphcode.mapper.ChatEventLogMapper;
 import com.ai.epiphcode.model.entity.ChatEventLog;
+import com.ai.epiphcode.model.enums.ChatEventTypeEnum;
 import com.ai.epiphcode.service.ChatEventLogService;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -56,6 +57,17 @@ public class ChatEventLogServiceImpl extends ServiceImpl<ChatEventLogMapper, Cha
                 .orderBy(ChatEventLog::getSeq, true)
                 .orderBy(ChatEventLog::getCreateTime, true);
         return this.list(queryWrapper);
+    }
+
+    @Override
+    public ChatEventLog getLatestAssistantFinalEvent(String memoryId) {
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .eq(ChatEventLog::getMemoryId, memoryId)
+                .eq(ChatEventLog::getEventType, ChatEventTypeEnum.ASSISTANT_FINAL.getValue())
+                .orderBy(ChatEventLog::getCreateTime, false)
+                .limit(0, 1);
+        List<ChatEventLog> events = this.list(queryWrapper);
+        return events.isEmpty() ? null : events.getFirst();
     }
 
     @Override

@@ -32,8 +32,9 @@ public class ClassicChatCodeGenerationEngine implements ChatCodeGenerationEngine
     }
 
     @Override
-    public Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent) {
-        Flux<String> generated = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId, agent);
+    public Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum,
+                                 ChatAgentEnum agent, String turnId) {
+        Flux<String> generated = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId, agent, turnId);
         if (codeGenTypeEnum != CodeGenTypeEnum.VUE_PROJECT) {
             return generated;
         }

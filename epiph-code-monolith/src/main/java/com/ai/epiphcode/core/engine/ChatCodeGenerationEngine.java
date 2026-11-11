@@ -19,6 +19,7 @@ public interface ChatCodeGenerationEngine {
     /**
      * 生成代码流
      */
-    Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent);
+    Flux<String> generate(Long appId, String message, User loginUser, CodeGenTypeEnum codeGenTypeEnum,
+                          ChatAgentEnum agent, String turnId);
 }
 

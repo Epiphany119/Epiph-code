@@ -259,6 +259,12 @@ public class CodeGenWorkflow {
 
     public Flux<String> executeWorkflowForChat(String originalPrompt, Long appId,
                                                CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent) {
+        return executeWorkflowForChat(originalPrompt, appId, codeGenTypeEnum, agent, null);
+    }
+
+    public Flux<String> executeWorkflowForChat(String originalPrompt, Long appId,
+                                               CodeGenTypeEnum codeGenTypeEnum, ChatAgentEnum agent,
+                                               String turnId) {
         return Flux.create(sink -> Thread.startVirtualThread(() -> {
             String streamSessionId = UUID.randomUUID().toString();
             try {
@@ -277,6 +283,7 @@ public class CodeGenWorkflow {
                         streamSessionId
                 );
                 initialContext.setAgent(agent == null ? ChatAgentEnum.DEFAULT : agent);
+                initialContext.setTurnId(turnId);
                 for (NodeOutput<MessagesState<String>> ignored : workflow.stream(
                         Map.of(WorkflowContext.WORKFLOW_CONTEXT_KEY, initialContext))) {
                     // 聊天链路不额外输出工作流步骤文本，避免污染最终回复

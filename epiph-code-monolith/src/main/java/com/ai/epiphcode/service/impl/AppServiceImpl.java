@@ -191,9 +191,10 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App>  implements AppS
         String turnId = IdUtil.fastSimpleUUID();
         String memoryId = appId + "_" + codeGenTypeEnum.getValue();
         // 5. 初始化本轮聚合上下文（流式阶段仅聚合，不落库）
-        turnAccumulatorManager.startTurn(appId, loginUser.getId(), memoryId, turnId, codeGenTypeEnum.getValue(), message);
+        turnAccumulatorManager.startTurn(
+                appId, loginUser.getId(), memoryId, turnId, codeGenTypeEnum.getValue(), message, chatAgent.getValue());
         // 6. 根据模式选择生成引擎
-        Flux<String> contentFlux = generationEngine.generate(appId, message, loginUser, codeGenTypeEnum, chatAgent);
+        Flux<String> contentFlux = generationEngine.generate(appId, message, loginUser, codeGenTypeEnum, chatAgent, turnId);
         // 7. 由处理器在 onComplete/onError 统一触发轮次落库
         return streamHandlerExecutor.doExecute(contentFlux, appId, loginUser, codeGenTypeEnum, turnId);
     }

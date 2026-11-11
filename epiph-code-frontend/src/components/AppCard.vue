@@ -28,15 +28,6 @@
         <p>{{ app.initPrompt || '生成完成后，这里会显示应用的真实页面。' }}</p>
       </div>
 
-      <div class="preview-topbar" aria-hidden="true">
-        <div class="browser-dots"><i></i><i></i><i></i></div>
-        <span class="preview-mode" :class="{ 'preview-mode--live': hasLivePreview }">
-          <span class="preview-mode-dot"></span>
-          {{ hasLivePreview ? '实时预览' : app.cover ? '作品封面' : '作品预览' }}
-        </span>
-        <span class="preview-type">{{ typeLabel }}</span>
-      </div>
-
       <div class="app-overlay">
         <a-space>
           <a-button type="primary" @click="handleViewChat">打开工作台</a-button>
@@ -70,7 +61,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { getStaticPreviewUrl } from '@/config/env'
-import { formatCodeGenType } from '@/utils/codeGenTypes'
 
 interface Props {
   app: API.AppVO
@@ -106,8 +96,6 @@ const iframeSrc = computed(() => {
 })
 
 const hasLivePreview = computed(() => previewStatus.value === 'ready' && !!previewUrl.value)
-const typeLabel = computed(() => formatCodeGenType(props.app.codeGenType).replace('模式', ''))
-
 watch(
   previewUrl,
   async (url) => {
@@ -239,68 +227,6 @@ const handleViewWork = () => {
   white-space: nowrap;
 }
 
-.preview-topbar {
-  position: absolute;
-  z-index: 1;
-  top: 12px;
-  right: 12px;
-  left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  pointer-events: none;
-}
-
-.browser-dots {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 7px 9px;
-  border: 1px solid rgba(231, 232, 238, 0.75);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(10px);
-}
-
-.browser-dots i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #eaa68d;
-}
-
-.browser-dots i:nth-child(2) {
-  background: #edc57e;
-}
-
-.browser-dots i:nth-child(3) {
-  background: #8fc4a0;
-}
-
-.preview-mode,
-.preview-type {
-  display: inline-flex;
-  align-items: center;
-  min-height: 27px;
-  padding: 0 9px;
-  border: 1px solid rgba(231, 232, 238, 0.72);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #737888;
-  font-size: 10px;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-}
-
-.preview-mode {
-  gap: 6px;
-}
-
-.preview-mode--live {
-  color: #467c59;
-}
-
-.preview-mode-dot,
 .app-state-dot {
   width: 6px;
   height: 6px;
@@ -308,14 +234,9 @@ const handleViewWork = () => {
   background: #b7bbc5;
 }
 
-.preview-mode--live .preview-mode-dot,
 .app-state--published .app-state-dot {
   background: #65ad78;
   box-shadow: 0 0 0 3px rgba(101, 173, 120, 0.13);
-}
-
-.preview-type {
-  margin-left: auto;
 }
 
 .app-overlay {

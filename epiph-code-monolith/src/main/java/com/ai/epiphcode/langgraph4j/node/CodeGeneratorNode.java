@@ -38,7 +38,8 @@ public class CodeGeneratorNode {
             }
             // 调用流式代码生成
             ChatAgentEnum agent = context.getAgent() == null ? ChatAgentEnum.DEFAULT : context.getAgent();
-            Flux<String> codeStream = codeGeneratorFacade.generateAndSaveCodeStream(userMessage, generationType, appId, agent);
+            Flux<String> codeStream = codeGeneratorFacade.generateAndSaveCodeStream(
+                    userMessage, generationType, appId, agent, context.getTurnId());
             Consumer<String> streamConsumer = context.getStreamConsumer();
             if (streamConsumer == null && context.getStreamSessionId() != null) {
                 WorkflowStreamConsumerRegistry streamConsumerRegistry =

@@ -13,6 +13,8 @@ import com.ai.epiphcode.config.AiCodeGeneratorServiceFactory;
 import com.ai.epiphcode.core.parser.CodeParser;
 import com.ai.epiphcode.core.parser.CodeParserExecutor;
 import com.ai.epiphcode.core.saver.CodeFileSaverExecutor;
+import com.ai.epiphcode.core.handler.TurnAccumulator;
+import com.ai.epiphcode.core.handler.TurnAccumulatorManager;
 import com.ai.epiphcode.exception.BusinessException;
 import com.ai.epiphcode.exception.ErrorCode;
 import com.ai.epiphcode.model.enums.ChatAgentEnum;
@@ -42,6 +44,9 @@ public class AiCodeGeneratorFacade {
 
     @Resource
     private AiCodeGeneratorServiceFactory aiCodeGeneratorServiceFactory;
+
+    @Resource
+    private TurnAccumulatorManager turnAccumulatorManager;
 
 
 
@@ -89,6 +94,11 @@ public class AiCodeGeneratorFacade {
 
     public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum,
                                                   Long appId, ChatAgentEnum agent) {
+        return generateAndSaveCodeStream(userMessage, codeGenTypeEnum, appId, agent, null);
+    }
+
+    public Flux<String> generateAndSaveCodeStream(String userMessage, CodeGenTypeEnum codeGenTypeEnum,
+                                                  Long appId, ChatAgentEnum agent, String turnId) {
         if (codeGenTypeEnum == null) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成类型为空");
         }
@@ -96,16 +106,16 @@ public class AiCodeGeneratorFacade {
         AiCodeGeneratorService aiCodeGeneratorService = aiCodeGeneratorServiceFactory.getAiCodeGeneratorService(appId, codeGenTypeEnum, agent);
         return switch (codeGenTypeEnum) {
             case HTML -> {
-                Flux<String> codeStream = aiCodeGeneratorService.generateHtmlCodeStream(userMessage);
-                yield processCodeStream(codeStream, CodeGenTypeEnum.HTML, appId);
+                TokenStream codeStream = aiCodeGeneratorService.generateHtmlCodeStream(userMessage);
+                yield processCodeTokenStream(codeStream, CodeGenTypeEnum.HTML, appId, turnId);
             }
             case MULTI_FILE -> {
-                Flux<String> codeStream = aiCodeGeneratorService.generateMultiFileCodeStream(userMessage);
-                yield processCodeStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId);
+                TokenStream codeStream = aiCodeGeneratorService.generateMultiFileCodeStream(userMessage);
+                yield processCodeTokenStream(codeStream, CodeGenTypeEnum.MULTI_FILE, appId, turnId);
             }
             case VUE_PROJECT -> {
                 TokenStream tokenStream = aiCodeGeneratorService.generateVueProjectCodeStream(appId, userMessage);
-                yield processTokenStream(tokenStream,appId);
+                yield processTokenStream(tokenStream, appId, turnId);
             }
             default -> {
                 String errorMessage = "不支持的生成类型：" + codeGenTypeEnum.getValue();
@@ -123,24 +133,37 @@ public class AiCodeGeneratorFacade {
      * @param appId       应用 ID
      * @return 流式响应
      */
-    private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenType, Long appId) {
-        StringBuilder codeBuilder = new StringBuilder();
-        return codeStream.doOnNext(chunk -> {
-            // 实时收集代码片段
-            codeBuilder.append(chunk);
-        }).doOnComplete(() -> {
-            // 流式返回完成后保存代码
-            try {
-                String completeCode = codeBuilder.toString();
-                // 使用执行器解析代码
-                Object parsedResult = CodeParserExecutor.executeParser(completeCode, codeGenType);
-                // 使用执行器保存代码
-                File savedDir = CodeFileSaverExecutor.executeSaver(parsedResult, codeGenType, appId);
-                log.info("保存成功，路径为：" + savedDir.getAbsolutePath());
-            } catch (Exception e) {
-                log.error("生成代码解析或保存失败", e);
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "代码解析或保存失败，请查看后端日志");
-            }
+    private Flux<String> processCodeTokenStream(TokenStream tokenStream, CodeGenTypeEnum codeGenType,
+                                                Long appId, String turnId) {
+        return Flux.create(sink -> {
+            StringBuilder codeBuilder = new StringBuilder();
+            TokenStream configuredStream = tokenStream
+                    .onPartialResponse((String partialResponse) -> {
+                        codeBuilder.append(partialResponse);
+                        sink.next(partialResponse);
+                    })
+                    .onCompleteResponse((ChatResponse response) -> {
+                        recordTokenUsage(response, turnId);
+                        try {
+                            if (codeBuilder.length() == 0
+                                    && response != null
+                                    && response.aiMessage() != null
+                                    && StrUtil.isNotBlank(response.aiMessage().text())) {
+                                String finalText = response.aiMessage().text();
+                                codeBuilder.append(finalText);
+                                sink.next(finalText);
+                            }
+                            Object parsedResult = CodeParserExecutor.executeParser(codeBuilder.toString(), codeGenType);
+                            File savedDir = CodeFileSaverExecutor.executeSaver(parsedResult, codeGenType, appId);
+                            log.info("代码生成保存成功，appId={}, path={}", appId, savedDir.getAbsolutePath());
+                            sink.complete();
+                        } catch (Exception e) {
+                            log.error("生成代码解析或保存失败", e);
+                            sink.error(new BusinessException(ErrorCode.SYSTEM_ERROR, "代码解析或保存失败，请查看后端日志"));
+                        }
+                    })
+                    .onError(sink::error);
+            configuredStream.start();
         });
     }
 
@@ -150,7 +173,7 @@ public class AiCodeGeneratorFacade {
      * @param tokenStream TokenStream 对象
      * @return Flux<String> 流式响应
      */
-    private Flux<String> processTokenStream(TokenStream tokenStream, Long appId) {
+    private Flux<String> processTokenStream(TokenStream tokenStream, Long appId, String turnId) {
         return Flux.create(sink -> {
             AtomicInteger emittedChunkCount = new AtomicInteger(0);
             TokenStream configuredStream = tokenStream.onPartialResponse((String partialResponse) -> {
@@ -172,6 +195,7 @@ public class AiCodeGeneratorFacade {
 //                        sink.complete();
 //                    })
                     .onCompleteResponse((ChatResponse response) -> {
+                        recordTokenUsage(response, turnId);
                         if (emittedChunkCount.get() == 0
                                 && response != null
                                 && response.aiMessage() != null
@@ -185,7 +209,6 @@ public class AiCodeGeneratorFacade {
                     })
 
                     .onError((Throwable error) -> {
-                        error.printStackTrace();
                         sink.error(error);
                     });
             // 仅当底层模型/实现支持时，才会接收到思考分片
@@ -200,6 +223,22 @@ public class AiCodeGeneratorFacade {
             }
             configuredStream.start();
         });
+    }
+
+    private void recordTokenUsage(ChatResponse response, String turnId) {
+        if (response == null || response.tokenUsage() == null || turnId == null) {
+            return;
+        }
+        TurnAccumulator accumulator = turnAccumulatorManager.get(turnId);
+        if (accumulator == null) {
+            return;
+        }
+        var tokenUsage = response.tokenUsage();
+        accumulator.recordTokenUsage(
+                tokenUsage.inputTokenCount(),
+                tokenUsage.outputTokenCount(),
+                tokenUsage.totalTokenCount()
+        );
     }
 
 

@@ -47,6 +47,9 @@ public class WorkflowContext implements Serializable {
      */
     private Long appId;
 
+    /** 当前对话轮次 ID，用于关联模型用量。 */
+    private String turnId;
+
     /**
      * 图片资源字符串
      */

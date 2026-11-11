@@ -117,6 +117,24 @@ public class ContextCompactionService {
     }
 
     /**
+     * 获取当前会话上下文的估算占用。估算方式与自动压缩保持一致。
+     */
+    public ContextUsage getContextUsage(String memoryId) {
+        List<ChatMessage> messages = chatMemoryStore.getMessages(memoryId);
+        if (messages == null || messages.isEmpty()) {
+            return new ContextUsage(0, 0, compactionProperties.getTokenThreshold());
+        }
+        return new ContextUsage(
+                estimateTokens(messages),
+                messages.size(),
+                compactionProperties.getTokenThreshold()
+        );
+    }
+
+    public record ContextUsage(int estimatedTokens, int messageCount, int compactionThreshold) {
+    }
+
+    /**
      * 执行压缩逻辑：生成摘要 → 替换消息。
      */
     private boolean doCompact(MessageWindowChatMemory chatMemory, String memoryId,

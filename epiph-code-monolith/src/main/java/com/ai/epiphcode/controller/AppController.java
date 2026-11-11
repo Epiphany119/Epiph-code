@@ -14,12 +14,14 @@ import com.ai.epiphcode.exception.ErrorCode;
 import com.ai.epiphcode.exception.ThrowUtils;
 import com.ai.epiphcode.model.dto.app.*;
 import com.ai.epiphcode.model.entity.App;
+import com.ai.epiphcode.model.entity.ChatEventLog;
 import com.ai.epiphcode.model.entity.User;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import com.ai.epiphcode.model.vo.AppVO;
 import com.ai.epiphcode.ratelimiter.anotation.RateLimit;
 import com.ai.epiphcode.ratelimiter.enms.RateLimitType;
 import com.ai.epiphcode.service.AppService;
+import com.ai.epiphcode.service.ChatEventLogService;
 import com.ai.epiphcode.service.ContextCompactionService;
 import com.ai.epiphcode.service.ProjectDownloadService;
 import com.ai.epiphcode.service.UserService;
@@ -45,6 +47,7 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -64,6 +67,8 @@ public class AppController {
 
     @Autowired
     private ContextCompactionService contextCompactionService;
+    @Autowired
+    private ChatEventLogService chatEventLogService;
     @Resource
     private RedissonClient redissonClient;
     @Resource
@@ -456,6 +461,41 @@ public class AppController {
                 ));
     }
 
+
+    /**
+     * 获取当前应用的模型用量与对话上下文指标。
+     */
+    @GetMapping("/chat/metrics")
+    public BaseResponse<Map<String, Object>> getChatMetrics(@RequestParam Long appId,
+                                                             HttpServletRequest request) {
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 无效");
+        User loginUser = userService.getLoginUser(request);
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+        boolean isAdmin = UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole());
+        if (!isAdmin && !app.getUserId().equals(loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权查看该应用的对话指标");
+        }
+
+        String memoryId = appId + "_" + app.getCodeGenType();
+        ContextCompactionService.ContextUsage contextUsage = contextCompactionService.getContextUsage(memoryId);
+        boolean isVueProject = CodeGenTypeEnum.VUE_PROJECT.getValue().equals(app.getCodeGenType());
+        Map<String, Object> metrics = new LinkedHashMap<>();
+        metrics.put("contextTokensEstimate", contextUsage.estimatedTokens());
+        metrics.put("contextMessageCount", contextUsage.messageCount());
+        metrics.put("contextTokenThreshold", isVueProject ? contextUsage.compactionThreshold() : null);
+        metrics.put("messageWindowLimit", isVueProject ? 160 : 20);
+
+        ChatEventLog latestAssistantEvent = chatEventLogService.getLatestAssistantFinalEvent(memoryId);
+        if (latestAssistantEvent != null && StrUtil.isNotBlank(latestAssistantEvent.getRawEventJson())) {
+            try {
+                metrics.put("lastTurnTokenUsage", JSONUtil.parseObj(latestAssistantEvent.getRawEventJson()));
+            } catch (Exception ignored) {
+                // 旧事件或未记录用量的事件可能将 rawEventJson 用于其他内容。
+            }
+        }
+        return ResultUtils.success(metrics);
+    }
 
     /**
      * 手动压缩对话上下文（Layer 3）。

@@ -17,7 +17,12 @@ public class TurnAccumulatorManager {
     private final Map<String, TurnAccumulator> turnAccumulatorMap = new ConcurrentHashMap<>();
 
     public void startTurn(long appId, long userId, String memoryId, String turnId, String codeGenType, String userMessage) {
-        TurnAccumulator accumulator = new TurnAccumulator(appId, userId, memoryId, turnId, codeGenType, userMessage);
+        startTurn(appId, userId, memoryId, turnId, codeGenType, userMessage, null);
+    }
+
+    public void startTurn(long appId, long userId, String memoryId, String turnId, String codeGenType,
+                          String userMessage, String agent) {
+        TurnAccumulator accumulator = new TurnAccumulator(appId, userId, memoryId, turnId, codeGenType, userMessage, agent);
         turnAccumulatorMap.put(turnId, accumulator);
     }
 

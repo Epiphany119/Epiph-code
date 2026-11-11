@@ -172,6 +172,45 @@
         <!-- 用户消息输入框 -->
         <div class="input-container">
           <div class="input-wrapper">
+            <div v-if="isOwner || isAdmin" class="chat-metrics" aria-label="对话用量指标">
+              <div class="chat-metric-card">
+                <div class="chat-metric-heading">
+                  <span>最近一轮代码生成</span>
+                  <span class="metric-heading-meta">
+                    <span v-if="lastTurnAgentLabel" class="metric-agent-badge">{{ lastTurnAgentLabel }}</span>
+                    <a-tooltip title="模型返回的实际 token 用量；旧对话或未提供用量的模型会显示暂无数据">
+                      <span class="metric-info" aria-label="用量说明">i</span>
+                    </a-tooltip>
+                  </span>
+                </div>
+                <strong class="chat-metric-value">
+                  {{ formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.totalTokens) }}
+                </strong>
+                <span class="chat-metric-detail">
+                  输入 {{ formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.inputTokens) }}
+                  <i></i>
+                  输出 {{ formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.outputTokens) }}
+                </span>
+              </div>
+
+              <div class="chat-metric-card chat-metric-card--context">
+                <div class="chat-metric-heading">
+                  <span>当前对话上下文</span>
+                  <a-tooltip title="按现有上下文压缩逻辑估算，每约 3 个字符计 1 token">
+                    <span class="metric-info" aria-label="估算说明">i</span>
+                  </a-tooltip>
+                </div>
+                <strong class="chat-metric-value">
+                  {{ chatMetrics ? `约 ${formatMetricTokens(chatMetrics.contextTokensEstimate)} tokens` : '正在读取上下文' }}
+                </strong>
+                <div class="context-meter" role="progressbar" :aria-valuenow="contextProgressPercent" aria-valuemin="0" aria-valuemax="100">
+                  <span :style="{ width: `${contextProgressPercent}%` }"></span>
+                </div>
+                <span class="chat-metric-detail">
+                  {{ contextMetricCaption }}
+                </span>
+              </div>
+            </div>
             <div class="input-agent-bar">
               <span class="input-agent-label">选择 Agent</span>
               <a-select v-model:value="selectedAgent" size="small" :disabled="isGenerating || !isOwner">
@@ -344,6 +383,54 @@ const loginUserStore = useLoginUserStore()
 const appInfo = ref<API.AppVO>()
 const appId = ref<any>()
 const isWorkflowLocked = ref(false)
+const chatMetrics = ref<ChatMetrics>()
+
+const formatMetricTokens = (value?: number | null) => {
+  if (value === undefined || value === null) return '暂无数据'
+  return new Intl.NumberFormat('zh-CN').format(value)
+}
+
+const lastTurnAgentLabel = computed(() => {
+  const agent = chatMetrics.value?.lastTurnTokenUsage?.agent
+  if (agent === 'deepseek') return 'DeepSeek Flash'
+  if (agent === 'default') return '默认 Agent'
+  return ''
+})
+
+const contextProgressPercent = computed(() => {
+  if (!chatMetrics.value) return 0
+  const estimatedTokens = chatMetrics.value.contextTokensEstimate || 0
+  const threshold = chatMetrics.value.contextTokenThreshold
+  if (threshold && threshold > 0) {
+    return Math.min(100, Math.round((estimatedTokens / threshold) * 100))
+  }
+  const messageLimit = chatMetrics.value.messageWindowLimit || 20
+  const messageCount = chatMetrics.value.contextMessageCount || 0
+  return Math.min(100, Math.round((messageCount / messageLimit) * 100))
+})
+
+const contextMetricCaption = computed(() => {
+  const metrics = chatMetrics.value
+  if (!metrics) return '正在读取上下文'
+  const count = metrics.contextMessageCount || 0
+  const limit = metrics.messageWindowLimit || 20
+  if (metrics.contextTokenThreshold) {
+    return `压缩阈值 ${contextProgressPercent.value}% · ${count}/${limit} 条消息`
+  }
+  return `消息窗口 ${count}/${limit}`
+})
+
+const refreshChatMetrics = async () => {
+  if (!appId.value || (!isOwner.value && !isAdmin.value)) return
+  try {
+    const response = await request.get('/app/chat/metrics', { params: { appId: appId.value } })
+    if (response.data?.code === 0 && response.data.data) {
+      chatMetrics.value = response.data.data as ChatMetrics
+    }
+  } catch (error) {
+    console.warn('读取对话指标失败：', error)
+  }
+}
 
 // 对话相关
 interface Message {
@@ -354,6 +441,19 @@ interface Message {
   turnId?: string
   processEvents?: ProcessEventItem[]
   streamBuffer?: string
+}
+
+interface ChatMetrics {
+  contextTokensEstimate?: number
+  contextMessageCount?: number
+  contextTokenThreshold?: number | null
+  messageWindowLimit?: number
+  lastTurnTokenUsage?: {
+    inputTokens?: number
+    outputTokens?: number
+    totalTokens?: number
+    agent?: string
+  }
 }
 
 interface ThinkingStreamChunk {
@@ -1054,6 +1154,7 @@ const fetchAppInfo = async () => {
     const res = await getAppVoById({ id: id as unknown as number })
     if (res.data.code === 0 && res.data.data) {
       appInfo.value = res.data.data
+      await refreshChatMetrics()
 
       // 先加载对话历史
       await loadChatHistory()
@@ -1246,9 +1347,15 @@ const generateCode = async (userMessage: string, aiMessageIndex: number, clientR
 
       streamCompleted = true
       flushStreamBufferEvents(messages.value[aiMessageIndex], toolState)
-      messages.value[aiMessageIndex].content = sanitizeAssistantContent(fullContent)
+      const completedMessage = messages.value[aiMessageIndex]
+      completedMessage.content = sanitizeAssistantContent(fullContent)
+      if (!completedMessage.content && !completedMessage.processEvents?.length) {
+        completedMessage.content = '本轮生成已结束，但没有收到模型文本回复。请查看预览或重试。'
+      }
+      completedMessage.loading = false
       isGenerating.value = false
       eventSource?.close()
+      void refreshChatMetrics()
 
       // 延迟更新预览，确保后端已完成处理
       setTimeout(async () => {
@@ -1893,6 +2000,114 @@ onUnmounted(() => {
   background: white;
 }
 
+.chat-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.chat-metric-card {
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid #eceef3;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fcfcfd 0%, #f7f8fb 100%);
+}
+
+.chat-metric-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #838998;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.metric-heading-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.metric-agent-badge {
+  max-width: 104px;
+  overflow: hidden;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #f2ebe7;
+  color: #a16b4e;
+  font-size: 9px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-info {
+  display: inline-grid;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  border: 1px solid #c9ced8;
+  border-radius: 50%;
+  color: #9298a5;
+  font-family: Georgia, serif;
+  font-size: 10px;
+  font-style: italic;
+  cursor: help;
+}
+
+.chat-metric-value {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #303544;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-metric-detail {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #9298a5;
+  font-size: 10px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-metric-detail i {
+  width: 3px;
+  height: 3px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #c1c5ce;
+}
+
+.context-meter {
+  height: 4px;
+  margin-top: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eaf0;
+}
+
+.context-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #b97b58, #e0b18f);
+  transition: width 0.25s ease;
+}
+
 .input-wrapper {
   position: relative;
 }
@@ -1917,6 +2132,16 @@ onUnmounted(() => {
 .input-agent-hint {
   color: #9aa1ac;
   font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .chat-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .input-agent-bar {
+    flex-wrap: wrap;
+  }
 }
 
 .input-wrapper .ant-input {
