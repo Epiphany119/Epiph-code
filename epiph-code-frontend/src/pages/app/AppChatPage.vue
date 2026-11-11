@@ -217,7 +217,19 @@
       <!-- 右侧网页展示区域 -->
       <div class="preview-section">
         <div class="preview-header">
-          <h3>生成后的网页展示</h3>
+          <div class="preview-heading">
+            <span class="preview-heading-icon">↗</span>
+            <div>
+              <h3>页面预览</h3>
+              <span class="preview-heading-caption">查看当前生成版本</span>
+            </div>
+          </div>
+          <span v-if="previewUrl" class="preview-status preview-status--ready">
+            <i></i> {{ isGenerating ? '正在更新' : '实时预览' }}
+          </span>
+          <span v-else-if="isGenerating" class="preview-status">
+            <i></i> 正在生成
+          </span>
           <div class="preview-actions">
             <a-button
                 v-if="isOwner && previewUrl"
@@ -241,21 +253,31 @@
           </div>
         </div>
         <div class="preview-content">
-          <div v-if="!previewUrl && !isGenerating" class="preview-placeholder">
-            <div class="placeholder-icon">🌐</div>
-            <p>网站文件生成完成后将在这里展示</p>
-          </div>
-          <div v-else-if="isGenerating" class="preview-loading">
-            <a-spin size="large" />
-            <p>正在生成网站...</p>
-          </div>
-          <iframe
-              v-else
+          <div v-if="previewUrl" class="preview-frame-wrap">
+            <iframe
+              :key="previewUrl"
               :src="previewUrl"
               class="preview-iframe"
+              title="生成应用实时预览"
               frameborder="0"
               @load="onIframeLoad"
-          ></iframe>
+              @error="onIframeError"
+            ></iframe>
+            <div v-if="previewLoadError" class="preview-frame-error">
+              <span class="placeholder-icon">⚠</span>
+              <p>预览页面暂时无法加载</p>
+              <a-button type="primary" ghost @click="refreshPreview">重新加载</a-button>
+            </div>
+          </div>
+          <div v-else-if="isGenerating || previewStatus === 'checking'" class="preview-loading">
+            <a-spin size="large" />
+            <p>{{ isGenerating ? '正在生成页面，完成后会自动预览' : '正在检查可预览版本…' }}</p>
+          </div>
+          <div v-else class="preview-placeholder">
+            <div class="placeholder-icon">&lt;/&gt;</div>
+            <p>{{ messages.length ? '当前还没有可运行的页面版本' : '发送描述后，生成的页面会显示在这里' }}</p>
+            <a-button size="small" @click="refreshPreview">重新检查</a-button>
+          </div>
         </div>
       </div>
     </div>
@@ -430,6 +452,8 @@ const historyLoaded = ref(false)
 // 预览相关
 const previewUrl = ref('')
 const previewReady = ref(false)
+const previewStatus = ref<'checking' | 'ready' | 'missing'>('checking')
+const previewLoadError = ref(false)
 
 // 部署相关
 const deploying = ref(false)
@@ -1033,11 +1057,8 @@ const fetchAppInfo = async () => {
 
       // 先加载对话历史
       await loadChatHistory()
-      // 公开的已部署视图直接展示部署产物；控制台预览仍等待至少一轮对话。
-      const isPublishedView = String(route.query.view || '') === '1'
-      if (messages.value.length >= 2 || (isPublishedView && appInfo.value.deployKey)) {
-        updatePreview()
-      }
+      // 直接检查产物是否存在，避免有代码但历史记录未完整返回时空白预览。
+      await updatePreview()
       // 检查是否需要自动发送初始提示词
       // 只有在是自己的应用且没有对话历史时才自动发送
       if (
@@ -1232,7 +1253,7 @@ const generateCode = async (userMessage: string, aiMessageIndex: number, clientR
       // 延迟更新预览，确保后端已完成处理
       setTimeout(async () => {
         await fetchAppInfo()
-        updatePreview()
+        await updatePreview(5)
       }, 1000)
     })
 
@@ -1295,17 +1316,53 @@ const handleError = (error: unknown, aiMessageIndex: number) => {
 }
 
 // 更新预览
-const updatePreview = () => {
-  if (appId.value) {
-    const codeGenType = appInfo.value?.codeGenType || CodeGenTypeEnum.HTML
-    const isPublishedView = String(route.query.view || '') === '1'
-    const deployKey = appInfo.value?.deployKey
-    const newPreviewUrl = isPublishedView && deployKey
-      ? getStaticDeployPreviewUrl(deployKey)
-      : getStaticPreviewUrl(codeGenType, appId.value)
-    previewUrl.value = newPreviewUrl
-    previewReady.value = true
+const updatePreview = async (retries = 0) => {
+  if (!appId.value) {
+    previewStatus.value = 'missing'
+    return
   }
+
+  const codeGenType = appInfo.value?.codeGenType || CodeGenTypeEnum.HTML
+  const isPublishedView = String(route.query.view || '') === '1'
+  const deployKey = appInfo.value?.deployKey
+  const sourceUrl = isPublishedView && deployKey
+    ? getStaticDeployPreviewUrl(deployKey)
+    : getStaticPreviewUrl(codeGenType, String(appId.value))
+  const hadWorkingPreview = Boolean(previewUrl.value)
+  previewStatus.value = 'checking'
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const response = await fetch(sourceUrl, { method: 'HEAD', cache: 'no-store' })
+      if (response.ok) {
+        const separator = sourceUrl.includes('?') ? '&' : '?'
+        previewUrl.value = `${sourceUrl}${separator}v=${Date.now()}`
+        previewStatus.value = 'ready'
+        previewLoadError.value = false
+        previewReady.value = false
+        return
+      }
+    } catch (error) {
+      console.warn('检查应用预览失败：', error)
+      // 跨域配置可能禁止 HEAD 请求，仍尝试让浏览器直接加载预览页。
+      const separator = sourceUrl.includes('?') ? '&' : '?'
+      previewUrl.value = `${sourceUrl}${separator}v=${Date.now()}`
+      previewStatus.value = 'ready'
+      previewLoadError.value = false
+      previewReady.value = false
+      return
+    }
+
+    if (attempt < retries) {
+      await new Promise((resolve) => window.setTimeout(resolve, 800))
+    }
+  }
+
+  previewStatus.value = hadWorkingPreview ? 'ready' : 'missing'
+}
+
+const refreshPreview = () => {
+  void updatePreview(2)
 }
 
 const isNearBottom = () => {
@@ -1417,11 +1474,17 @@ const openDeployedSite = () => {
 // iframe加载完成
 const onIframeLoad = () => {
   previewReady.value = true
+  previewLoadError.value = false
   const iframe = document.querySelector('.preview-iframe') as HTMLIFrameElement
   if (iframe) {
     visualEditor.init(iframe)
     visualEditor.onIframeLoad()
   }
+}
+
+const onIframeError = () => {
+  previewReady.value = false
+  previewLoadError.value = true
 }
 
 // 编辑应用
@@ -1497,11 +1560,15 @@ onUnmounted(() => {
 
 <style scoped>
 #appChatPage {
-  height: 100vh;
+  height: min(860px, calc(100vh - 180px));
+  min-height: 620px;
   display: flex;
   flex-direction: column;
   padding: 16px;
-  background: #fdfdfd;
+  border: 1px solid rgba(226, 228, 235, 0.9);
+  border-radius: 22px;
+  background: rgba(250, 250, 252, 0.88);
+  box-shadow: 0 18px 50px rgba(32, 38, 56, 0.08);
 }
 
 /* 顶部栏 */
@@ -1509,7 +1576,8 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  min-height: 58px;
+  padding: 8px 8px 14px;
 }
 
 .header-left {
@@ -1537,6 +1605,7 @@ onUnmounted(() => {
 /* 主要内容区域 */
 .main-content {
   flex: 1;
+  min-height: 0;
   display: flex;
   gap: 16px;
   padding: 8px;
@@ -1546,11 +1615,14 @@ onUnmounted(() => {
 /* 左侧对话区域 */
 .chat-section {
   flex: 2;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9eaf0;
+  border-radius: 17px;
+  box-shadow: 0 6px 20px rgba(38, 43, 62, 0.045);
   overflow: hidden;
 }
 
@@ -1860,26 +1932,85 @@ onUnmounted(() => {
 /* 右侧预览区域 */
 .preview-section {
   flex: 3;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9eaf0;
+  border-radius: 17px;
+  box-shadow: 0 6px 20px rgba(38, 43, 62, 0.045);
   overflow: hidden;
 }
 
 .preview-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e8e8e8;
+  gap: 12px;
+  min-height: 66px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ececf1;
+  background: linear-gradient(180deg, #fff 0%, #fdfdfe 100%);
+}
+
+.preview-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.preview-heading-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #efdfd3;
+  border-radius: 11px;
+  background: #fbf5f0;
+  color: #a66846;
+  font-size: 16px;
 }
 
 .preview-header h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  color: #2b2e3a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.preview-heading-caption {
+  display: block;
+  margin-top: 2px;
+  color: #9a9eaa;
+  font-size: 10px;
+}
+
+.preview-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #a3785e;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.preview-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d8ac82;
+}
+
+.preview-status--ready {
+  color: #538763;
+}
+
+.preview-status--ready i {
+  background: #6bb77f;
+  box-shadow: 0 0 0 3px rgba(107, 183, 127, 0.13);
 }
 
 .preview-actions {
@@ -1889,8 +2020,22 @@ onUnmounted(() => {
 
 .preview-content {
   flex: 1;
+  min-height: 0;
   position: relative;
   overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(230, 232, 241, 0.34), transparent 55%),
+    #f7f8fa;
+}
+
+.preview-frame-wrap {
+  position: absolute;
+  inset: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e6eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(36, 41, 58, 0.08);
 }
 
 .preview-placeholder {
@@ -1899,12 +2044,25 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
+  gap: 2px;
+  padding: 24px;
+  color: #7b808e;
+  text-align: center;
 }
 
 .placeholder-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  margin-bottom: 12px;
+  border: 1px solid #e8e2de;
+  border-radius: 18px;
+  background: #fff;
+  color: #a96f4f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 20px;
+  box-shadow: 0 8px 24px rgba(38, 44, 62, 0.07);
 }
 
 .preview-loading {
@@ -1913,11 +2071,14 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
+  gap: 3px;
+  color: #777d8a;
+  text-align: center;
 }
 
 .preview-loading p {
-  margin-top: 16px;
+  margin: 12px 0 0;
+  font-size: 12px;
 }
 
 .preview-iframe {
@@ -1926,20 +2087,88 @@ onUnmounted(() => {
   border: none;
 }
 
+.preview-frame-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(250, 250, 252, 0.96);
+  color: #777d8a;
+}
+
+.preview-frame-error .placeholder-icon {
+  margin-bottom: 0;
+  color: #c18b4b;
+}
+
+.preview-frame-error p {
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+
 .selected-element-alert {
   margin: 0 16px;
 }
 
 /* 响应式设计 */
 @media (max-width: 1024px) {
+  #appChatPage {
+    height: auto;
+    min-height: calc(100vh - 180px);
+  }
+
   .main-content {
     flex-direction: column;
+    overflow: visible;
   }
 
   .chat-section,
   .preview-section {
     flex: none;
-    height: 50vh;
+    height: min(620px, 60vh);
+    min-height: 360px;
+  }
+}
+
+@media (max-width: 640px) {
+  #appChatPage {
+    min-height: calc(100vh - 150px);
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .header-bar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 4px 12px;
+  }
+
+  .header-right {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .header-right :deep(.ant-btn) {
+    flex: 1;
+  }
+
+  .preview-header {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+
+  .preview-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .preview-frame-wrap {
+    inset: 6px;
   }
 }
 

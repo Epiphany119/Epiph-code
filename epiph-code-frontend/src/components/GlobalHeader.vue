@@ -144,7 +144,7 @@ const onGlobalModeChange = (value: string | number) => {
 
 <style scoped>
 .header {
-  width: min(1240px, calc(100vw - 32px));
+  width: min(1360px, calc(100vw - 40px));
   height: 68px;
   line-height: 68px;
   margin: 16px auto 0;

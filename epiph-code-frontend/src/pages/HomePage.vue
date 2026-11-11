@@ -247,7 +247,7 @@ onMounted(() => {
             <span class="section-count">{{ myAppsPage.total }} 个应用</span>
           </div>
         </div>
-        <span class="section-note">你创建的应用会集中显示在这里</span>
+        <span class="section-note">生成后可直接查看页面预览，也能继续进入工作台编辑</span>
       </div>
 
       <div v-if="myApps.length" class="app-grid">
@@ -344,7 +344,7 @@ onMounted(() => {
   min-height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 23px;
 }
 
 .hero-section {
@@ -355,12 +355,16 @@ onMounted(() => {
   grid-template-columns: minmax(0, 0.92fr) minmax(440px, 1.08fr);
   align-items: center;
   gap: clamp(28px, 5vw, 64px);
+  min-height: 470px;
   padding: clamp(30px, 4.5vw, 58px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 28px;
   color: #fff;
-  background: linear-gradient(128deg, #1d2231 0%, #292b3b 56%, #3b3338 100%);
-  box-shadow: 0 28px 76px rgba(35, 38, 54, 0.18);
+  background:
+    radial-gradient(ellipse at 77% 18%, rgba(112, 124, 178, 0.25), transparent 36%),
+    radial-gradient(ellipse at 10% 100%, rgba(202, 128, 91, 0.12), transparent 42%),
+    linear-gradient(128deg, #191e2e 0%, #24293d 56%, #302d3a 100%);
+  box-shadow: 0 30px 82px rgba(35, 38, 54, 0.2);
 }
 
 .hero-section::before,
@@ -373,11 +377,11 @@ onMounted(() => {
 }
 
 .hero-section::before {
-  width: 480px;
-  height: 480px;
-  top: -260px;
-  right: 12%;
-  background: radial-gradient(circle, rgba(226, 157, 112, 0.27), transparent 68%);
+  width: 540px;
+  height: 540px;
+  top: -290px;
+  right: 10%;
+  background: radial-gradient(circle, rgba(226, 157, 112, 0.25), transparent 68%);
 }
 
 .hero-section::after {
@@ -671,11 +675,11 @@ onMounted(() => {
 
 .content-section {
   min-width: 0;
-  padding: 23px 25px;
-  border: 1px solid rgba(225, 228, 235, 0.9);
-  border-radius: 20px;
+  padding: 25px 27px;
+  border: 1px solid rgba(225, 228, 235, 0.86);
+  border-radius: 22px;
   background: var(--zc-bg-card);
-  box-shadow: var(--zc-shadow);
+  box-shadow: 0 12px 34px rgba(38, 44, 62, 0.055);
 }
 
 .section-head {
@@ -817,6 +821,7 @@ onMounted(() => {
   .hero-section {
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
+    min-height: 0;
     padding: 25px 20px 20px;
     border-radius: 22px;
   }

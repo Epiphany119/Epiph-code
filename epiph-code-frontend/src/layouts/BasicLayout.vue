@@ -20,7 +20,7 @@ import GlobalFooter from '@/components/GlobalFooter.vue'
 }
 
 .main-content {
-  width: min(1240px, calc(100vw - 32px));
+  width: min(1360px, calc(100vw - 40px));
   margin: 24px auto 0;
   padding-bottom: 24px;
   background: transparent;
