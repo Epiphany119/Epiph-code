@@ -71,6 +71,12 @@ public class App implements Serializable {
     @Column("deployedTime")
     private LocalDateTime deployedTime;
 
+    @Column("workingVersionId")
+    private Long workingVersionId;
+
+    @Column("deployedVersionId")
+    private Long deployedVersionId;
+
     /**
      * 优先级
      */

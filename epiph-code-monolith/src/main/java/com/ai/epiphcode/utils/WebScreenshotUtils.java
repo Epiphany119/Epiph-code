@@ -3,6 +3,7 @@ package com.ai.epiphcode.utils;
 import cn.hutool.core.img.ImgUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
+import com.ai.epiphcode.constant.AppConstant;
 import cn.hutool.core.util.StrUtil;
 import com.ai.epiphcode.exception.BusinessException;
 import com.ai.epiphcode.exception.ErrorCode;
@@ -134,7 +135,7 @@ public class WebScreenshotUtils {
         }
         try {
             // 创建临时目录
-            String rootPath = System.getProperty("user.dir") + File.separator + "tmp" + File.separator + "screenshots"
+            String rootPath = AppConstant.SCREENSHOT_ROOT_DIR
                     + File.separator + UUID.randomUUID().toString().substring(0, 8);
             FileUtil.mkdir(rootPath);
             // 图片后缀

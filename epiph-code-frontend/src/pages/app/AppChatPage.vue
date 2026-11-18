@@ -7,9 +7,14 @@
         <a-tag v-if="appInfo?.codeGenType" color="blue" class="code-gen-type-tag">
           {{ formatCodeGenType(appInfo.codeGenType) }}
         </a-tag>
+        <a-tag v-if="deployedVersion" color="green">线上 V{{ deployedVersion.versionNo }}</a-tag>
         <a-tag v-if="isWorkflowLocked" color="gold">工作流锁定</a-tag>
       </div>
       <div class="header-right">
+        <a-button v-if="isOwner || isAdmin" @click="versionsDrawerOpen = true">
+          网页版本
+          <a-tag v-if="workingVersion" color="blue">工作 V{{ workingVersion.versionNo }}</a-tag>
+        </a-button>
         <a-button type="default" @click="showAppDetail">
           <template #icon>
             <InfoCircleOutlined />
@@ -28,7 +33,7 @@
           </template>
           下载代码
         </a-button>
-        <a-button type="primary" @click="deployApp" :loading="deploying">
+        <a-button type="primary" @click="deployApp" :loading="deploying" :disabled="!(isOwner || isAdmin) || !workingVersion">
           <template #icon>
             <CloudUploadOutlined />
           </template>
@@ -126,6 +131,14 @@
                   <a-spin size="small" />
                   <span>AI 正在思考...</span>
                 </div>
+                <a-tag
+                  v-if="message.turnId && versionForTurn(message.turnId)"
+                  color="green"
+                  class="turn-version-tag"
+                  @click="previewTurnVersion(message.turnId)"
+                >
+                  生成了 V{{ versionForTurn(message.turnId)?.versionNo }}
+                </a-tag>
               </div>
             </div>
           </div>
@@ -211,6 +224,13 @@
                 </span>
               </div>
             </div>
+            <div v-if="isOwner && modificationBaseVersion" class="version-base-bar">
+              <span>
+                本轮修改基于 <strong>V{{ modificationBaseVersion.versionNo }}</strong>
+                <template v-if="previewVersion && String(previewVersion.id) !== String(modificationBaseVersion.id)"> · 正在预览 V{{ previewVersion.versionNo }}</template>
+              </span>
+              <a-button type="link" size="small" @click="versionsDrawerOpen = true">更换基线</a-button>
+            </div>
             <div class="input-agent-bar">
               <span class="input-agent-label">选择 Agent</span>
               <a-select v-model:value="selectedAgent" size="small" :disabled="isGenerating || !isOwner">
@@ -260,7 +280,10 @@
             <span class="preview-heading-icon">↗</span>
             <div>
               <h3>页面预览</h3>
-              <span class="preview-heading-caption">查看当前生成版本</span>
+              <span class="preview-heading-caption">
+                {{ previewVersion ? `预览 V${previewVersion.versionNo}` : '当前工作区' }}
+                <template v-if="previewVersion?.deployed"> · 线上版本</template>
+              </span>
             </div>
           </div>
           <span v-if="previewUrl" class="preview-status preview-status--ready">
@@ -336,17 +359,81 @@
         :deploy-url="deployUrl"
         @open-site="openDeployedSite"
     />
+
+    <a-drawer v-model:open="versionsDrawerOpen" title="网页版本" placement="right" width="460">
+      <div class="version-drawer-intro">
+        <span>每次成功生成都会保存为独立版本。切换预览不会更改修改基线。</span>
+        <a-button size="small" @click="refreshVersions" :loading="loadingVersions">刷新</a-button>
+      </div>
+      <a-alert v-if="modificationBaseVersion" type="info" show-icon class="version-current-base">
+        <template #message>当前修改基线：V{{ modificationBaseVersion.versionNo }}</template>
+      </a-alert>
+      <a-empty v-if="!versions.length && !loadingVersions" description="还没有网页版本" />
+      <a-spin v-else-if="loadingVersions" />
+      <div v-else class="version-list">
+        <div v-for="version in versions" :key="version.id" class="version-item">
+          <div class="version-item-heading">
+            <strong>V{{ version.versionNo }}</strong>
+            <a-tag v-if="version.working" color="blue">工作版本</a-tag>
+            <a-tag v-if="version.deployed" color="green">线上版本</a-tag>
+            <a-tag v-if="String(previewVersionId) === String(version.id)" color="purple">正在预览</a-tag>
+          </div>
+          <div class="version-item-time">{{ formatVersionTime(version.createTime) }} · {{ formatVersionType(version.versionType) }}</div>
+          <div v-if="version.userPrompt" class="version-item-prompt">{{ version.userPrompt }}</div>
+          <div class="version-item-meta">
+            <span v-if="version.parentVersionId">基于 V{{ versionNoById(version.parentVersionId) }}</span>
+            <span>{{ formatBytes(version.totalBytes) }}</span>
+            <span v-if="version.agent">{{ version.agent === 'deepseek' ? 'DeepSeek Flash' : '默认 Agent' }}</span>
+          </div>
+          <div class="version-item-actions">
+            <a-button size="small" @click="selectPreviewVersion(version)">预览</a-button>
+            <a-button size="small" :disabled="isGenerating" @click="setModificationBase(version)">基于此版本修改</a-button>
+            <a-button size="small" :disabled="!isOwner" @click="openVersionCompare(version)">比较</a-button>
+            <a-button size="small" type="primary" ghost :loading="deploying && deployingVersionId === version.id" :disabled="!(isOwner || isAdmin)" @click="deployVersion(version)">部署此版</a-button>
+          </div>
+        </div>
+      </div>
+      <a-divider v-if="deploymentHistory.length" orientation="left">部署记录</a-divider>
+      <div v-if="deploymentHistory.length" class="deployment-history-list">
+        <div v-for="record in deploymentHistory" :key="record.id" class="deployment-history-item">
+          <a-tag color="green">发布 V{{ record.versionNo }}</a-tag>
+          <span>{{ formatVersionTime(record.deployedTime) }}</span>
+        </div>
+      </div>
+    </a-drawer>
+
+    <a-modal v-model:open="compareModalOpen" title="版本比较" width="820px" :footer="null">
+      <div class="version-compare-controls">
+        <a-select v-model:value="compareLeftVersionId" style="min-width: 150px" placeholder="旧版本">
+          <a-select-option v-for="version in versions" :key="version.id" :value="version.id">V{{ version.versionNo }}</a-select-option>
+        </a-select>
+        <span>对比</span>
+        <a-select v-model:value="compareRightVersionId" style="min-width: 150px" placeholder="新版本">
+          <a-select-option v-for="version in versions" :key="version.id" :value="version.id">V{{ version.versionNo }}</a-select-option>
+        </a-select>
+        <a-button type="primary" :loading="loadingCompare" @click="loadVersionCompare">比较</a-button>
+      </div>
+      <a-empty v-if="compareFiles.length === 0 && !loadingCompare" description="没有文件差异或尚未比较" />
+      <a-collapse v-else :bordered="false">
+        <a-collapse-panel v-for="file in compareFiles" :key="file.path" :header="`${file.path} · ${file.status} · ${file.oldBytes ?? '—'}B → ${file.newBytes ?? '—'}B`">
+          <pre class="version-diff">{{ file.unifiedDiff }}</pre>
+        </a-collapse-panel>
+      </a-collapse>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import {
   getAppVoById,
   deployApp as deployAppApi,
+  listAppVersions,
+  listAppDeploymentHistory,
+  compareAppVersions,
   deleteApp as deleteAppApi,
 } from '@/api/appController'
 import { listAppChatHistory, listTurnEvents } from '@/api/chatHistoryController'
@@ -363,7 +450,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import AppDetailModal from '@/components/AppDetailModal.vue'
 import DeploySuccessModal from '@/components/DeploySuccessModal.vue'
 import aiAvatar from '@/assets/aiAvatar.svg'
-import { API_BASE_URL, getStaticDeployPreviewUrl, getStaticPreviewUrl } from '@/config/env'
+import { API_BASE_URL, getStaticPreviewUrl, getStaticVersionPreviewUrl } from '@/config/env'
 import { VisualEditor, type ElementInfo } from '@/utils/visualEditor'
 
 import {
@@ -384,6 +471,40 @@ const appInfo = ref<API.AppVO>()
 const appId = ref<any>()
 const isWorkflowLocked = ref(false)
 const chatMetrics = ref<ChatMetrics>()
+const versions = ref<API.AppVersionVO[]>([])
+const deploymentHistory = ref<API.AppDeploymentHistoryVO[]>([])
+const versionsDrawerOpen = ref(false)
+const loadingVersions = ref(false)
+const previewVersionId = ref<string>()
+const baseVersionId = ref<string>()
+const deployingVersionId = ref<string>()
+const compareModalOpen = ref(false)
+const compareLeftVersionId = ref<string>()
+const compareRightVersionId = ref<string>()
+const compareFiles = ref<API.AppVersionFileChangeVO[]>([])
+const loadingCompare = ref(false)
+
+const workingVersion = computed(() => versions.value.find(version => version.working))
+const deployedVersion = computed(() => versions.value.find(version => version.deployed))
+const previewVersion = computed(() => versions.value.find(version => String(version.id) === String(previewVersionId.value)))
+const modificationBaseVersion = computed(() => versions.value.find(version => String(version.id) === String(baseVersionId.value)))
+
+const versionForTurn = (turnId: string) => versions.value.find(version => version.turnId === turnId)
+const previewTurnVersion = (turnId?: string) => {
+  if (!turnId) return
+  const version = versionForTurn(turnId)
+  if (version) void selectPreviewVersion(version)
+}
+const versionNoById = (id?: string) => versions.value.find(version => String(version.id) === String(id))?.versionNo ?? '未知'
+const formatVersionTime = (value?: string) => value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '时间未知'
+const formatVersionType = (value?: string) => value === 'GENERATED' ? '对话生成'
+  : value === 'LEGACY_DEPLOYED' ? '历史部署基线' : value === 'LEGACY_BASELINE' ? '历史代码基线' : '网页版本'
+const formatBytes = (value?: number) => {
+  if (value === undefined || value === null) return '大小未知'
+  if (value < 1024) return `${value} B`
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`
+  return `${(value / 1024 / 1024).toFixed(1)} MB`
+}
 
 const formatMetricTokens = (value?: number | null) => {
   if (value === undefined || value === null) return '暂无数据'
@@ -1138,6 +1259,132 @@ const loadMoreHistory = async () => {
   await loadChatHistory(true)
 }
 
+const refreshVersions = async (selectWorking = false, versionIdsBeforeTurn?: Set<string>) => {
+  if (!appId.value || (!isOwner.value && !isAdmin.value)) return
+  loadingVersions.value = true
+  try {
+    const [response, historyResponse] = await Promise.all([
+      listAppVersions({ appId: String(appId.value) }),
+      listAppDeploymentHistory({ appId: String(appId.value) }),
+    ])
+    if (response.data.code !== 0) throw new Error(response.data.message || '读取版本列表失败')
+    versions.value = response.data.data || []
+    deploymentHistory.value = historyResponse.data.code === 0 ? historyResponse.data.data || [] : []
+    const currentWorking = versions.value.find(version => version.working)
+    const currentDeployed = versions.value.find(version => version.deployed)
+    if (appInfo.value) {
+      appInfo.value.workingVersionId = currentWorking?.id
+      appInfo.value.deployedVersionId = currentDeployed?.id
+    }
+    if (selectWorking || !previewVersionId.value || !versions.value.some(version => String(version.id) === String(previewVersionId.value))) {
+      previewVersionId.value = currentWorking?.id || currentDeployed?.id
+    }
+    if (selectWorking || !baseVersionId.value || !versions.value.some(version => String(version.id) === String(baseVersionId.value))) {
+      baseVersionId.value = currentWorking?.id
+    }
+    const baseStorageKey = `epiph-code:app:${appId.value}:base-version`
+    if (baseVersionId.value) localStorage.setItem(baseStorageKey, baseVersionId.value)
+    else localStorage.removeItem(baseStorageKey)
+    if (selectWorking) {
+      const latestTurnVersion = versions.value.find(version => version.turnId
+        && version.versionType === 'GENERATED'
+        && (!versionIdsBeforeTurn || !versionIdsBeforeTurn.has(String(version.id))))
+      const latestUnlinkedReply = [...messages.value].reverse().find(item => item.type === 'ai' && !item.turnId && !item.loading)
+      if (latestTurnVersion?.turnId && latestUnlinkedReply) latestUnlinkedReply.turnId = latestTurnVersion.turnId
+    }
+  } catch (error) {
+    console.error('读取版本列表失败：', error)
+    message.error(error instanceof Error ? error.message : '读取版本列表失败')
+  } finally {
+    loadingVersions.value = false
+  }
+}
+
+const selectPreviewVersion = async (version: API.AppVersionVO) => {
+  if (!version.id) return
+  previewVersionId.value = String(version.id)
+  await updatePreview(2)
+}
+
+const setModificationBase = (version: API.AppVersionVO) => {
+  if (!version.id) return
+  baseVersionId.value = String(version.id)
+  localStorage.setItem(`epiph-code:app:${appId.value}:base-version`, baseVersionId.value)
+  message.success(`后续修改将基于 V${version.versionNo}`)
+}
+
+const openVersionCompare = (version: API.AppVersionVO) => {
+  if (!version.id || versions.value.length < 2) {
+    message.info('至少需要两个网页版本才能比较')
+    return
+  }
+  compareLeftVersionId.value = String(version.id)
+  compareRightVersionId.value = String(
+    (versions.value.find(item => item.working && String(item.id) !== String(version.id))
+      || versions.value.find(item => String(item.id) !== String(version.id)))?.id || '',
+  )
+  compareFiles.value = []
+  compareModalOpen.value = true
+  void loadVersionCompare()
+}
+
+const loadVersionCompare = async () => {
+  if (!appId.value || !compareLeftVersionId.value || !compareRightVersionId.value) return
+  loadingCompare.value = true
+  try {
+    const response = await compareAppVersions({
+      appId: String(appId.value),
+      leftVersionId: compareLeftVersionId.value,
+      rightVersionId: compareRightVersionId.value,
+    })
+    if (response.data.code !== 0) throw new Error(response.data.message || '比较版本失败')
+    compareFiles.value = response.data.data?.files || []
+  } catch (error) {
+    console.error('比较版本失败：', error)
+    message.error(error instanceof Error ? error.message : '比较版本失败')
+  } finally {
+    loadingCompare.value = false
+  }
+}
+
+const deployVersion = (version: API.AppVersionVO) => {
+  if (!version.id || !appId.value) return
+  Modal.confirm({
+    title: `部署网页版本 V${version.versionNo}？`,
+    content: version.userPrompt ? `本次版本：${version.userPrompt.slice(0, 120)}` : '线上网页将切换到此版本。',
+    okText: '部署此版本',
+    cancelText: '取消',
+    onOk: async () => {
+      deploying.value = true
+      deployingVersionId.value = String(version.id)
+      try {
+        const response = await deployAppApi({ appId: String(appId.value), versionId: String(version.id) })
+        if (response.data.code !== 0 || !response.data.data) throw new Error(response.data.message || '部署失败')
+        deployUrl.value = response.data.data
+        if (appInfo.value) appInfo.value.deployedVersionId = String(version.id)
+        deployModalVisible.value = true
+        message.success(`V${version.versionNo} 已部署`)
+        await refreshVersions()
+      } catch (error) {
+        console.error('部署版本失败：', error)
+        message.error(error instanceof Error ? error.message : '部署失败，请重试')
+      } finally {
+        deploying.value = false
+        deployingVersionId.value = undefined
+      }
+    },
+  })
+}
+
+const deployApp = () => {
+  const version = workingVersion.value
+  if (!version) {
+    message.warning('当前还没有可部署的网页版本')
+    return
+  }
+  deployVersion(version)
+}
+
 // 获取应用信息
 const fetchAppInfo = async () => {
   const id = route.params.id as string
@@ -1148,13 +1395,18 @@ const fetchAppInfo = async () => {
   }
 
   appId.value = id
+  baseVersionId.value = localStorage.getItem(`epiph-code:app:${id}:base-version`) || undefined
   isWorkflowLocked.value = isAppWorkflowModeLocked(id)
 
   try {
     const res = await getAppVoById({ id: id as unknown as number })
     if (res.data.code === 0 && res.data.data) {
       appInfo.value = res.data.data
+      if (!isOwner.value && appInfo.value.deployedVersionId) {
+        previewVersionId.value = appInfo.value.deployedVersionId
+      }
       await refreshChatMetrics()
+      await refreshVersions()
 
       // 先加载对话历史
       await loadChatHistory()
@@ -1261,6 +1513,7 @@ const sendMessage = async () => {
 const generateCode = async (userMessage: string, aiMessageIndex: number, clientRequestId: string) => {
   let eventSource: EventSource | null = null
   let streamCompleted = false
+  const versionIdsBeforeTurn = new Set(versions.value.map(version => String(version.id)))
 
   try {
     // 获取 axios 配置的 baseURL
@@ -1274,6 +1527,7 @@ const generateCode = async (userMessage: string, aiMessageIndex: number, clientR
       agent: selectedAgent.value,
       clientRequestId,
     })
+    if (baseVersionId.value) params.set('baseVersionId', baseVersionId.value)
     if (appId.value && getCurrentGenerationMode() === 'workflow') {
       lockAppWorkflowMode(appId.value)
       isWorkflowLocked.value = true
@@ -1342,7 +1596,7 @@ const generateCode = async (userMessage: string, aiMessageIndex: number, clientR
     }
 
     // 处理done事件
-    eventSource.addEventListener('done', function () {
+    eventSource.addEventListener('done', async function () {
       if (streamCompleted) return
 
       streamCompleted = true
@@ -1353,17 +1607,16 @@ const generateCode = async (userMessage: string, aiMessageIndex: number, clientR
         completedMessage.content = '本轮生成已结束，但没有收到模型文本回复。请查看预览或重试。'
       }
       completedMessage.loading = false
-      isGenerating.value = false
       eventSource?.close()
       void refreshChatMetrics()
 
-      // 延迟更新预览，确保后端已完成处理
-      setTimeout(async () => {
-        if (appInfo.value?.deployKey) {
-          await syncDeployedVersion()
-        }
+      // done 到达时后端已完成版本落库；先同步工作版本和修改基线，再允许下一轮输入。
+      try {
+        await refreshVersions(true, versionIdsBeforeTurn)
         await updatePreview(5)
-      }, 1000)
+      } finally {
+        isGenerating.value = false
+      }
     })
 
     // 处理business-error事件（后端限流等错误）
@@ -1432,10 +1685,8 @@ const updatePreview = async (retries = 0) => {
   }
 
   const codeGenType = appInfo.value?.codeGenType || CodeGenTypeEnum.HTML
-  const isPublishedView = String(route.query.view || '') === '1'
-  const deployKey = appInfo.value?.deployKey
-  const sourceUrl = isPublishedView && deployKey
-    ? getStaticDeployPreviewUrl(deployKey)
+  const sourceUrl = previewVersionId.value
+    ? getStaticVersionPreviewUrl(previewVersionId.value)
     : getStaticPreviewUrl(codeGenType, String(appId.value))
   const hadWorkingPreview = Boolean(previewUrl.value)
   previewStatus.value = 'checking'
@@ -1535,52 +1786,6 @@ const downloadCode = async () => {
     message.error('下载失败，请重试')
   } finally {
     downloading.value = false
-  }
-}
-
-// 部署应用
-const syncDeployedVersion = async () => {
-  if (!appId.value || !appInfo.value?.deployKey) return
-
-  deploying.value = true
-  try {
-    const res = await deployAppApi({ appId: appId.value as unknown as number })
-    if (res.data.code !== 0 || !res.data.data) {
-      throw new Error(res.data.message || '部署同步失败')
-    }
-    message.success('已部署版本已同步')
-  } catch (error) {
-    console.error('已部署版本同步失败：', error)
-    message.warning('代码已更新，但线上版本同步失败，请点击“部署”重试')
-  } finally {
-    deploying.value = false
-  }
-}
-
-const deployApp = async () => {
-  if (!appId.value) {
-    message.error('应用ID不存在')
-    return
-  }
-
-  deploying.value = true
-  try {
-    const res = await deployAppApi({
-      appId: appId.value as unknown as number,
-    })
-
-    if (res.data.code === 0 && res.data.data) {
-      deployUrl.value = res.data.data
-      deployModalVisible.value = true
-      message.success('部署成功')
-    } else {
-      message.error('部署失败：' + res.data.message)
-    }
-  } catch (error) {
-    console.error('部署失败：', error)
-    message.error('部署失败，请重试')
-  } finally {
-    deploying.value = false
   }
 }
 
@@ -2499,5 +2704,123 @@ onUnmounted(() => {
     background-color: #73d13d !important;
     border-color: #73d13d !important;
   }
+}
+
+.version-base-bar,
+.version-drawer-intro,
+.version-item-heading,
+.version-item-meta,
+.version-item-actions,
+.version-compare-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.version-base-bar {
+  justify-content: space-between;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  border: 1px solid #e8eaf0;
+  border-radius: 10px;
+  color: #697386;
+  font-size: 12px;
+}
+
+.version-base-bar strong {
+  color: #385db7;
+}
+
+.turn-version-tag {
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.version-drawer-intro {
+  justify-content: space-between;
+  color: #737b8b;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.version-current-base {
+  margin-bottom: 14px;
+}
+
+.version-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.version-item {
+  padding: 14px;
+  border: 1px solid #e8eaf0;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.version-item-heading strong {
+  font-size: 16px;
+  color: #262b37;
+}
+
+.version-item-time,
+.version-item-meta {
+  margin-top: 7px;
+  color: #7c8494;
+  font-size: 12px;
+}
+
+.version-item-prompt {
+  margin-top: 8px;
+  color: #424958;
+  font-size: 13px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.version-item-meta {
+  flex-wrap: wrap;
+}
+
+.version-item-actions {
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.version-compare-controls {
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.version-diff {
+  max-height: 360px;
+  overflow: auto;
+  padding: 12px;
+  margin: 0;
+  border-radius: 8px;
+  background: #171b24;
+  color: #e5e9f0;
+  font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.deployment-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deployment-history-item {
+  display: flex;
+  align-items: center;
+  color: #737b8b;
+  font-size: 12px;
 }
 </style>

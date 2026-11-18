@@ -28,6 +28,14 @@ public class TurnAccumulator {
 
     private final String userMessage;
 
+    private final Long baseVersionId;
+
+    private volatile Long createdVersionId;
+
+    private volatile Integer createdVersionNo;
+
+    private boolean versionLockHeld = true;
+
     private final StringBuilder assistantBuilder = new StringBuilder();
 
     private final StringBuilder thinkingBuilder = new StringBuilder();
@@ -44,6 +52,11 @@ public class TurnAccumulator {
 
     public TurnAccumulator(long appId, long userId, String memoryId, String turnId, String codeGenType,
                            String userMessage, String agent) {
+        this(appId, userId, memoryId, turnId, codeGenType, userMessage, agent, null);
+    }
+
+    public TurnAccumulator(long appId, long userId, String memoryId, String turnId, String codeGenType,
+                           String userMessage, String agent, Long baseVersionId) {
         this.appId = appId;
         this.userId = userId;
         this.memoryId = memoryId;
@@ -51,6 +64,18 @@ public class TurnAccumulator {
         this.codeGenType = codeGenType;
         this.userMessage = userMessage;
         this.agent = agent;
+        this.baseVersionId = baseVersionId;
+    }
+
+    public void setCreatedVersion(Long versionId, Integer versionNo) {
+        this.createdVersionId = versionId;
+        this.createdVersionNo = versionNo;
+    }
+
+    public synchronized boolean releaseVersionLockOnce() {
+        if (!versionLockHeld) return false;
+        versionLockHeld = false;
+        return true;
     }
 
     public synchronized boolean beginFlush() {

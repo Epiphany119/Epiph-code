@@ -110,6 +110,34 @@ export async function deployApp(body: API.AppDeployRequest, options?: { [key: st
   })
 }
 
+export async function listAppVersions(params: { appId: number | string }, options?: { [key: string]: any }) {
+  return request<API.BaseResponseAppVersionVO>('/app/versions', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  })
+}
+
+export async function compareAppVersions(params: {
+  appId: number | string
+  leftVersionId: number | string
+  rightVersionId: number | string
+}, options?: { [key: string]: any }) {
+  return request<API.BaseResponseAppVersionCompareVO>('/app/versions/compare', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  })
+}
+
+export async function listAppDeploymentHistory(params: { appId: number | string }, options?: { [key: string]: any }) {
+  return request<API.BaseResponseAppDeploymentHistoryVO>('/app/versions/deployments', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 GET /app/download/${param0} */
 export async function downloadAppCode(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

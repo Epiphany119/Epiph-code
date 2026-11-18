@@ -7,11 +7,11 @@ public interface ScreenshotService {
 
 
     /**
-     * 通用的截图服务，可以得到访问地址
+     * 生成截图并返回本地静态资源地址
      *
      * @param webUrl 网址
-     * @return
+     * @return 本地静态资源 URL
      */
-    String generateAndUploadScreenshot(String webUrl);
+    String generateScreenshotUrl(String webUrl);
 
 }

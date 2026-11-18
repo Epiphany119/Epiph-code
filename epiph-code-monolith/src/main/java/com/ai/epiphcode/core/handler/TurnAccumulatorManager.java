@@ -22,7 +22,13 @@ public class TurnAccumulatorManager {
 
     public void startTurn(long appId, long userId, String memoryId, String turnId, String codeGenType,
                           String userMessage, String agent) {
-        TurnAccumulator accumulator = new TurnAccumulator(appId, userId, memoryId, turnId, codeGenType, userMessage, agent);
+        startTurn(appId, userId, memoryId, turnId, codeGenType, userMessage, agent, null);
+    }
+
+    public void startTurn(long appId, long userId, String memoryId, String turnId, String codeGenType,
+                          String userMessage, String agent, Long baseVersionId) {
+        TurnAccumulator accumulator = new TurnAccumulator(appId, userId, memoryId, turnId, codeGenType,
+                userMessage, agent, baseVersionId);
         turnAccumulatorMap.put(turnId, accumulator);
     }
 

@@ -22,6 +22,11 @@ export const getStaticDeployPreviewUrl = (deployKey: string) => {
   return `${STATIC_BASE_URL.replace(/\/+$/, '')}/${encodeURIComponent(deployKey)}/`
 }
 
+/** Preview an immutable, owner-authorized version snapshot. */
+export const getStaticVersionPreviewUrl = (versionId: number | string) => {
+  return `${STATIC_BASE_URL.replace(/\/+$/, '')}/version/${encodeURIComponent(String(versionId))}/`
+}
+
 // 获取静态资源预览URL
 export const getStaticPreviewUrl = (codeGenType: string, appId: string) => {
   const baseUrl = `${STATIC_BASE_URL}/${codeGenType}_${appId}/`

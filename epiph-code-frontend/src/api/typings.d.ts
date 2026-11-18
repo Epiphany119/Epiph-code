@@ -11,7 +11,8 @@ declare namespace API {
   }
 
   type AppDeployRequest = {
-    appId?: number
+    appId?: number | string
+    versionId?: number | string
   }
 
   type AppQueryRequest = {
@@ -42,6 +43,10 @@ declare namespace API {
     codeGenType?: string
     deployKey?: string
     deployedTime?: string
+    workingVersionId?: string
+    deployedVersionId?: string
+    workingVersionNo?: number
+    deployedVersionNo?: number
     priority?: number
     userId?: number
     createTime?: string
@@ -129,8 +134,8 @@ declare namespace API {
   }
 
   type ChatEventLog = {
-    id?: number
-    appId?: number
+    id?: string
+    appId?: string
     memoryId?: string
     turnId?: string
     seq?: number
@@ -169,6 +174,64 @@ declare namespace API {
     mode?: string
     agent?: string
     clientRequestId?: string
+    baseVersionId?: number | string
+  }
+
+  type AppVersionVO = {
+    id?: string
+    appId?: string
+    versionNo?: number
+    parentVersionId?: string
+    turnId?: string
+    userPrompt?: string
+    agent?: string
+    codeGenType?: string
+    versionType?: string
+    totalBytes?: number
+    createTime?: string
+    working?: boolean
+    deployed?: boolean
+  }
+
+  type AppVersionFileChangeVO = {
+    path?: string
+    status?: 'ADDED' | 'DELETED' | 'MODIFIED'
+    oldBytes?: number
+    newBytes?: number
+    unifiedDiff?: string
+  }
+
+  type AppVersionCompareVO = {
+    leftVersionId?: string
+    rightVersionId?: string
+    files?: AppVersionFileChangeVO[]
+  }
+
+  type AppDeploymentHistoryVO = {
+    id?: string
+    versionId?: string
+    versionNo?: number
+    deployKey?: string
+    deployedBy?: string
+    deployedTime?: string
+  }
+
+  type BaseResponseAppDeploymentHistoryVO = {
+    code?: number
+    data?: AppDeploymentHistoryVO[]
+    message?: string
+  }
+
+  type BaseResponseAppVersionVO = {
+    code?: number
+    data?: AppVersionVO[]
+    message?: string
+  }
+
+  type BaseResponseAppVersionCompareVO = {
+    code?: number
+    data?: AppVersionCompareVO
+    message?: string
   }
 
   type DeleteRequest = {

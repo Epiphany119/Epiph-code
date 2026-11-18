@@ -18,12 +18,16 @@ import com.ai.epiphcode.model.entity.ChatEventLog;
 import com.ai.epiphcode.model.entity.User;
 import com.ai.epiphcode.model.enums.CodeGenTypeEnum;
 import com.ai.epiphcode.model.vo.AppVO;
+import com.ai.epiphcode.model.vo.AppVersionVO;
+import com.ai.epiphcode.model.vo.AppVersionCompareVO;
+import com.ai.epiphcode.model.vo.AppDeploymentHistoryVO;
 import com.ai.epiphcode.ratelimiter.anotation.RateLimit;
 import com.ai.epiphcode.ratelimiter.enms.RateLimitType;
 import com.ai.epiphcode.service.AppService;
 import com.ai.epiphcode.service.ChatEventLogService;
 import com.ai.epiphcode.service.ContextCompactionService;
 import com.ai.epiphcode.service.ProjectDownloadService;
+import com.ai.epiphcode.service.impl.AppVersionService;
 import com.ai.epiphcode.service.UserService;
 import com.mybatisflex.core.paginate.Page;
 
@@ -69,6 +73,8 @@ public class AppController {
     private ContextCompactionService contextCompactionService;
     @Autowired
     private ChatEventLogService chatEventLogService;
+    @Resource
+    private AppVersionService appVersionService;
     @Resource
     private RedissonClient redissonClient;
     @Resource
@@ -419,6 +425,7 @@ public class AppController {
                                                        @RequestParam(defaultValue = "classic") String mode,
                                                        @RequestParam(defaultValue = "default") String agent,
                                                        @RequestParam(required = false) String clientRequestId,
+                                                       @RequestParam(required = false) Long baseVersionId,
                                                        HttpServletRequest request) {
         // 参数校验
         ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
@@ -427,8 +434,8 @@ public class AppController {
         User loginUser = userService.getLoginUser(request);
         // 浏览器 EventSource 断线自动重连会重复发起同一 URL，这里用 clientRequestId 做幂等防重
         if (StrUtil.isNotBlank(clientRequestId)) {
-            String dedupeKey = String.format("sse:chat:dedupe:%d:%d:%s:%s:%s",
-                    loginUser.getId(), appId, clientRequestId, mode, agent);
+            String dedupeKey = String.format("sse:chat:dedupe:%d:%d:%s:%s:%s:%s",
+                    loginUser.getId(), appId, clientRequestId, mode, agent, baseVersionId);
             RBucket<String> bucket = redissonClient.getBucket(dedupeKey);
             boolean firstRequest = bucket.trySet("1", 30, TimeUnit.MINUTES);
             if (!firstRequest) {
@@ -441,7 +448,7 @@ public class AppController {
             }
         }
         // 调用服务生成代码（流式）
-        Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser, mode, agent);
+        Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser, mode, agent, baseVersionId);
         // 转换为 ServerSentEvent 格式
         return contentFlux
                 .map(chunk -> {
@@ -459,6 +466,38 @@ public class AppController {
                                 .data("")
                                 .build()
                 ));
+    }
+
+    @GetMapping("/versions")
+    public BaseResponse<List<AppVersionVO>> listAppVersions(@RequestParam Long appId, HttpServletRequest request) {
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 无效");
+        User loginUser = userService.getLoginUser(request);
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+        return ResultUtils.success(appVersionService.listVersions(app, loginUser));
+    }
+
+    @GetMapping("/versions/compare")
+    public BaseResponse<AppVersionCompareVO> compareAppVersions(@RequestParam Long appId,
+                                                                 @RequestParam Long leftVersionId,
+                                                                 @RequestParam Long rightVersionId,
+                                                                 HttpServletRequest request) {
+        ThrowUtils.throwIf(appId == null || appId <= 0 || leftVersionId == null || rightVersionId == null,
+                ErrorCode.PARAMS_ERROR, "比较参数无效");
+        User loginUser = userService.getLoginUser(request);
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+        return ResultUtils.success(appVersionService.compare(app, loginUser, leftVersionId, rightVersionId));
+    }
+
+    @GetMapping("/versions/deployments")
+    public BaseResponse<List<AppDeploymentHistoryVO>> listAppDeployments(@RequestParam Long appId,
+                                                                          HttpServletRequest request) {
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 无效");
+        User loginUser = userService.getLoginUser(request);
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+        return ResultUtils.success(appVersionService.listDeploymentHistory(app, loginUser));
     }
 
 
@@ -539,10 +578,12 @@ public class AppController {
         Long appId = appDeployRequest.getAppId();
         // 检查应用 ID 是否为空
         ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        ThrowUtils.throwIf(appDeployRequest.getVersionId() == null || appDeployRequest.getVersionId() <= 0,
+                ErrorCode.PARAMS_ERROR, "请选择要部署的网页版本");
         // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
         // 调用服务部署应用
-        String deployUrl = appService.deployApp(appId, loginUser);
+        String deployUrl = appService.deployApp(appId, loginUser, appDeployRequest.getVersionId());
         // 返回部署 URL
         return ResultUtils.success(deployUrl);
     }

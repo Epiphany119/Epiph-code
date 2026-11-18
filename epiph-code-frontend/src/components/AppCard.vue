@@ -51,6 +51,12 @@
             <span class="app-state-dot"></span>
             {{ app.deployKey ? '已部署' : hasLivePreview ? '可预览' : '进行中' }}
           </span>
+          <span v-if="app.deployedVersionNo" class="app-version-badge app-version-badge--deployed">
+            线上 V{{ app.deployedVersionNo }}
+          </span>
+          <span v-else-if="app.workingVersionNo" class="app-version-badge">
+            工作 V{{ app.workingVersionNo }}
+          </span>
         </div>
       </div>
       <span class="card-arrow" aria-hidden="true">↗</span>
@@ -60,7 +66,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { getStaticPreviewUrl } from '@/config/env'
+import { getStaticPreviewUrl, getStaticVersionPreviewUrl } from '@/config/env'
 
 interface Props {
   app: API.AppVO
@@ -82,6 +88,12 @@ const previewRevision = ref(Date.now())
 let checkId = 0
 
 const previewUrl = computed(() => {
+  if (props.app.deployedVersionId) {
+    return getStaticVersionPreviewUrl(props.app.deployedVersionId)
+  }
+  if (props.app.workingVersionId) {
+    return getStaticVersionPreviewUrl(props.app.workingVersionId)
+  }
   if (!props.app.id || !props.app.codeGenType) {
     return ''
   }
@@ -336,6 +348,20 @@ const handleViewWork = () => {
 }
 
 .app-state--published {
+  color: #548663;
+}
+
+.app-version-badge {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #f1f2f6;
+  color: #727786;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.app-version-badge--deployed {
+  background: #edf6ef;
   color: #548663;
 }
 

@@ -7,6 +7,7 @@ import com.ai.epiphcode.service.impl.TurnFlushService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.SignalType;
 
 /**
  * 简单文本流处理器
@@ -45,6 +46,11 @@ public class SimpleTextStreamHandler {
                 .doOnError(error -> {
                     // 失败也统一落库
                     turnFlushService.flushError(turnId, error.getMessage());
+                })
+                .doFinally(signalType -> {
+                    if (signalType == SignalType.CANCEL && turnAccumulatorManager.get(turnId) != null) {
+                        turnFlushService.flushError(turnId, "生成请求已中断");
+                    }
                 });
     }
 }

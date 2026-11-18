@@ -20,6 +20,7 @@ spring:
 
 app:
   # 本机开发默认走后端静态资源接口；部署到服务器时改为用户可访问的域名和路径
+  screenshot-base-url: ${EPIPH_CODE_SCREENSHOT_BASE_URL:http://localhost:8123/api/static}
   deploy-base-url: ${EPIPH_CODE_DEPLOY_BASE_URL:http://localhost:8123/api/static}
 
 server:

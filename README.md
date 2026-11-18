@@ -48,7 +48,7 @@ Epiph-code Studio 是一个以工程化为目标的 AI 代码生成平台。
 
 - **流式可观测**：SSE 实时推送`思考过程`、`工具调用`、`计划更新`、`最终回复`四类事件，前端分层渲染，生成过程全程可见。
 
-- **生成-修改-部署闭环**：支持 `HTML / 多文件 / Vue 工程`三种代码类型生成，可视化选中元素定点修改，生成后自动构建并部署到本地可访问地址。
+- **网页版本迭代**：支持 `HTML / 多文件 / Vue 工程`三种代码类型；成功生成后保存不可变版本，用户可在对话中预览、比较、选择修改基线并部署指定版本。应用封面截图默认本地保存，不要求 COS。
 
 ---
 
@@ -64,7 +64,7 @@ Epiph-code Studio 是一个以工程化为目标的 AI 代码生成平台。
 - 做了`微服务支持`：按`应用服务`、`用户服务`、`截图服务`做了微服务拆分，并基于 `Dubbo + Nacos` 实现服务注册发现与远程调用。
 - 做了`过程可视化`：前端分层展示`思考过程`、`工具调用`、`最终回复`。
 - 做了`局部修改能力`：前端支持选取局部元素修改
-- 做了`本地部署闭环`：生成后自动构建并发布到本地可访问地址。
+- 做了`本地版本部署`：生成后保存为新版本，用户明确选择版本后发布到稳定访问地址。
 - 做了`可视化编辑`：在预览页点选元素，带`选择器`发起定点修改。
 - 做了`接口限流保护`：基于 `Redis + Redisson` 的分布式限流，按用户 / IP / API 维度控制请求频率。
 
@@ -91,7 +91,7 @@ Epiph-code Studio 是一个以工程化为目标的 AI 代码生成平台。
 - 智能生成：支持 HTML、多文件、Vue 项目多种代码生成类型。
 - 精准修改：支持基于选择器的定点修改和 patch 应用。
 - 可视化编辑：在预览 iframe 中选中元素并自动注入上下文提示。
-- 一键部署：生成后自动部署到本地静态访问地址，并异步生成封面截图。
+- 指定版本部署：用户可部署当前工作版或历史版本，并查看部署记录；部署成功后异步生成封面截图。
 - 接口限流：对 AI 对话接口进行用户维度频控（当前 `10 次 / 60 秒`），防止高频请求冲击服务。
 - 精选缓存：首页的精选应用分页结果写入 Redis（前 10 页缓存，TTL 5 分钟），并在精选数据变更时主动失效。
 
@@ -447,11 +447,16 @@ export EPIPH_CODE_COMPACTION_MAX_SUMMARY_CHARS=300000
 
 项目内置本地部署闭环：
 
-- 代码生成目录：`tmp/code_output/{codeGenType}_{appId}`
-- 部署目录：`tmp/code_deploy/{deployKey}`
-- Vue 项目部署前自动执行构建（`npm install` + `npm run build`）
+- 唯一运行产物根目录：仓库根目录 `tmp/`，不随 IDEA/命令行的启动工作目录变化。
+- 生成目录：`tmp/code_output/{codeGenType}_{appId}`；不可变网页快照：`tmp/code_versions/{appId}/{versionId}`。
+- 部署目录：`tmp/code_deploy/{deployKey}`；截图目录：`tmp/screenshots/`。
+- 应用截图本地静态地址：`/api/static/screenshots/{相对路径}`；默认地址前缀为 `http://localhost:8123/api/static`，可通过 `EPIPH_CODE_SCREENSHOT_BASE_URL` 设置成用户可访问的后端域名。
+- 如需将产物放到其他磁盘，可设置系统属性 `epiphcode.storage-root` 或环境变量 `EPIPH_CODE_STORAGE_ROOT`，值应指向统一的 tmp 根目录。
+- 旧单体模块目录 `epiph-code-monolith/tmp/` 会在后端启动时安全并入仓库根目录 `tmp/`；同名但内容不同的文件会以 `.legacy-monolith` 名称保留。
+- Vue 项目部署前使用目标版本快照构建（`npm install` + `npm run build`）。
 - 静态访问路由：`/api/static/{deployKey}/...`
-- 部署完成后返回访问 URL，并异步更新应用封面截图
+- 版本预览路由：`/api/static/version/{versionId}/...`；非公开历史版本仅应用所有者/管理员可访问。
+- 部署完成后返回访问 URL并记录部署版本，异步生成本地截图并更新应用封面；截图失败会保留旧封面，不影响部署。
 
 ---
 
@@ -483,6 +488,8 @@ npm run dev
 ```
 运行sql/create_table.sql
 ```
+
+已有数据库升级网页版本管理时，额外执行一次 `sql/migration_app_versions.sql`。
 
 ### 访问地址
 

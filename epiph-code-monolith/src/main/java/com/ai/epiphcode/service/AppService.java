@@ -29,6 +29,8 @@ public interface AppService extends IService<App> {
      */
     Flux<String> chatToGenCode(Long appId, String message, User loginUser, String mode, String agent);
 
+    Flux<String> chatToGenCode(Long appId, String message, User loginUser, String mode, String agent, Long baseVersionId);
+
     /**
      * 创建应用
      *
@@ -46,6 +48,8 @@ public interface AppService extends IService<App> {
      * @return 可访问的部署地址
      */
     String deployApp(Long appId, User loginUser);
+
+    String deployApp(Long appId, User loginUser, Long versionId);
 
     /**
      * 异步生成应用截图并更新封面

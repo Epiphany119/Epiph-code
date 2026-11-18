@@ -17,6 +17,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.SignalType;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -48,7 +49,12 @@ public class JsonMessageStreamHandler {
                 .doOnComplete(
                         () -> turnFlushService.flushSuccess(turnId)
                 )
-                .doOnError(error -> turnFlushService.flushError(turnId, error.getMessage()));
+                .doOnError(error -> turnFlushService.flushError(turnId, error.getMessage()))
+                .doFinally(signalType -> {
+                    if (signalType == SignalType.CANCEL && turnAccumulatorManager.get(turnId) != null) {
+                        turnFlushService.flushError(turnId, "生成请求已中断");
+                    }
+                });
     }
 
     /**

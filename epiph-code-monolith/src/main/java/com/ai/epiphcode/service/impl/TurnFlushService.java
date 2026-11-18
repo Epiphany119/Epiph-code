@@ -5,17 +5,21 @@ import cn.hutool.json.JSONUtil;
 import com.ai.epiphcode.core.handler.TurnAccumulator;
 import com.ai.epiphcode.core.handler.TurnAccumulatorManager;
 import com.ai.epiphcode.model.entity.ChatEventLog;
+import com.ai.epiphcode.model.entity.AppVersion;
 import com.ai.epiphcode.model.enums.ChatEventTypeEnum;
 import com.ai.epiphcode.model.enums.ChatHistoryMessageTypeEnum;
 import com.ai.epiphcode.service.ChatEventLogService;
 import com.ai.epiphcode.service.ChatHistoryService;
+import com.ai.epiphcode.service.impl.AppVersionService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,6 +38,9 @@ public class TurnFlushService {
     @Resource
     private ChatEventLogService chatEventLogService;
 
+    @Resource
+    private AppVersionService appVersionService;
+
     @Transactional(rollbackFor = Exception.class)
     public void flushSuccess(String turnId) {
         TurnAccumulator accumulator = turnAccumulatorManager.get(turnId);
@@ -44,11 +51,20 @@ public class TurnFlushService {
             return;
         }
         try {
-            flushTransactional(accumulator, null);
+            AppVersion version = appVersionService.commitTurn(accumulator);
+            flushTransactional(accumulator, null, version);
             turnAccumulatorManager.remove(turnId);
         } catch (Exception e) {
+            try {
+                appVersionService.rollbackTurn(accumulator);
+            } catch (RuntimeException rollbackError) {
+                e.addSuppressed(rollbackError);
+                log.error("轮次落库失败后恢复网页工作区失败 turnId={}", turnId, rollbackError);
+            }
             accumulator.resetFlushFlagOnFailure();
             throw e;
+        } finally {
+            appVersionService.finishTurn(accumulator);
         }
     }
 
@@ -62,15 +78,18 @@ public class TurnFlushService {
             return;
         }
         try {
-            flushTransactional(accumulator, StrUtil.blankToDefault(errorMessage, "unknown error"));
+            appVersionService.rollbackTurn(accumulator);
+            flushTransactional(accumulator, StrUtil.blankToDefault(errorMessage, "unknown error"), null);
             turnAccumulatorManager.remove(turnId);
         } catch (Exception e) {
             accumulator.resetFlushFlagOnFailure();
             throw e;
+        } finally {
+            appVersionService.finishTurn(accumulator);
         }
     }
 
-    private void flushTransactional(TurnAccumulator accumulator, String errorMessage) {
+    private void flushTransactional(TurnAccumulator accumulator, String errorMessage, AppVersion version) {
         String turnId = accumulator.getTurnId();
         String thinking = StrUtil.emptyToNull(accumulator.thinkingText());
         String assistantText = accumulator.assistantText();
@@ -161,11 +180,7 @@ public class TurnFlushService {
                 .eventType(failed ? ChatEventTypeEnum.ERROR.getValue() : ChatEventTypeEnum.ASSISTANT_FINAL.getValue())
                 .content(StrUtil.blankToDefault(finalAssistantText, ""))
                 .reasoningContent(thinking)
-                .rawEventJson(failed
-                        ? errorMessage
-                        : accumulator.hasTokenUsage()
-                                ? JSONUtil.toJsonStr(accumulator.tokenUsageSnapshot())
-                                : null)
+                .rawEventJson(finalEventMetadata(accumulator, errorMessage, version))
                 .userId(accumulator.getUserId())
                 .build());
 
@@ -174,5 +189,17 @@ public class TurnFlushService {
             throw new RuntimeException("批量写入 chat_event_log 失败，turnId=" + turnId);
         }
         log.info("轮次聚合落库完成: turnId={}, eventCount={}, failed={}", turnId, eventLogs.size(), failed);
+    }
+
+    private String finalEventMetadata(TurnAccumulator accumulator, String errorMessage, AppVersion version) {
+        if (StrUtil.isNotBlank(errorMessage)) return errorMessage;
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        if (accumulator.hasTokenUsage()) metadata.putAll(accumulator.tokenUsageSnapshot());
+        if (version != null) {
+            metadata.put("versionId", version.getId());
+            metadata.put("versionNo", version.getVersionNo());
+            metadata.put("parentVersionId", version.getParentVersionId());
+        }
+        return metadata.isEmpty() ? null : JSONUtil.toJsonStr(metadata);
     }
 }
