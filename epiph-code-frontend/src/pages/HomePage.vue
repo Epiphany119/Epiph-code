@@ -1,3 +1,219 @@
+<template>
+  <div id="homePage">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-pill">
+          <span class="hero-pill-dot"></span>
+          <span class="hero-pill-text">AI 驱动的全链路应用工作台</span>
+          <span class="hero-pill-badge">v2.0</span>
+        </div>
+
+        <h1 class="hero-title">
+          把灵感，
+          <span class="hero-gradient-title">做成真正可运行的应用</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          从一句自然语言开始，完成结构化任务规划、代码生成、实时预览与一键部署。<br />
+          让 AI 成为你的全栈工程师搭档，把创意极速变为现实。
+        </p>
+
+        <!-- Feature Capabilities -->
+        <div class="hero-capabilities">
+          <div class="capability-item">
+            <ThunderboltOutlined class="capability-icon" />
+            <span>自然语言秒级构建</span>
+          </div>
+          <div class="capability-item">
+            <FireOutlined class="capability-icon" />
+            <span>Agent 任务计划推进</span>
+          </div>
+          <div class="capability-item">
+            <EyeOutlined class="capability-icon" />
+            <span>实时运行与可视化编辑</span>
+          </div>
+          <div class="capability-item">
+            <CloudUploadOutlined class="capability-icon" />
+            <span>多版本管理与一键上线</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompt Console Card -->
+      <div id="projectPrompt" class="prompt-studio-card">
+        <div class="studio-card-header">
+          <div class="studio-header-title">
+            <span class="studio-header-badge">01</span>
+            <h3>描述你的应用需求</h3>
+          </div>
+          <div class="studio-header-controls">
+            <span class="agent-label">生成模型:</span>
+            <a-select
+              v-model:value="selectedAgent"
+              class="agent-select"
+              size="small"
+              :disabled="creating"
+            >
+              <a-select-option value="default">默认 Agent (基础模式)</a-select-option>
+              <a-select-option value="deepseek">DeepSeek Flash (长链路推理)</a-select-option>
+            </a-select>
+          </div>
+        </div>
+
+        <div class="studio-card-body">
+          <a-textarea
+            v-model:value="userPrompt"
+            placeholder="例如：帮我创建一个现代化响应式的个人博客网站，包含文章列表、分类标签、搜索框、暗色模式切换和个人简介页面……"
+            :rows="5"
+            :maxlength="1000"
+            class="studio-prompt-input"
+            :disabled="creating"
+          />
+
+          <!-- Quick Suggestions -->
+          <div class="inspiration-box">
+            <span class="inspiration-label">灵感预设:</span>
+            <div class="inspiration-chips">
+              <button
+                v-for="item in promptIdeas"
+                :key="item.label"
+                type="button"
+                class="idea-chip"
+                @click="setPrompt(item.prompt)"
+              >
+                {{ item.label }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="studio-card-footer">
+          <div class="prompt-length-hint">
+            <span :class="{ 'text-warn': userPrompt.length > 900 }">{{ userPrompt.length }}</span>
+            <span class="dim">/ 1000 字 · 描述越具体，生成效果越出色</span>
+          </div>
+          <a-button
+            type="primary"
+            size="large"
+            class="start-generate-btn"
+            :loading="creating"
+            @click="createApp"
+          >
+            <template #icon>
+              <RocketOutlined />
+            </template>
+            <span>{{ creating ? '正在创建并构思...' : '立即开始生成' }}</span>
+          </a-button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workspace Section (My Apps) -->
+    <section class="section-container">
+      <div class="section-header">
+        <div>
+          <div class="section-badge">
+            <FolderOpenOutlined />
+            <span>MY WORKSPACE</span>
+          </div>
+          <h2 class="section-title">我的作品</h2>
+          <p class="section-desc">管理你创建的应用，继续对话迭代或查看线上版本。</p>
+        </div>
+        <div class="section-extra">
+          <span class="stat-pill">{{ myAppsPage.total }} 个应用</span>
+        </div>
+      </div>
+
+      <!-- Not Logged In State -->
+      <div v-if="!loginUserStore.loginUser.id" class="login-prompt-card">
+        <div class="login-prompt-content">
+          <h4>登录以查看你的专属工作台</h4>
+          <p>登录后可永久保存对话历史、多版本迭代记录并随时管理线上站点。</p>
+        </div>
+        <a-button type="primary" @click="goToLogin">立即登录 / 注册</a-button>
+      </div>
+
+      <!-- App Grid -->
+      <div v-else-if="myApps.length" class="app-grid">
+        <AppCard
+          v-for="app in myApps"
+          :key="app.id"
+          :app="app"
+          @view-chat="viewChat"
+          @view-work="viewWork"
+        />
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="empty-state-card">
+        <FolderOpenOutlined class="empty-icon" />
+        <h3>暂无作品</h3>
+        <p>在上方控制台输入提示词，即可快速创建并运行你的第一个 AI 应用。</p>
+        <a-button type="primary" ghost @click="scrollToPrompt">
+          <template #icon><PlusOutlined /></template>
+          立即创建新应用
+        </a-button>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="myApps.length && myAppsPage.total > myAppsPage.pageSize" class="pagination-wrap">
+        <a-pagination
+          v-model:current="myAppsPage.current"
+          :page-size="myAppsPage.pageSize"
+          :total="myAppsPage.total"
+          show-less-items
+          @change="loadMyApps"
+        />
+      </div>
+    </section>
+
+    <!-- Featured Gallery Section -->
+    <section class="section-container">
+      <div class="section-header">
+        <div>
+          <div class="section-badge">
+            <CompassOutlined />
+            <span>COMMUNITY GALLERY</span>
+          </div>
+          <h2 class="section-title">精选应用展示</h2>
+          <p class="section-desc">探索社区创作者通过 Epiph-code 生成的精美站点与实用工具。</p>
+        </div>
+        <div class="section-extra">
+          <span class="stat-pill">{{ featuredAppsPage.total }} 个精选</span>
+        </div>
+      </div>
+
+      <div v-if="featuredApps.length" class="app-grid">
+        <AppCard
+          v-for="app in featuredApps"
+          :key="app.id"
+          :app="app"
+          :featured="true"
+          @view-chat="viewChat"
+          @view-work="viewWork"
+        />
+      </div>
+
+      <div v-else class="empty-state-card">
+        <CompassOutlined class="empty-icon" />
+        <h3>暂无精选应用</h3>
+        <p>精选应用正在持续评选并收录中，敬请期待。</p>
+      </div>
+
+      <div v-if="featuredApps.length && featuredAppsPage.total > featuredAppsPage.pageSize" class="pagination-wrap">
+        <a-pagination
+          v-model:current="featuredAppsPage.current"
+          :page-size="featuredAppsPage.pageSize"
+          :total="featuredAppsPage.total"
+          show-less-items
+          @change="loadFeaturedApps"
+        />
+      </div>
+    </section>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -6,6 +222,16 @@ import { useLoginUserStore } from '@/stores/loginUser'
 import { addApp, listGoodAppVoByPage, listMyAppVoByPage } from '@/api/appController'
 import { getDeployUrl } from '@/config/env'
 import AppCard from '@/components/AppCard.vue'
+import {
+  RocketOutlined,
+  ThunderboltOutlined,
+  FireOutlined,
+  EyeOutlined,
+  CloudUploadOutlined,
+  FolderOpenOutlined,
+  CompassOutlined,
+  PlusOutlined,
+} from '@ant-design/icons-vue'
 
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
@@ -30,24 +256,24 @@ const featuredAppsPage = reactive({
 
 const promptIdeas = [
   {
-    label: '个人博客网站',
+    label: '个人博客',
     prompt:
-      '创建一个现代化的个人博客网站，包含文章列表、详情页、分类标签、搜索功能、评论系统和个人简介页面。采用简洁设计，支持响应式布局。',
+      '创建一个现代化的个人博客网站，包含文章列表、详情页、分类标签、搜索功能、暗黑模式切换和个人简介页面。采用简洁高端设计，支持响应式布局。',
   },
   {
     label: '企业官网',
     prompt:
-      '设计一个专业的企业官网，包含公司介绍、产品服务展示、新闻资讯、联系我们等页面，采用商务简约风格并支持移动端。',
+      '设计一个专业的 SaaS 产品企业官网，包含产品优势、功能矩阵、客户案例、价格方案、常见问题和在线咨询入口，科技感强，排版大气。',
   },
   {
     label: '在线商城',
     prompt:
-      '构建一个在线商城，包含商品展示、购物车、用户登录注册、订单管理、支付结算等功能，界面清晰且易于浏览。',
+      '构建一个现代风格的在线数码商城，包含热门商品网格、类目侧边栏、购物车抽屉、用户结算面板和优惠券领取模块，交互顺畅。',
   },
   {
-    label: '作品展示网站',
+    label: '作品集画廊',
     prompt:
-      '制作一个作品展示网站，包含作品画廊、项目详情、个人介绍和联系方式，风格简洁高级，支持分类筛选。',
+      '制作一个摄影与设计作品展示网站，采用瀑布流画廊布局，支持大图沉浸式预览、项目分类筛选以及个人履历，视觉质感极高。',
   },
 ]
 
@@ -57,12 +283,12 @@ const setPrompt = (prompt: string) => {
 
 const createApp = async () => {
   if (!userPrompt.value.trim()) {
-    message.warning('请输入应用描述')
+    message.warning('请输入你想创建的应用描述')
     return
   }
 
   if (!loginUserStore.loginUser.id) {
-    message.warning('请先登录')
+    message.warning('请先登录后再创建应用')
     await router.push('/user/login')
     return
   }
@@ -71,7 +297,7 @@ const createApp = async () => {
   try {
     const res = await addApp({ initPrompt: userPrompt.value.trim() })
     if (res.data.code === 0 && res.data.data) {
-      message.success('应用创建成功')
+      message.success('应用创建成功，正在进入工作台...')
       const appId = String(res.data.data)
       await router.push({
         path: `/app/chat/${appId}`,
@@ -155,771 +381,395 @@ onMounted(() => {
 })
 </script>
 
-<template>
-  <div id="homePage">
-    <section class="hero-section" aria-labelledby="heroTitle">
-      <div class="hero-copy">
-        <div class="hero-kicker"><span class="hero-kicker-dot"></span> AI APP WORKSPACE</div>
-        <h1 id="heroTitle" class="hero-title">把想法，<br /><span>做成真正可用的应用</span></h1>
-        <p class="hero-subtitle">
-          从一句描述开始，完成生成、编辑、预览与部署。让 AI 帮你把灵感变成可以运行的产品。
-        </p>
-
-        <div class="hero-features">
-          <div class="hero-feature"><span class="feature-index">01</span><span>自然语言生成</span></div>
-          <div class="hero-feature"><span class="feature-index">02</span><span>可视化工作流</span></div>
-          <div class="hero-feature"><span class="feature-index">03</span><span>持续编辑与预览</span></div>
-          <div class="hero-feature"><span class="feature-index">04</span><span>本地一键部署</span></div>
-        </div>
-
-        <div class="hero-footnote">
-          <span class="status-dot"></span>
-          支持 HTML、多文件与 Vue 工程
-        </div>
-      </div>
-
-      <div id="projectPrompt" class="prompt-panel">
-        <div class="prompt-panel-head">
-          <div>
-            <span class="prompt-panel-kicker">START A PROJECT</span>
-            <h2>描述你的应用</h2>
-          </div>
-          <div class="prompt-panel-tools">
-            <a-select
-              v-model:value="selectedAgent"
-              class="prompt-agent-select"
-              size="small"
-              aria-label="选择生成 Agent"
-              :disabled="creating"
-            >
-              <a-select-option value="default">默认 Agent</a-select-option>
-              <a-select-option value="deepseek">DeepSeek Flash</a-select-option>
-            </a-select>
-            <span class="prompt-step">01 <span>/</span> START</span>
-          </div>
-        </div>
-
-        <a-textarea
-          v-model:value="userPrompt"
-          placeholder="例如：帮我创建一个简洁的个人博客，包含文章列表、分类和个人介绍……"
-          :rows="5"
-          :maxlength="1000"
-          class="prompt-input"
-          aria-label="描述你想创建的应用"
-        />
-
-        <div class="prompt-panel-actions">
-          <div class="prompt-hint">
-            <span>{{ userPrompt.length }}</span> / 1000
-            <span class="hint-divider">·</span>
-            描述越具体，生成结果越贴合
-          </div>
-          <a-button class="generate-button" type="primary" size="large" :loading="creating" @click="createApp">
-            <span>{{ creating ? '正在创建' : '开始生成' }}</span>
-            <span class="generate-arrow" aria-hidden="true">→</span>
-          </a-button>
-        </div>
-
-        <div class="prompt-examples">
-          <span class="examples-label">试试灵感</span>
-          <div class="example-chips">
-            <button
-              v-for="item in promptIdeas"
-              :key="item.label"
-              type="button"
-              class="example-chip"
-              @click="setPrompt(item.prompt)"
-            >
-              {{ item.label }}
-              <span aria-hidden="true">↗</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="content-section" aria-labelledby="worksTitle">
-      <div class="section-head">
-        <div>
-          <span class="section-kicker">YOUR WORKSPACE</span>
-          <div class="section-title-row">
-            <h2 id="worksTitle">我的作品</h2>
-            <span class="section-count">{{ myAppsPage.total }} 个应用</span>
-          </div>
-        </div>
-        <span class="section-note">生成后可直接查看页面预览，也能继续进入工作台编辑</span>
-      </div>
-
-      <div v-if="myApps.length" class="app-grid">
-        <AppCard
-          v-for="app in myApps"
-          :key="app.id"
-          :app="app"
-          @view-chat="viewChat"
-          @view-work="viewWork"
-        />
-      </div>
-
-      <div v-else class="empty-state">
-        <div class="empty-mark">01</div>
-        <div class="empty-copy">
-          <h3>{{ loginUserStore.loginUser.id ? '你的作品空间已准备好' : '登录后开始创建作品' }}</h3>
-          <p>
-            {{
-              loginUserStore.loginUser.id
-                ? '从一个想法开始，AI 会帮你搭建第一个版本。'
-                : '登录后即可保存、编辑并管理你创建的应用。'
-            }}
-          </p>
-        </div>
-        <a-button v-if="loginUserStore.loginUser.id" class="empty-action" @click="scrollToPrompt">
-          描述一个想法 <span aria-hidden="true">→</span>
-        </a-button>
-        <a-button v-else class="empty-action" @click="goToLogin">
-          前往登录 <span aria-hidden="true">→</span>
-        </a-button>
-      </div>
-
-      <div v-if="myAppsPage.total > myAppsPage.pageSize" class="pagination-wrapper">
-        <a-pagination
-          v-model:current="myAppsPage.current"
-          v-model:page-size="myAppsPage.pageSize"
-          :total="myAppsPage.total"
-          :show-size-changer="false"
-          :show-total="(total: number) => `共 ${total} 个应用`"
-          @change="loadMyApps"
-        />
-      </div>
-    </section>
-
-    <section class="content-section" aria-labelledby="featuredTitle">
-      <div class="section-head">
-        <div>
-          <span class="section-kicker">COMMUNITY PICKS</span>
-          <div class="section-title-row">
-            <h2 id="featuredTitle">精选案例</h2>
-            <span class="section-count">{{ featuredAppsPage.total }} 个案例</span>
-          </div>
-        </div>
-        <span class="section-note">看看大家用 AI 做出了什么</span>
-      </div>
-
-      <div v-if="featuredApps.length" class="app-grid">
-        <AppCard
-          v-for="app in featuredApps"
-          :key="app.id"
-          :app="app"
-          :featured="true"
-          @view-chat="viewChat"
-          @view-work="viewWork"
-        />
-      </div>
-
-      <div v-else class="empty-state empty-state--featured">
-        <div class="empty-mark empty-mark--featured">✦</div>
-        <div class="empty-copy">
-          <h3>精选案例正在准备中</h3>
-          <p>这里会展示值得参考的作品。你也可以先创建自己的第一个应用。</p>
-        </div>
-        <a-button class="empty-action" @click="scrollToPrompt">开始创作 <span aria-hidden="true">→</span></a-button>
-      </div>
-
-      <div v-if="featuredAppsPage.total > featuredAppsPage.pageSize" class="pagination-wrapper">
-        <a-pagination
-          v-model:current="featuredAppsPage.current"
-          v-model:page-size="featuredAppsPage.pageSize"
-          :total="featuredAppsPage.total"
-          :show-size-changer="false"
-          :show-total="(total: number) => `共 ${total} 个案例`"
-          @change="loadFeaturedApps"
-        />
-      </div>
-    </section>
-  </div>
-</template>
-
 <style scoped>
 #homePage {
-  width: 100%;
-  min-height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
-  gap: 23px;
+  gap: 64px;
 }
 
+/* Hero Section */
 .hero-section {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(440px, 1.08fr);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: clamp(28px, 5vw, 64px);
-  min-height: 470px;
-  padding: clamp(30px, 4.5vw, 58px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 28px;
-  color: #fff;
-  background:
-    radial-gradient(ellipse at 77% 18%, rgba(112, 124, 178, 0.25), transparent 36%),
-    radial-gradient(ellipse at 10% 100%, rgba(202, 128, 91, 0.12), transparent 42%),
-    linear-gradient(128deg, #191e2e 0%, #24293d 56%, #302d3a 100%);
-  box-shadow: 0 30px 82px rgba(35, 38, 54, 0.2);
+  text-align: center;
+  padding: 20px 0 10px;
 }
 
-.hero-section::before,
-.hero-section::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
-  border-radius: 50%;
-}
-
-.hero-section::before {
-  width: 540px;
-  height: 540px;
-  top: -290px;
-  right: 10%;
-  background: radial-gradient(circle, rgba(226, 157, 112, 0.25), transparent 68%);
-}
-
-.hero-section::after {
-  width: 540px;
-  height: 540px;
-  right: -320px;
-  bottom: -360px;
-  background: radial-gradient(circle, rgba(123, 139, 186, 0.28), transparent 68%);
-}
-
-.hero-copy,
-.prompt-panel {
-  position: relative;
-  z-index: 1;
-}
-
-.hero-copy {
-  max-width: 530px;
-}
-
-.hero-kicker {
+.hero-pill {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  gap: 8px;
+  padding: 4px 12px 4px 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: #e8d9d0;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  margin-bottom: 24px;
 }
 
-.hero-kicker-dot,
-.status-dot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 auto;
+.hero-pill-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #87d1a0;
-  box-shadow: 0 0 0 4px rgba(135, 209, 160, 0.13);
+  background: #6366F1;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
+
+.hero-pill-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4F46E5;
+}
+
+.hero-pill-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  background: #6366F1;
+  color: #FFFFFF;
+  border-radius: 999px;
 }
 
 .hero-title {
-  margin: 24px 0 16px;
-  color: #fff;
-  font-size: clamp(36px, 3.5vw, 50px);
-  font-weight: 750;
-  line-height: 1.18;
-  letter-spacing: -0.055em;
+  margin: 0;
+  font-size: clamp(34px, 4.5vw, 54px);
+  font-weight: 850;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  color: #0F172A;
 }
 
-.hero-title span {
-  display: inline-block;
-  color: #f0b88f;
-  background: linear-gradient(90deg, #f2c4a1 0%, #e9a579 65%, #f7d5bc 100%);
-  background-clip: text;
+.hero-gradient-title {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #2563EB 100%);
+  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .hero-subtitle {
-  max-width: 470px;
-  margin: 0;
-  color: rgba(240, 241, 247, 0.72);
-  font-size: 15px;
-  line-height: 1.85;
+  max-width: 680px;
+  margin: 18px auto 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #64748B;
 }
 
-.hero-features {
-  display: grid;
-  grid-template-columns: repeat(2, max-content);
-  gap: 15px 22px;
-  margin-top: 30px;
-}
-
-.hero-feature {
+.hero-capabilities {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  color: rgba(245, 245, 249, 0.88);
-  font-size: 13px;
-}
-
-.feature-index {
-  color: #d6a17f;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.hero-footnote {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 32px;
-  color: rgba(235, 236, 242, 0.58);
-  font-size: 12px;
-}
-
-.prompt-panel {
-  min-width: 0;
-  padding: clamp(18px, 2.4vw, 28px);
-  border: 1px solid rgba(255, 255, 255, 0.74);
-  border-radius: 22px;
-  background: #fff;
-  color: var(--zc-text-primary);
-  box-shadow: 0 24px 64px rgba(8, 12, 25, 0.24);
-}
-
-.prompt-panel-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-top: 28px;
 }
 
-.prompt-panel-kicker,
-.section-kicker {
-  display: block;
-  color: #a37158;
-  font-size: 10px;
+.capability-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.capability-icon {
+  color: #6366F1;
+  font-size: 14px;
+}
+
+/* Prompt Studio Card */
+.prompt-studio-card {
+  width: min(840px, 100%);
+  margin-top: 40px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+  text-align: left;
+  transition: box-shadow 0.2s ease;
+}
+
+.prompt-studio-card:focus-within {
+  box-shadow: 0 24px 48px -12px rgba(99, 102, 241, 0.14), 0 0 0 2px rgba(99, 102, 241, 0.25);
+  border-color: #818CF8;
+}
+
+.studio-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.studio-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.studio-header-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #6366F1;
+  color: #FFFFFF;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
 }
 
-.prompt-panel-head h2 {
-  margin: 7px 0 0;
-  color: #242735;
-  font-size: 21px;
+.studio-header-title h3 {
+  margin: 0;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  color: #1E293B;
 }
 
-.prompt-panel-tools {
+.studio-header-controls {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
 }
 
-.prompt-agent-select {
-  width: 150px;
+.agent-label {
+  font-size: 12px;
+  color: #64748B;
 }
 
-.prompt-agent-select :deep(.ant-select-selector) {
-  border-radius: 9px !important;
+.agent-select {
+  min-width: 200px;
 }
 
-.prompt-step {
-  padding: 7px 10px;
-  border-radius: 9px;
-  background: #f6f3f1;
-  color: #8a7468;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
+.studio-card-body {
+  padding: 20px;
 }
 
-.prompt-step span {
-  margin: 0 3px;
-  color: #c7b8ae;
+.studio-prompt-input {
+  font-size: 15px;
+  line-height: 1.6;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  resize: none;
+  padding: 0;
 }
 
-.prompt-input {
-  width: 100%;
+.studio-prompt-input:focus {
+  box-shadow: none !important;
 }
 
-.prompt-input :deep(.ant-input) {
-  min-height: 138px;
-  padding: 15px 16px;
-  border: 1px solid #e8e9ee;
-  border-radius: 14px;
-  background: #fafbfc;
-  color: #262a35;
-  font-size: 14px;
-  line-height: 1.75;
-  box-shadow: none;
-  resize: vertical;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+.inspiration-box {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #F1F5F9;
 }
 
-.prompt-input :deep(.ant-input::placeholder) {
-  color: #a0a5b1;
+.inspiration-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748B;
 }
 
-.prompt-input :deep(.ant-input:hover) {
-  border-color: #d7b8a5;
+.inspiration-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.prompt-input :deep(.ant-input:focus) {
-  border-color: var(--zc-primary);
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(184, 106, 66, 0.11);
+.idea-chip {
+  padding: 4px 10px;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.prompt-panel-actions {
+.idea-chip:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: #818CF8;
+  color: #4F46E5;
+  transform: translateY(-1px);
+}
+
+.studio-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-top: 14px;
+  padding: 14px 20px;
+  background: #F8FAFC;
+  border-top: 1px solid #F1F5F9;
 }
 
-.prompt-hint {
-  color: #9a9eaa;
-  font-size: 11px;
-  line-height: 1.6;
+.prompt-length-hint {
+  font-size: 12px;
+  color: #64748B;
 }
 
-.prompt-hint > span:first-child {
-  color: #6f7481;
-  font-variant-numeric: tabular-nums;
+.prompt-length-hint .dim {
+  color: #94A3B8;
+  margin-left: 4px;
 }
 
-.hint-divider {
-  margin: 0 6px;
-  color: #c0c3cb;
-}
-
-.generate-button {
-  height: 46px;
-  padding: 0 17px;
-  border: 0;
-  border-radius: 12px;
-  box-shadow: 0 8px 18px rgba(184, 106, 66, 0.2);
+.prompt-length-hint .text-warn {
+  color: #EF4444;
   font-weight: 600;
 }
 
-.generate-arrow {
-  margin-left: 10px;
-  font-size: 17px;
-  transition: transform 0.2s ease;
+.start-generate-btn {
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.generate-button:hover .generate-arrow {
-  transform: translateX(3px);
-}
-
-.prompt-examples {
+/* Sections */
+.section-container {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-top: 20px;
-  padding-top: 17px;
-  border-top: 1px solid #f0f0f3;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.examples-label {
-  padding-top: 7px;
-  color: #9297a4;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.example-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.example-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 30px;
-  padding: 0 10px;
-  border: 1px solid #e9e9ee;
-  border-radius: 999px;
-  background: #fff;
-  color: #666c79;
-  cursor: pointer;
-  font: inherit;
-  font-size: 11px;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-
-.example-chip span {
-  color: #b8876d;
-  font-size: 12px;
-}
-
-.example-chip:hover {
-  transform: translateY(-1px);
-  border-color: #d9b6a0;
-  background: #fbf7f4;
-  color: #8a5539;
-}
-
-.content-section {
-  min-width: 0;
-  padding: 25px 27px;
-  border: 1px solid rgba(225, 228, 235, 0.86);
-  border-radius: 22px;
-  background: var(--zc-bg-card);
-  box-shadow: 0 12px 34px rgba(38, 44, 62, 0.055);
-}
-
-.section-head {
+.section-header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #E2E8F0;
 }
 
-.section-kicker {
-  margin-bottom: 5px;
-  color: #9a8290;
-  font-size: 9px;
-}
-
-.section-title-row {
-  display: flex;
+.section-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 11px;
-}
-
-.section-head h2 {
-  margin: 0;
-  color: #282b36;
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.section-count {
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: #f3f4f7;
-  color: #777d8a;
+  gap: 6px;
   font-size: 11px;
-  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #6366F1;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
 }
 
-.section-note {
-  color: #969ba7;
+.section-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 750;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+}
+
+.section-desc {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #64748B;
+}
+
+.stat-pill {
+  padding: 4px 12px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
   font-size: 12px;
+  font-weight: 600;
+  color: #475569;
 }
 
 .app-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
 }
 
-.empty-state {
+.login-prompt-card,
+.empty-state-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 17px;
-  min-height: 112px;
-  padding: 20px 22px;
-  border: 1px dashed #e1e4eb;
-  border-radius: 16px;
-  background: linear-gradient(110deg, #fafbfc 0%, #f8f8fa 100%);
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  background: #FFFFFF;
+  border: 1px dashed #CBD5E1;
+  border-radius: 14px;
+  text-align: center;
 }
 
-.empty-mark {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #f0e0d5;
-  border-radius: 15px;
-  background: linear-gradient(145deg, #fff8f3, #f7e9df);
-  color: #a96c4a;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.empty-mark--featured {
-  border-color: #e2e5f1;
-  background: linear-gradient(145deg, #f5f6fc, #e9edf7);
-  color: #66729b;
-  font-size: 22px;
-}
-
-.empty-copy {
-  min-width: 0;
-  flex: 1;
-}
-
-.empty-copy h3 {
+.login-prompt-content h4 {
   margin: 0;
-  color: #383c48;
-  font-size: 14px;
-  font-weight: 650;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E293B;
 }
 
-.empty-copy p {
-  margin: 5px 0 0;
-  color: #9297a3;
-  font-size: 12px;
-  line-height: 1.6;
+.login-prompt-content p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #64748B;
 }
 
-.empty-action {
-  height: 36px;
-  flex: 0 0 auto;
-  border-radius: 10px;
-  color: #755340;
-  font-size: 12px;
+.empty-icon {
+  font-size: 36px;
+  color: #94A3B8;
+  margin-bottom: 4px;
 }
 
-.empty-action span {
-  margin-left: 7px;
-  font-size: 14px;
+.empty-state-card h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E293B;
 }
 
-.pagination-wrapper {
-  margin-top: 16px;
+.empty-state-card p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #64748B;
+}
+
+.pagination-wrap {
   display: flex;
   justify-content: center;
-}
-
-@media (max-width: 980px) {
-  .hero-section {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
-    gap: 28px;
-    padding: 32px;
-  }
-
-  .hero-title {
-    font-size: clamp(36px, 4.2vw, 46px);
-  }
-
-  .hero-features {
-    gap: 13px 15px;
-  }
+  margin-top: 12px;
 }
 
 @media (max-width: 768px) {
   .hero-section {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    min-height: 0;
-    padding: 25px 20px 20px;
-    border-radius: 22px;
+    padding: 10px 0;
   }
 
-  .hero-title {
-    margin-top: 19px;
-    font-size: clamp(34px, 8vw, 46px);
+  .studio-header-controls {
+    display: none;
   }
 
-  .hero-subtitle {
-    max-width: 560px;
-    font-size: 14px;
-  }
-
-  .hero-features {
-    margin-top: 22px;
-  }
-
-  .hero-footnote {
-    margin-top: 21px;
-  }
-
-  .prompt-panel {
-    padding: 18px;
-    border-radius: 18px;
-  }
-
-  .prompt-input :deep(.ant-input) {
-    min-height: 120px;
-    font-size: 13px;
-  }
-
-  .prompt-panel-actions {
-    align-items: flex-start;
+  .studio-card-footer {
     flex-direction: column;
-  }
-
-  .generate-button {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .prompt-examples {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .examples-label {
-    padding-top: 0;
-  }
-
-  .content-section {
-    padding: 18px 16px;
-    border-radius: 17px;
-  }
-
-  .section-head {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-
-  .empty-state {
-    align-items: flex-start;
-    flex-wrap: wrap;
     gap: 12px;
-    padding: 16px;
+    align-items: stretch;
   }
 
-  .empty-copy {
-    flex-basis: calc(100% - 62px);
-  }
-
-  .empty-action {
-    margin-left: 60px;
-  }
-}
-
-@media (max-width: 420px) {
-  .prompt-panel-head {
-    flex-wrap: wrap;
-  }
-
-  .prompt-panel-tools {
+  .start-generate-btn {
     width: 100%;
-    justify-content: space-between;
   }
 
-  .hero-features {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 11px;
-  }
-
-  .section-title-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 6px;
+  .app-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

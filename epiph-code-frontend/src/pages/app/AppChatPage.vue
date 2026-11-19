@@ -1,321 +1,393 @@
 <template>
   <div id="appChatPage">
-    <!-- 顶部栏 -->
-    <div class="header-bar">
+    <!-- Top Workspace Navigation Bar -->
+    <header class="chat-header-bar">
       <div class="header-left">
-        <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
-        <a-tag v-if="appInfo?.codeGenType" color="blue" class="code-gen-type-tag">
-          {{ formatCodeGenType(appInfo.codeGenType) }}
-        </a-tag>
-        <a-tag v-if="deployedVersion" color="green">线上 V{{ deployedVersion.versionNo }}</a-tag>
-        <a-tag v-if="isWorkflowLocked" color="gold">工作流锁定</a-tag>
+        <RouterLink to="/" class="back-home-btn" title="返回应用列表">
+          <ArrowLeftOutlined />
+        </RouterLink>
+        <div class="header-app-info">
+          <h1 class="header-app-title">{{ appInfo?.appName || '智能应用生成器' }}</h1>
+          <div class="header-status-tags">
+            <a-tag v-if="appInfo?.codeGenType" class="tag-codegen">
+              {{ formatCodeGenType(appInfo.codeGenType) }}
+            </a-tag>
+            <a-tag v-if="deployedVersion" class="tag-deployed">
+              <CheckCircleFilled /> 线上 V{{ deployedVersion.versionNo }}
+            </a-tag>
+            <a-tag v-if="isWorkflowLocked" class="tag-locked">
+              <LockOutlined /> 工作流锁定
+            </a-tag>
+          </div>
+        </div>
       </div>
-      <div class="header-right">
-        <a-button v-if="isOwner || isAdmin" @click="versionsDrawerOpen = true">
-          网页版本
-          <a-tag v-if="workingVersion" color="blue">工作 V{{ workingVersion.versionNo }}</a-tag>
-        </a-button>
-        <a-button type="default" @click="showAppDetail">
-          <template #icon>
-            <InfoCircleOutlined />
-          </template>
-          应用详情
-        </a-button>
-        <a-button
-            type="primary"
-            ghost
-            @click="downloadCode"
-            :loading="downloading"
-            :disabled="!isOwner"
-        >
-          <template #icon>
-            <DownloadOutlined />
-          </template>
-          下载代码
-        </a-button>
-        <a-button type="primary" @click="deployApp" :loading="deploying" :disabled="!(isOwner || isAdmin) || !workingVersion">
-          <template #icon>
-            <CloudUploadOutlined />
-          </template>
-          部署
-        </a-button>
-      </div>
-    </div>
 
-    <!-- 主要内容区域 -->
-    <div class="main-content">
-      <!-- 左侧对话区域 -->
-      <div class="chat-section">
-        <!-- 消息区域 -->
-        <div class="messages-container" ref="messagesContainer" @scroll="handleMessagesScroll">
-          <!-- 加载更多按钮 -->
-          <div v-if="hasMoreHistory" class="load-more-container">
-            <a-button type="link" @click="loadMoreHistory" :loading="loadingHistory" size="small">
-              加载更多历史消息
+      <div class="header-right">
+        <!-- Versions Drawer Trigger -->
+        <a-button v-if="isOwner || isAdmin" class="btn-tool" @click="versionsDrawerOpen = true">
+          <template #icon><HistoryOutlined /></template>
+          <span>网页版本</span>
+          <span v-if="workingVersion" class="badge-version">工作 V{{ workingVersion.versionNo }}</span>
+        </a-button>
+
+        <!-- App Details Modal Trigger -->
+        <a-button type="default" class="btn-tool" @click="showAppDetail">
+          <template #icon><InfoCircleOutlined /></template>
+          <span>应用详情</span>
+        </a-button>
+
+        <!-- Download Code -->
+        <a-button
+          type="default"
+          class="btn-tool"
+          :loading="downloading"
+          :disabled="!isOwner"
+          @click="downloadCode"
+        >
+          <template #icon><DownloadOutlined /></template>
+          <span>下载源码</span>
+        </a-button>
+
+        <!-- Deploy App -->
+        <a-button
+          type="primary"
+          class="btn-deploy"
+          :loading="deploying"
+          :disabled="!(isOwner || isAdmin) || !workingVersion"
+          @click="deployApp"
+        >
+          <template #icon><CloudUploadOutlined /></template>
+          <span>部署发布</span>
+        </a-button>
+      </div>
+    </header>
+
+    <!-- Main Dual-Pane Workspace -->
+    <div class="chat-workspace">
+      <!-- Left Pane: AI Conversation & Execution Timeline -->
+      <section class="chat-pane">
+        <!-- Message Scroll Area -->
+        <div ref="messagesContainer" class="messages-scroll-area" @scroll="handleMessagesScroll">
+          <!-- Load More History -->
+          <div v-if="hasMoreHistory" class="history-loader-wrap">
+            <a-button type="link" size="small" :loading="loadingHistory" @click="loadMoreHistory">
+              加载更早的历史记录
             </a-button>
           </div>
-          <div v-for="(message, index) in messages" :key="index" class="message-item">
-            <div v-if="message.type === 'user'" class="user-message">
-              <div class="message-content">{{ message.content }}</div>
-              <div class="message-avatar">
-                <a-avatar :src="loginUserStore.loginUser.userAvatar" />
+
+          <!-- Message Items -->
+          <div v-for="(message, index) in messages" :key="index" class="message-row">
+            <!-- User Message -->
+            <div v-if="message.type === 'user'" class="user-bubble-wrap">
+              <div class="user-bubble">
+                <div class="bubble-text">{{ message.content }}</div>
               </div>
+              <a-avatar :src="loginUserStore.loginUser.userAvatar" class="avatar-user">
+                {{ loginUserStore.loginUser.userName?.charAt(0) || 'U' }}
+              </a-avatar>
             </div>
-            <div v-else class="ai-message">
-              <div class="message-avatar">
-                <a-avatar :src="aiAvatar" />
+
+            <!-- AI Message -->
+            <div v-else class="ai-bubble-wrap">
+              <div class="ai-avatar-wrap">
+                <img :src="aiAvatar" alt="AI Agent" class="avatar-ai-img" />
               </div>
-              <div class="message-content">
-                <!-- 计划进度面板：仅在最后一条AI消息上展示 -->
-                <div v-if="currentPlan.length > 0 && index === messages.length - 1" class="plan-panel">
-                  <div class="plan-header">
-                    <span class="plan-title">生成计划</span>
-                    <span class="plan-progress">{{ currentPlan.filter(i => i.status === 'completed').length }}/{{ currentPlan.length }}</span>
+
+              <div class="ai-bubble-card">
+                <!-- Agent Task Plan Card (Shown on last AI turn or when plan exists) -->
+                <div v-if="currentPlan.length > 0 && index === messages.length - 1" class="agent-plan-card">
+                  <div class="plan-card-header">
+                    <div class="plan-title-box">
+                      <BranchesOutlined class="plan-head-icon" />
+                      <span class="plan-card-title">生成任务推进计划</span>
+                    </div>
+                    <span class="plan-counter-pill">
+                      {{ currentPlan.filter(i => i.status === 'completed').length }} / {{ currentPlan.length }}
+                    </span>
                   </div>
-                  <div class="plan-items">
+
+                  <div class="plan-items-list">
                     <div
                       v-for="item in currentPlan"
                       :key="item.id"
-                      class="plan-item"
+                      class="plan-task-row"
                       :class="{
-                        'plan-item-completed': item.status === 'completed',
-                        'plan-item-active': item.status === 'in_progress',
+                        'task--done': item.status === 'completed',
+                        'task--running': item.status === 'in_progress',
+                        'task--pending': item.status !== 'completed' && item.status !== 'in_progress',
                       }"
-                      :style="{ paddingLeft: getPlanItemDepth(item, currentPlan) * 20 + 'px' }"
+                      :style="{ paddingLeft: (getPlanItemDepth(item, currentPlan) * 16 + 12) + 'px' }"
                     >
-                      <span class="plan-item-icon">
-                        <template v-if="item.status === 'completed'">&#10003;</template>
-                        <template v-else-if="item.status === 'in_progress'">
-                          <span class="plan-item-spinner"></span>
-                        </template>
-                        <template v-else>
-                          <span class="plan-item-dot"></span>
-                        </template>
+                      <span class="task-status-icon">
+                        <CheckCircleFilled v-if="item.status === 'completed'" class="icon-completed" />
+                        <LoadingOutlined v-else-if="item.status === 'in_progress'" class="icon-running" />
+                        <ClockCircleOutlined v-else class="icon-pending" />
                       </span>
-                      <span class="plan-item-text">{{ item.text }}</span>
+                      <span class="task-text">{{ item.text }}</span>
                     </div>
                   </div>
-                  <div class="plan-bar">
-                    <div class="plan-bar-fill" :style="{ width: (currentPlan.filter(i => i.status === 'completed').length / currentPlan.length * 100) + '%' }"></div>
+
+                  <div class="plan-progress-track">
+                    <div
+                      class="plan-progress-bar"
+                      :style="{ width: ((currentPlan.filter(i => i.status === 'completed').length / currentPlan.length) * 100) + '%' }"
+                    ></div>
                   </div>
                 </div>
-                <div v-if="message.processEvents?.length" class="process-timeline">
+
+                <!-- Process Events (Thinking & Tools Execution) -->
+                <div v-if="message.processEvents?.length" class="process-events-container">
                   <div
                     v-for="eventItem in message.processEvents"
                     :key="eventItem.id"
-                    class="process-event"
+                    class="process-item-box"
                   >
-                    <details v-if="eventItem.details" class="event-details">
-                      <summary class="event-summary-line">
-                        <span class="event-summary-text">{{ eventItem.summary || '过程' }}</span>
-                        <span class="event-time">{{ eventItem.time }}</span>
+                    <details v-if="eventItem.details" class="event-details-tag">
+                      <summary class="event-summary-row">
+                        <div class="summary-left">
+                          <BulbOutlined v-if="eventItem.type === 'thinking'" class="event-icon icon--thinking" />
+                          <CodeOutlined v-else class="event-icon icon--tool" />
+                          <span class="event-type-label">{{ eventItem.type === 'thinking' ? '思考过程' : '工具调用' }}</span>
+                          <span class="event-summary-text">{{ eventItem.summary || '执行详情' }}</span>
+                        </div>
+                        <span class="event-time-stamp">{{ eventItem.time }}</span>
                       </summary>
-                      <pre class="event-plain">{{ eventItem.details }}</pre>
+                      <div class="event-details-pre-wrap">
+                        <pre class="event-pre-code"><code>{{ eventItem.details }}</code></pre>
+                      </div>
                     </details>
-                    <div v-else class="event-summary-line event-summary-line-static">
-                      <span class="event-summary-text">{{ eventItem.summary || '过程' }}</span>
-                      <span class="event-time">{{ eventItem.time }}</span>
+
+                    <div v-else class="event-summary-row event-summary-row--static">
+                      <div class="summary-left">
+                        <BulbOutlined v-if="eventItem.type === 'thinking'" class="event-icon icon--thinking" />
+                        <CodeOutlined v-else class="event-icon icon--tool" />
+                        <span class="event-type-label">{{ eventItem.type === 'thinking' ? '思考过程' : '系统事件' }}</span>
+                        <span class="event-summary-text">{{ eventItem.summary || '执行中' }}</span>
+                      </div>
+                      <span class="event-time-stamp">{{ eventItem.time }}</span>
                     </div>
                   </div>
                 </div>
-                <div v-if="message.content" class="final-reply">
+
+                <!-- Final Reply Section -->
+                <div v-if="message.content" class="final-reply-box">
                   <div class="final-reply-header" @click="toggleFinalReply(index)">
-                    <span class="final-reply-toggle">{{ expandedReplies.has(index) ? '▼' : '▶' }}</span>
-                    <span class="final-reply-title">最终回复</span>
+                    <div class="final-reply-left">
+                      <CheckCircleOutlined class="final-reply-check" />
+                      <span class="final-reply-heading">生成结果与说明</span>
+                    </div>
+                    <span class="final-reply-caret">
+                      <DownOutlined v-if="isReplyExpanded(index)" />
+                      <RightOutlined v-else />
+                    </span>
                   </div>
-                  <div v-show="expandedReplies.has(index)" class="final-reply-body">
+
+                  <div v-show="isReplyExpanded(index)" class="final-reply-content">
                     <MarkdownRenderer :content="message.content" />
                   </div>
                 </div>
-                <div v-if="message.loading" class="loading-indicator">
+
+                <!-- Live Stream Loading -->
+                <div v-if="message.loading" class="stream-loading-row">
                   <a-spin size="small" />
-                  <span>AI 正在思考...</span>
+                  <span class="stream-loading-text">AI 正在构思与执行代码生成...</span>
                 </div>
-                <a-tag
-                  v-if="message.turnId && versionForTurn(message.turnId)"
-                  color="green"
-                  class="turn-version-tag"
-                  @click="previewTurnVersion(message.turnId)"
-                >
-                  生成了 V{{ versionForTurn(message.turnId)?.versionNo }}
-                </a-tag>
+
+                <!-- Turn Version Generated Tag -->
+                <div v-if="message.turnId && versionForTurn(message.turnId)" class="turn-version-card">
+                  <span class="turn-version-icon">🚀</span>
+                  <span class="turn-version-label">本次生成保存为不可变版本:</span>
+                  <a-tag color="purple" class="turn-tag-link" @click="previewTurnVersion(message.turnId)">
+                    V{{ versionForTurn(message.turnId)?.versionNo }} · 立即预览
+                  </a-tag>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 选中元素信息展示 -->
-        <a-alert
-            v-if="selectedElementInfo"
-            class="selected-element-alert"
-            type="info"
-            closable
-            @close="clearSelectedElement"
-        >
-          <template #message>
-            <div class="selected-element-info">
-              <div class="element-header">
-                <span class="element-tag">
-                  选中元素：{{ selectedElementInfo.tagName.toLowerCase() }}
-                </span>
-                <span v-if="selectedElementInfo.id" class="element-id">
-                  #{{ selectedElementInfo.id }}
-                </span>
-                <span v-if="selectedElementInfo.className" class="element-class">
-                  .{{ selectedElementInfo.className.split(' ').join('.') }}
-                </span>
+        <!-- Input Dock Area -->
+        <div class="input-dock-container">
+          <div class="input-dock-card">
+            <!-- Top Controls Bar inside Dock -->
+            <div class="dock-meta-bar">
+              <!-- Agent Model Dropdown -->
+              <div class="agent-switch-pill">
+                <span class="pill-prefix">模型:</span>
+                <a-select
+                  v-model:value="selectedAgent"
+                  size="small"
+                  :bordered="false"
+                  class="compact-agent-select"
+                  :disabled="isGenerating || !isOwner"
+                >
+                  <a-select-option value="default">默认 Agent</a-select-option>
+                  <a-select-option value="deepseek">DeepSeek Flash</a-select-option>
+                </a-select>
               </div>
-              <div class="element-details">
-                <div v-if="selectedElementInfo.textContent" class="element-item">
-                  内容: {{ selectedElementInfo.textContent.substring(0, 50) }}
-                  {{ selectedElementInfo.textContent.length > 50 ? '...' : '' }}
-                </div>
-                <div v-if="selectedElementInfo.pagePath" class="element-item">
-                  页面路径: {{ selectedElementInfo.pagePath }}
-                </div>
-                <div class="element-item">
-                  选择器:
-                  <code class="element-selector-code">{{ selectedElementInfo.selector }}</code>
-                </div>
-              </div>
-            </div>
-          </template>
-        </a-alert>
 
-        <!-- 用户消息输入框 -->
-        <div class="input-container">
-          <div class="input-wrapper">
-            <div v-if="isOwner || isAdmin" class="chat-metrics" aria-label="对话用量指标">
-              <div class="chat-metric-card">
-                <div class="chat-metric-heading">
-                  <span>最近一轮代码生成</span>
-                  <span class="metric-heading-meta">
-                    <span v-if="lastTurnAgentLabel" class="metric-agent-badge">{{ lastTurnAgentLabel }}</span>
-                    <a-tooltip title="模型返回的实际 token 用量；旧对话或未提供用量的模型会显示暂无数据">
-                      <span class="metric-info" aria-label="用量说明">i</span>
-                    </a-tooltip>
-                  </span>
-                </div>
-                <strong class="chat-metric-value">
-                  {{ formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.totalTokens) }}
-                </strong>
-                <span class="chat-metric-detail">
-                  输入 {{ formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.inputTokens) }}
-                  <i></i>
-                  输出 {{ formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.outputTokens) }}
+              <!-- Token Metrics -->
+              <div v-if="isOwner || isAdmin" class="metrics-display-pill">
+                <span title="最近一轮代码生成消耗 Token">
+                  最近消耗: <strong>{{ formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.totalTokens) }}</strong>
+                  <span v-if="lastTurnAgentLabel"> ({{ lastTurnAgentLabel }})</span>
+                </span>
+                <span class="pill-sep">·</span>
+                <span :title="contextMetricCaption">
+                  上下文: <strong>{{ chatMetrics ? `~${formatMetricTokens(chatMetrics.contextTokensEstimate)}` : '计算中' }}</strong>
                 </span>
               </div>
 
-              <div class="chat-metric-card chat-metric-card--context">
-                <div class="chat-metric-heading">
-                  <span>当前对话上下文</span>
-                  <a-tooltip title="按现有上下文压缩逻辑估算，每约 3 个字符计 1 token">
-                    <span class="metric-info" aria-label="估算说明">i</span>
-                  </a-tooltip>
-                </div>
-                <strong class="chat-metric-value">
-                  {{ chatMetrics ? `约 ${formatMetricTokens(chatMetrics.contextTokensEstimate)} tokens` : '正在读取上下文' }}
-                </strong>
-                <div class="context-meter" role="progressbar" :aria-valuenow="contextProgressPercent" aria-valuemin="0" aria-valuemax="100">
-                  <span :style="{ width: `${contextProgressPercent}%` }"></span>
-                </div>
-                <span class="chat-metric-detail">
-                  {{ contextMetricCaption }}
-                </span>
+              <!-- Base Version if user modified from historic version -->
+              <div v-if="isOwner && modificationBaseVersion" class="base-version-indicator">
+                <span>基于 <strong>V{{ modificationBaseVersion.versionNo }}</strong> 修改</span>
+                <button type="button" class="btn-change-base" @click="versionsDrawerOpen = true">更换基线</button>
               </div>
             </div>
-            <div v-if="isOwner && modificationBaseVersion" class="version-base-bar">
-              <span>
-                本轮修改基于 <strong>V{{ modificationBaseVersion.versionNo }}</strong>
-                <template v-if="previewVersion && String(previewVersion.id) !== String(modificationBaseVersion.id)"> · 正在预览 V{{ previewVersion.versionNo }}</template>
-              </span>
-              <a-button type="link" size="small" @click="versionsDrawerOpen = true">更换基线</a-button>
+
+            <!-- Selected Element Inspector Banner -->
+            <div v-if="selectedElementInfo" class="inspector-selection-banner">
+              <div class="inspector-info-left">
+                <AimOutlined class="inspector-icon" />
+                <span class="inspector-tag-name">&lt;{{ selectedElementInfo.tagName.toLowerCase() }}&gt;</span>
+                <code v-if="selectedElementInfo.selector" class="inspector-selector-code">{{ selectedElementInfo.selector }}</code>
+              </div>
+              <button type="button" class="inspector-cancel-btn" @click="clearSelectedElement">取消元素绑定</button>
             </div>
-            <div class="input-agent-bar">
-              <span class="input-agent-label">选择 Agent</span>
-              <a-select v-model:value="selectedAgent" size="small" :disabled="isGenerating || !isOwner">
-                <a-select-option value="default">默认 Agent</a-select-option>
-                <a-select-option value="deepseek">DeepSeek Flash</a-select-option>
-              </a-select>
-              <span class="input-agent-hint">选择本轮代码生成模型</span>
-            </div>
-            <a-tooltip v-if="!isOwner" title="无法在别人的作品下对话哦~" placement="top">
-              <a-textarea
+
+            <!-- Input Textarea & Send Button -->
+            <div class="textarea-container">
+              <a-tooltip v-if="!isOwner" title="只能在自己的应用项目下发送对话指令哦" placement="top">
+                <a-textarea
                   v-model:value="userInput"
                   :placeholder="getInputPlaceholder()"
-                  :rows="4"
+                  :rows="3"
                   :maxlength="1000"
-                  @keydown.enter.prevent="sendMessage"
+                  class="prompt-textarea"
                   :disabled="isGenerating || !isOwner"
-              />
-            </a-tooltip>
-            <a-textarea
+                  @keydown.enter.exact.prevent="sendMessage"
+                />
+              </a-tooltip>
+              <a-textarea
                 v-else
                 v-model:value="userInput"
                 :placeholder="getInputPlaceholder()"
-                :rows="4"
+                :rows="3"
                 :maxlength="1000"
-                @keydown.enter.prevent="sendMessage"
+                class="prompt-textarea"
                 :disabled="isGenerating"
-            />
-            <div class="input-actions">
-              <a-button
+                @keydown.enter.exact.prevent="sendMessage"
+              />
+
+              <div class="textarea-footer">
+                <span class="textarea-hint">Enter 发送 · Shift + Enter 换行</span>
+                <a-button
                   type="primary"
-                  @click="sendMessage"
+                  shape="circle"
+                  class="send-circle-btn"
                   :loading="isGenerating"
-                  :disabled="!isOwner"
+                  :disabled="!isOwner || !userInput.trim()"
+                  @click="sendMessage"
+                >
+                  <template #icon><SendOutlined /></template>
+                </a-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Pane: Real-Time Browser Live Preview -->
+      <section class="preview-pane">
+        <!-- Browser Mockup Window Header -->
+        <div class="preview-browser-header">
+          <div class="browser-header-left">
+            <div class="traffic-lights">
+              <span class="light light--red"></span>
+              <span class="light light--yellow"></span>
+              <span class="light light--green"></span>
+            </div>
+
+            <!-- Responsive Device Viewport Switcher -->
+            <div class="device-switcher-tabs">
+              <button
+                type="button"
+                class="device-tab"
+                :class="{ 'device-tab--active': previewDevice === 'desktop' }"
+                title="桌面端全屏预览 (100%)"
+                @click="previewDevice = 'desktop'"
               >
-                <template #icon>
-                  <SendOutlined />
-                </template>
-              </a-button>
+                <DesktopOutlined />
+                <span class="device-tab-label">桌面</span>
+              </button>
+              <button
+                type="button"
+                class="device-tab"
+                :class="{ 'device-tab--active': previewDevice === 'tablet' }"
+                title="平板端预览 (768px)"
+                @click="previewDevice = 'tablet'"
+              >
+                <TabletOutlined />
+                <span class="device-tab-label">平板</span>
+              </button>
+              <button
+                type="button"
+                class="device-tab"
+                :class="{ 'device-tab--active': previewDevice === 'mobile' }"
+                title="手机端预览 (375px)"
+                @click="previewDevice = 'mobile'"
+              >
+                <MobileOutlined />
+                <span class="device-tab-label">手机</span>
+              </button>
+            </div>
+
+            <!-- Simulated Address Bar -->
+            <div class="simulated-url-bar" :title="previewUrl">
+              <span class="url-scheme">https://</span>
+              <span class="url-host">preview.epiph.studio</span>
+              <span class="url-route">{{ previewVersion ? `/v${previewVersion.versionNo}` : '/live' }}</span>
             </div>
           </div>
-        </div>
-      </div>
-      <!-- 右侧网页展示区域 -->
-      <div class="preview-section">
-        <div class="preview-header">
-          <div class="preview-heading">
-            <span class="preview-heading-icon">↗</span>
-            <div>
-              <h3>页面预览</h3>
-              <span class="preview-heading-caption">
-                {{ previewVersion ? `预览 V${previewVersion.versionNo}` : '当前工作区' }}
-                <template v-if="previewVersion?.deployed"> · 线上版本</template>
-              </span>
-            </div>
-          </div>
-          <span v-if="previewUrl" class="preview-status preview-status--ready">
-            <i></i> {{ isGenerating || deploying ? '正在更新' : '实时预览' }}
-          </span>
-          <span v-else-if="isGenerating" class="preview-status">
-            <i></i> 正在生成
-          </span>
-          <div class="preview-actions">
+
+          <div class="browser-header-right">
+            <!-- Visual Element Inspector Toggle -->
             <a-button
-                v-if="isOwner && previewUrl"
-                type="link"
-                :danger="isEditMode"
-                @click="toggleEditMode"
-                :class="{ 'edit-mode-active': isEditMode }"
-                style="padding: 0; height: auto; margin-right: 12px"
+              v-if="isOwner && previewUrl"
+              size="small"
+              :type="isEditMode ? 'primary' : 'default'"
+              :danger="isEditMode"
+              class="inspector-toggle-btn"
+              :class="{ 'inspector-toggle-btn--active': isEditMode }"
+              @click="toggleEditMode"
             >
-              <template #icon>
-                <EditOutlined />
-              </template>
-              {{ isEditMode ? '退出编辑' : '编辑模式' }}
+              <template #icon><AimOutlined /></template>
+              <span>{{ isEditMode ? '退出点选修改' : '点选元素修改' }}</span>
             </a-button>
-            <a-button v-if="previewUrl" type="link" @click="openInNewTab">
-              <template #icon>
+
+            <!-- Reload Preview -->
+            <a-tooltip title="重新加载预览页面">
+              <button type="button" class="preview-tool-btn" @click="refreshPreview">
+                <ReloadOutlined />
+              </button>
+            </a-tooltip>
+
+            <!-- Open In New Tab -->
+            <a-tooltip title="在新窗口中独立访问">
+              <button v-if="previewUrl" type="button" class="preview-tool-btn" @click="openInNewTab">
                 <ExportOutlined />
-              </template>
-              新窗口打开
-            </a-button>
+              </button>
+            </a-tooltip>
           </div>
         </div>
-        <div class="preview-content">
-          <div v-if="previewUrl" class="preview-frame-wrap">
+
+        <!-- Browser Screen Area -->
+        <div class="preview-screen-viewport">
+          <div
+            v-if="previewUrl"
+            class="iframe-canvas-wrap"
+            :class="`device-mode--${previewDevice}`"
+          >
             <iframe
               :key="previewUrl"
               :src="previewUrl"
@@ -325,98 +397,133 @@
               @load="onIframeLoad"
               @error="onIframeError"
             ></iframe>
-            <div v-if="previewLoadError" class="preview-frame-error">
-              <span class="placeholder-icon">⚠</span>
-              <p>预览页面暂时无法加载</p>
+            <div v-if="previewLoadError" class="preview-error-overlay">
+              <ReloadOutlined class="error-center-icon" />
+              <h4>预览页面暂时无法加载</h4>
+              <p>构建服务正在准备中或页面渲染受到安全限制，请重试。</p>
               <a-button type="primary" ghost @click="refreshPreview">重新加载</a-button>
             </div>
           </div>
-          <div v-else-if="isGenerating || previewStatus === 'checking'" class="preview-loading">
+
+          <div v-else-if="isGenerating || previewStatus === 'checking'" class="preview-placeholder-state">
             <a-spin size="large" />
-            <p>{{ isGenerating ? '正在生成页面，完成后会自动预览' : '正在检查可预览版本…' }}</p>
+            <h4 class="state-title">{{ isGenerating ? 'AI 正在全力构建并编译工程...' : '正在检索可预览网页版本...' }}</h4>
+            <p class="state-desc">完成生成后，此处将自动呈现具有完整交互能力的真实网页</p>
           </div>
-          <div v-else class="preview-placeholder">
-            <div class="placeholder-icon">&lt;/&gt;</div>
-            <p>{{ messages.length ? '当前还没有可运行的页面版本' : '发送描述后，生成的页面会显示在这里' }}</p>
-            <a-button size="small" @click="refreshPreview">重新检查</a-button>
+
+          <div v-else class="preview-placeholder-state">
+            <div class="placeholder-icon-circle">
+              <CodeOutlined />
+            </div>
+            <h4 class="state-title">当前暂无可预览页面</h4>
+            <p class="state-desc">{{ messages.length ? '等待模型输出首个可执行版本' : '在左侧发送你的应用构想，代码将实时编译渲染' }}</p>
+            <a-button size="small" @click="refreshPreview">刷新检查</a-button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
-    <!-- 应用详情弹窗 -->
+    <!-- Modals & Drawers -->
     <AppDetailModal
-        v-model:open="appDetailVisible"
-        :app="appInfo"
-        :show-actions="isOwner || isAdmin"
-        @edit="editApp"
-        @delete="deleteApp"
+      v-model:open="appDetailVisible"
+      :app="appInfo"
+      :show-actions="isOwner || isAdmin"
+      @edit="editApp"
+      @delete="deleteApp"
     />
 
-    <!-- 部署成功弹窗 -->
     <DeploySuccessModal
-        v-model:open="deployModalVisible"
-        :deploy-url="deployUrl"
-        @open-site="openDeployedSite"
+      v-model:open="deployModalVisible"
+      :deploy-url="deployUrl"
+      @open-site="openDeployedSite"
     />
 
-    <a-drawer v-model:open="versionsDrawerOpen" title="网页版本" placement="right" width="460">
-      <div class="version-drawer-intro">
-        <span>每次成功生成都会保存为独立版本。切换预览不会更改修改基线。</span>
-        <a-button size="small" @click="refreshVersions" :loading="loadingVersions">刷新</a-button>
+    <!-- Versions Drawer -->
+    <a-drawer v-model:open="versionsDrawerOpen" title="网页版本历史" placement="right" width="480">
+      <div class="drawer-header-meta">
+        <span>每次生成成功均保存为独立不可变快照，支持无缝切换与回退。</span>
+        <a-button size="small" :loading="loadingVersions" @click="refreshVersions">刷新列表</a-button>
       </div>
-      <a-alert v-if="modificationBaseVersion" type="info" show-icon class="version-current-base">
+
+      <a-alert v-if="modificationBaseVersion" type="info" show-icon class="current-base-banner">
         <template #message>当前修改基线：V{{ modificationBaseVersion.versionNo }}</template>
       </a-alert>
-      <a-empty v-if="!versions.length && !loadingVersions" description="还没有网页版本" />
+
+      <a-empty v-if="!versions.length && !loadingVersions" description="暂无历史版本" />
       <a-spin v-else-if="loadingVersions" />
-      <div v-else class="version-list">
-        <div v-for="version in versions" :key="version.id" class="version-item">
-          <div class="version-item-heading">
-            <strong>V{{ version.versionNo }}</strong>
-            <a-tag v-if="version.working" color="blue">工作版本</a-tag>
-            <a-tag v-if="version.deployed" color="green">线上版本</a-tag>
-            <a-tag v-if="String(previewVersionId) === String(version.id)" color="purple">正在预览</a-tag>
+      <div v-else class="version-cards-list">
+        <div v-for="version in versions" :key="version.id" class="version-entry-card">
+          <div class="version-card-top">
+            <span class="version-number-tag">V{{ version.versionNo }}</span>
+            <div class="version-status-pills">
+              <a-tag v-if="version.working" color="blue">当前工作版本</a-tag>
+              <a-tag v-if="version.deployed" color="green">已上线版本</a-tag>
+              <a-tag v-if="String(previewVersionId) === String(version.id)" color="purple">正在预览</a-tag>
+            </div>
           </div>
-          <div class="version-item-time">{{ formatVersionTime(version.createTime) }} · {{ formatVersionType(version.versionType) }}</div>
-          <div v-if="version.userPrompt" class="version-item-prompt">{{ version.userPrompt }}</div>
-          <div class="version-item-meta">
-            <span v-if="version.parentVersionId">基于 V{{ versionNoById(version.parentVersionId) }}</span>
-            <span>{{ formatBytes(version.totalBytes) }}</span>
-            <span v-if="version.agent">{{ version.agent === 'deepseek' ? 'DeepSeek Flash' : '默认 Agent' }}</span>
+
+          <div class="version-meta-time">
+            {{ formatVersionTime(version.createTime) }} · {{ formatVersionType(version.versionType) }}
           </div>
-          <div class="version-item-actions">
-            <a-button size="small" @click="selectPreviewVersion(version)">预览</a-button>
-            <a-button size="small" :disabled="isGenerating" @click="setModificationBase(version)">基于此版本修改</a-button>
-            <a-button size="small" :disabled="!isOwner" @click="openVersionCompare(version)">比较</a-button>
-            <a-button size="small" type="primary" ghost :loading="deploying && deployingVersionId === version.id" :disabled="!(isOwner || isAdmin)" @click="deployVersion(version)">部署此版</a-button>
+
+          <div v-if="version.userPrompt" class="version-prompt-text">
+            {{ version.userPrompt }}
+          </div>
+
+          <div class="version-specs">
+            <span v-if="version.parentVersionId">基线: V{{ versionNoById(version.parentVersionId) }}</span>
+            <span>大小: {{ formatBytes(version.totalBytes) }}</span>
+            <span v-if="version.agent">模型: {{ version.agent === 'deepseek' ? 'DeepSeek Flash' : '默认 Agent' }}</span>
+          </div>
+
+          <div class="version-actions-bar">
+            <a-button size="small" @click="selectPreviewVersion(version)">预览此版</a-button>
+            <a-button size="small" :disabled="isGenerating" @click="setModificationBase(version)">设为修改基线</a-button>
+            <a-button size="small" :disabled="!isOwner" @click="openVersionCompare(version)">版本对比</a-button>
+            <a-button
+              size="small"
+              type="primary"
+              ghost
+              :loading="deploying && deployingVersionId === version.id"
+              :disabled="!(isOwner || isAdmin)"
+              @click="deployVersion(version)"
+            >
+              部署此版
+            </a-button>
           </div>
         </div>
       </div>
-      <a-divider v-if="deploymentHistory.length" orientation="left">部署记录</a-divider>
-      <div v-if="deploymentHistory.length" class="deployment-history-list">
-        <div v-for="record in deploymentHistory" :key="record.id" class="deployment-history-item">
+
+      <a-divider v-if="deploymentHistory.length" orientation="left">部署发布记录</a-divider>
+      <div v-if="deploymentHistory.length" class="deploy-history-list">
+        <div v-for="record in deploymentHistory" :key="record.id" class="deploy-history-row">
           <a-tag color="green">发布 V{{ record.versionNo }}</a-tag>
-          <span>{{ formatVersionTime(record.deployedTime) }}</span>
+          <span class="deploy-time">{{ formatVersionTime(record.deployedTime) }}</span>
         </div>
       </div>
     </a-drawer>
 
-    <a-modal v-model:open="compareModalOpen" title="版本比较" width="820px" :footer="null">
-      <div class="version-compare-controls">
+    <!-- Version Diff Compare Modal -->
+    <a-modal v-model:open="compareModalOpen" title="版本文件差异对比" width="840px" :footer="null">
+      <div class="compare-controls-bar">
         <a-select v-model:value="compareLeftVersionId" style="min-width: 150px" placeholder="旧版本">
           <a-select-option v-for="version in versions" :key="version.id" :value="version.id">V{{ version.versionNo }}</a-select-option>
         </a-select>
-        <span>对比</span>
+        <span class="compare-vs-badge">VS</span>
         <a-select v-model:value="compareRightVersionId" style="min-width: 150px" placeholder="新版本">
           <a-select-option v-for="version in versions" :key="version.id" :value="version.id">V{{ version.versionNo }}</a-select-option>
         </a-select>
-        <a-button type="primary" :loading="loadingCompare" @click="loadVersionCompare">比较</a-button>
+        <a-button type="primary" :loading="loadingCompare" @click="loadVersionCompare">开始比较</a-button>
       </div>
-      <a-empty v-if="compareFiles.length === 0 && !loadingCompare" description="没有文件差异或尚未比较" />
-      <a-collapse v-else :bordered="false">
-        <a-collapse-panel v-for="file in compareFiles" :key="file.path" :header="`${file.path} · ${file.status} · ${file.oldBytes ?? '—'}B → ${file.newBytes ?? '—'}B`">
-          <pre class="version-diff">{{ file.unifiedDiff }}</pre>
+
+      <a-empty v-if="compareFiles.length === 0 && !loadingCompare" description="两版本间无文件差异或尚未发起对比" />
+      <a-collapse v-else :bordered="false" class="compare-collapse">
+        <a-collapse-panel
+          v-for="file in compareFiles"
+          :key="file.path"
+          :header="`${file.path} · ${file.status} · ${file.oldBytes ?? '—'}B → ${file.newBytes ?? '—'}B`"
+        >
+          <pre class="unified-diff-view">{{ file.unifiedDiff }}</pre>
         </a-collapse-panel>
       </a-collapse>
     </a-modal>
@@ -426,7 +533,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { message, Modal } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import {
   getAppVoById,
@@ -450,7 +557,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import AppDetailModal from '@/components/AppDetailModal.vue'
 import DeploySuccessModal from '@/components/DeploySuccessModal.vue'
 import aiAvatar from '@/assets/aiAvatar.svg'
-import { API_BASE_URL, getStaticPreviewUrl, getStaticVersionPreviewUrl } from '@/config/env'
+import { getStaticPreviewUrl, getStaticVersionPreviewUrl } from '@/config/env'
 import { VisualEditor, type ElementInfo } from '@/utils/visualEditor'
 
 import {
@@ -459,16 +566,48 @@ import {
   ExportOutlined,
   InfoCircleOutlined,
   DownloadOutlined,
-  EditOutlined,
+  ArrowLeftOutlined,
+  HistoryOutlined,
+  DesktopOutlined,
+  TabletOutlined,
+  MobileOutlined,
+  ReloadOutlined,
+  CheckCircleFilled,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  LoadingOutlined,
+  DownOutlined,
+  RightOutlined,
+  AimOutlined,
+  BranchesOutlined,
+  LockOutlined,
+  CodeOutlined,
+  BulbOutlined,
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
 
+// 响应式设备切换
+const previewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop')
+
+// 最终回复折叠状态管理（默认全部展开，点击可折叠）
+const collapsedReplies = ref<Set<number>>(new Set())
+const isReplyExpanded = (index: number) => !collapsedReplies.value.has(index)
+const toggleFinalReply = (index: number) => {
+  const s = new Set(collapsedReplies.value)
+  if (s.has(index)) {
+    s.delete(index)
+  } else {
+    s.add(index)
+  }
+  collapsedReplies.value = s
+}
+
 // 应用信息
 const appInfo = ref<API.AppVO>()
-const appId = ref<any>()
+const appId = ref<string | number>()
 const isWorkflowLocked = ref(false)
 const chatMetrics = ref<ChatMetrics>()
 const versions = ref<API.AppVersionVO[]>([])
@@ -507,7 +646,7 @@ const formatBytes = (value?: number) => {
 }
 
 const formatMetricTokens = (value?: number | null) => {
-  if (value === undefined || value === null) return '暂无数据'
+  if (value === undefined || value === null) return '0'
   return new Intl.NumberFormat('zh-CN').format(value)
 }
 
@@ -632,10 +771,8 @@ interface PlanItem {
   deps?: string[]
 }
 
-// 当前生成计划状态（跨消息保持，用于面板渲染）
 const currentPlan = ref<PlanItem[]>([])
 
-// 根据依赖关系计算每个任务的缩进层级
 const getPlanItemDepth = (item: PlanItem, items: PlanItem[]): number => {
   if (!item.deps || item.deps.length === 0) return 0
   const itemMap = new Map(items.map(i => [i.id, i]))
@@ -650,12 +787,6 @@ const getPlanItemDepth = (item: PlanItem, items: PlanItem[]): number => {
 }
 
 const messages = ref<Message[]>([])
-const expandedReplies = ref<Set<number>>(new Set())
-const toggleFinalReply = (index: number) => {
-  const s = new Set(expandedReplies.value)
-  if (s.has(index)) { s.delete(index) } else { s.add(index) }
-  expandedReplies.value = s
-}
 const userInput = ref('')
 const selectedAgent = ref(
   String(route.query.agent || '') === 'deepseek' ? 'deepseek' : 'default',
@@ -864,21 +995,18 @@ const mergeStreamSnapshotOrDelta = (previous: string, incoming: string) => {
       delta: incoming.slice(previous.length),
     }
   }
-  // 收到完全重复或更短前缀，视为无增量
   if (previous === incoming || previous.startsWith(incoming)) {
     return {
       next: previous,
       delta: '',
     }
   }
-  // 常见流式增量：新分片刚好接在尾部
   if (incoming.startsWith(previous.slice(-Math.min(previous.length, 64)))) {
     return {
       next: previous + incoming,
       delta: incoming,
     }
   }
-  // 兜底：当无法可靠判定为“快照”时，按增量追加，优先保证内容不丢失
   return {
     next: previous + incoming,
     delta: incoming,
@@ -888,10 +1016,8 @@ const mergeStreamSnapshotOrDelta = (previous: string, incoming: string) => {
 const sanitizeAssistantContent = (raw: string) => {
   if (!raw) return ''
   const normalizedRaw = raw
-    // 兼容部分模型返回的中文引号 JSON 片段
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
-    // 将拼接在一起的 JSON 对象拆开，便于逐行过滤
     .replace(/}\s*{/g, '}\n{')
   const lines = normalizedRaw.split('\n')
   const filtered: string[] = []
@@ -899,7 +1025,6 @@ const sanitizeAssistantContent = (raw: string) => {
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed) continue
-    // 过滤结构化工具事件 JSON，避免被展示在“最终回复”
     if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
       try {
         const obj = JSON.parse(trimmed)
@@ -907,7 +1032,7 @@ const sanitizeAssistantContent = (raw: string) => {
           continue
         }
       } catch {
-        // ignore JSON parse error
+        // ignore
       }
     }
     if (/"type"\s*:\s*"(tool_request|tool_executed|tool_result)"/.test(trimmed)) {
@@ -950,7 +1075,6 @@ const findLatestToolEventIndexByCallId = (msg: Message, toolCallId?: string) => 
 }
 
 const appendStructuredToolEvent = (msg: Message, chunk: ToolRequestStreamChunk | ToolExecutedStreamChunk) => {
-  // updatePlan 拦截：解析 items 更新计划面板，不创建 processEvent
   if (chunk.name === 'updatePlan') {
     const argStr = chunk.arguments || ''
     if (argStr) {
@@ -1000,85 +1124,119 @@ const appendStructuredToolEvent = (msg: Message, chunk: ToolRequestStreamChunk |
   })
 }
 
-const startToolEvent = (msg: Message) => {
-  const events = ensureProcessEvents(msg)
-  events.push({
-    id: `${Date.now()}_${events.length}_tool`,
-    type: 'tool',
-    title: 'tool',
-    summary: '工具调用',
-    details: '',
-    time: formatEventTime(),
-  })
-  return events.length - 1
+const appendStructuredStreamChunk = (msg: Message, chunk: StructuredStreamChunk) => {
+  if (chunk.type === 'thinking') {
+    upsertThinkingEvent(msg, chunk.data)
+    return
+  }
+  if (chunk.type === 'tool_request' || chunk.type === 'tool_executed') {
+    appendStructuredToolEvent(msg, chunk)
+  }
 }
 
-const appendStreamChunkEvents = (
+const appendRawProcessChunk = (msg: Message, chunk: string) => {
+  const structured = parseStructuredStreamChunk(chunk)
+  if (structured) {
+    appendStructuredStreamChunk(msg, structured)
+    return
+  }
+
+  const thinkingMatch = chunk.match(/^\[thinking\]\s*([\s\S]*)$/i)
+  if (thinkingMatch) {
+    const thinking = thinkingMatch[1].trim()
+    if (thinking) {
+      upsertThinkingEvent(msg, thinking)
+    }
+    return
+  }
+
+  const toolRequestMatch = chunk.match(/^\[(选择工具|工具调用)\]\s*([\s\S]*)$/)
+  if (toolRequestMatch) {
+    appendProcessEvent(msg, {
+      type: 'tool',
+      title: 'tool',
+      summary: sanitizeEventLine(toolRequestMatch[2]) || '工具调用',
+      details: chunk,
+    })
+    return
+  }
+
+  const toolResultMatch = chunk.match(/^\[(工具结果|执行结束)\]\s*([\s\S]*)$/)
+  if (toolResultMatch) {
+    appendProcessEvent(msg, {
+      type: 'tool',
+      title: 'tool',
+      summary: sanitizeEventLine(toolResultMatch[2]) || '工具结果',
+      details: chunk,
+    })
+    return
+  }
+
+  if (/^(工具|参数|结果):/.test(chunk.trim())) {
+    appendProcessEvent(msg, {
+      type: 'tool',
+      title: 'tool',
+      summary: sanitizeEventLine(chunk) || '工具详情',
+      details: chunk,
+    })
+  }
+}
+
+const consumeStreamBufferAndAppend = (
   msg: Message,
-  chunk: string,
-  toolState: { activeIndex: number | null; collectingResult: boolean }
+  rawChunk: string,
+  onAssistantChunk: (chunk: string) => void
 ) => {
-  msg.streamBuffer = (msg.streamBuffer || '') + chunk
-  const lines = msg.streamBuffer.split('\n')
+  const incoming = (msg.streamBuffer || '') + rawChunk
+  const lines = incoming.split('\n')
   msg.streamBuffer = lines.pop() || ''
+
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed) continue
-    if (trimmed.startsWith('[选择工具]')) {
-      // 仅作为中间态提示，不单独展示，避免出现“写入文件”这类无效卡片
-      continue
-    }
-    if (trimmed.startsWith('[工具调用]')) {
-      // 每次工具调用都单独生成一条事件，避免多次调用混在同一块中
-      toolState.activeIndex = startToolEvent(msg)
-      toolState.collectingResult = false
-      appendToolDetail(
-        msg,
-        toolState.activeIndex,
-        trimmed.replace(/^\[工具调用\]\s*/, '')
-      )
-      continue
-    }
-    if (trimmed.startsWith('[工具结果]')) {
-      if (toolState.activeIndex === null) {
-        toolState.activeIndex = startToolEvent(msg)
-      }
-      const events = ensureProcessEvents(msg)
-      const current = events[toolState.activeIndex]
-      if (current) {
-        current.title = 'tool'
-      }
-      toolState.collectingResult = true
-      appendToolDetail(
-        msg,
-        toolState.activeIndex,
-        trimmed.replace(/^\[工具结果\]\s*/, '')
-      )
-      continue
-    }
-    if (trimmed.startsWith('[执行结束]')) {
-      toolState.activeIndex = null
-      toolState.collectingResult = false
+    const structured = parseStructuredStreamChunk(trimmed)
+    if (structured) {
+      appendStructuredStreamChunk(msg, structured)
       continue
     }
     if (
-      toolState.activeIndex !== null &&
-      !/^\[(选择工具|工具调用|工具结果|执行结束)\]/.test(trimmed)
+      trimmed.startsWith('[thinking]') ||
+      trimmed.startsWith('[选择工具]') ||
+      trimmed.startsWith('[工具调用]') ||
+      trimmed.startsWith('[工具结果]') ||
+      trimmed.startsWith('[执行结束]') ||
+      /^(工具|参数|结果):/.test(trimmed)
     ) {
-      appendToolDetail(msg, toolState.activeIndex, line)
+      appendRawProcessChunk(msg, trimmed)
+      continue
     }
+    onAssistantChunk(`${line}\n`)
   }
 }
 
-const flushStreamBufferEvents = (
-  msg: Message,
-  toolState: { activeIndex: number | null; collectingResult: boolean }
-) => {
-  const rest = (msg.streamBuffer || '').trim()
-  if (rest) {
-    appendStreamChunkEvents(msg, `${rest}\n`, toolState)
-  }
+const flushStreamBuffer = (msg: Message, onAssistantChunk: (chunk: string) => void) => {
+  if (!msg.streamBuffer) return
+  const leftover = msg.streamBuffer
   msg.streamBuffer = ''
+  const trimmed = leftover.trim()
+  if (!trimmed) return
+  const structured = parseStructuredStreamChunk(trimmed)
+  if (structured) {
+    appendStructuredStreamChunk(msg, structured)
+    return
+  }
+  if (
+    trimmed.startsWith('[thinking]') ||
+    trimmed.startsWith('[选择工具]') ||
+    trimmed.startsWith('[工具调用]') ||
+    trimmed.startsWith('[工具结果]') ||
+    trimmed.startsWith('[执行结束]') ||
+    /^(工具|参数|结果):/.test(trimmed)
+  ) {
+    appendRawProcessChunk(msg, trimmed)
+    return
+  }
+  onAssistantChunk(leftover)
 }
 
 const toMultilineEventContent = (eventItem: API.ChatEventLog) => {
@@ -1106,7 +1264,7 @@ const hydrateTurnEventsForMessage = async (msg: Message) => {
   if (!msg.turnId || !isVueProjectMode.value) return
   try {
     const res = await listTurnEvents({ turnId: msg.turnId })
-    if (res.data.code !== 0 || !res.data.data?.length) return
+    if (res.data?.code !== 0 || !res.data?.data?.length) return
     const sorted = [...res.data.data].sort((a, b) => (a.seq || 0) - (b.seq || 0))
     const events: ProcessEventItem[] = []
     let activeToolIndex: number | null = null
@@ -1180,21 +1338,160 @@ const hydrateTurnEventsForMessage = async (msg: Message) => {
   }
 }
 
-// 显示应用详情
-const showAppDetail = () => {
-  appDetailVisible.value = true
+const syncAppWorkflowLockState = () => {
+  if (!appId.value) return
+  isWorkflowLocked.value = isAppWorkflowModeLocked(appId.value)
 }
 
-// 加载对话历史
+const refreshVersions = async () => {
+  if (!appId.value || (!isOwner.value && !isAdmin.value)) return
+  loadingVersions.value = true
+  try {
+    const res = await listAppVersions({ appId: appId.value })
+    if (res.data?.code === 0 && res.data.data) {
+      versions.value = res.data.data
+      if (!previewVersionId.value) {
+        const defaultVersion = workingVersion.value || deployedVersion.value || versions.value[0]
+        if (defaultVersion?.id) {
+          previewVersionId.value = String(defaultVersion.id)
+        }
+      }
+      if (!baseVersionId.value && workingVersion.value?.id) {
+        baseVersionId.value = String(workingVersion.value.id)
+      }
+    }
+    const historyRes = await listAppDeploymentHistory({ appId: appId.value })
+    if (historyRes.data?.code === 0 && historyRes.data.data) {
+      deploymentHistory.value = historyRes.data.data
+    }
+  } catch (error) {
+    console.warn('获取版本列表失败：', error)
+  } finally {
+    loadingVersions.value = false
+  }
+}
+
+const selectPreviewVersion = async (version: API.AppVersionVO) => {
+  if (!version.id) return
+  previewVersionId.value = String(version.id)
+  const targetUrl = getStaticVersionPreviewUrl(version.id)
+  const separator = targetUrl.includes('?') ? '&' : '?'
+  previewUrl.value = `${targetUrl}${separator}v=${Date.now()}`
+  previewStatus.value = 'ready'
+  previewReady.value = false
+  previewLoadError.value = false
+  message.success(`已切换预览 V${version.versionNo}`)
+}
+
+const setModificationBase = (version: API.AppVersionVO) => {
+  if (!version.id) return
+  baseVersionId.value = String(version.id)
+  message.success(`后续修改将基于 V${version.versionNo}`)
+}
+
+const openVersionCompare = (version: API.AppVersionVO) => {
+  compareModalOpen.value = true
+  compareRightVersionId.value = String(version.id)
+  if (version.parentVersionId) {
+    compareLeftVersionId.value = String(version.parentVersionId)
+  } else {
+    const other = versions.value.find(item => String(item.id) !== String(version.id))
+    compareLeftVersionId.value = other?.id ? String(other.id) : undefined
+  }
+  if (compareLeftVersionId.value && compareRightVersionId.value) {
+    void loadVersionCompare()
+  }
+}
+
+const loadVersionCompare = async () => {
+  if (!appId.value || !compareLeftVersionId.value || !compareRightVersionId.value) {
+    message.warning('请选择需要对比的两个版本')
+    return
+  }
+  loadingCompare.value = true
+  try {
+    const res = await compareAppVersions({
+      appId: String(appId.value),
+      leftVersionId: String(compareLeftVersionId.value),
+      rightVersionId: String(compareRightVersionId.value),
+    })
+    if (res.data?.code === 0 && res.data.data) {
+      compareFiles.value = res.data.data.files || []
+    } else {
+      message.error(res.data?.message || '版本比对失败')
+    }
+  } catch {
+    message.error('版本比对请求失败')
+  } finally {
+    loadingCompare.value = false
+  }
+}
+
+const deployVersion = async (version: API.AppVersionVO) => {
+  if (!appId.value || !version.id) return
+  deploying.value = true
+  deployingVersionId.value = String(version.id)
+  try {
+    const res = await deployAppApi({
+      appId: appId.value,
+      versionId: version.id as unknown as number,
+    })
+    if (res.data.code === 0 && res.data.data) {
+      deployUrl.value = res.data.data
+      deployModalVisible.value = true
+      message.success(`V${version.versionNo} 部署成功`)
+      await fetchAppInfo()
+      await refreshVersions()
+    } else {
+      message.error('部署失败：' + res.data.message)
+    }
+  } catch {
+    message.error('部署失败，请重试')
+  } finally {
+    deploying.value = false
+    deployingVersionId.value = undefined
+  }
+}
+
+const fetchAppInfo = async () => {
+  const id = route.params.id as string
+  if (!id) {
+    message.error('应用ID不存在')
+    router.push('/')
+    return
+  }
+
+  appId.value = id
+  syncAppWorkflowLockState()
+
+  try {
+    const res = await getAppVoById({ id: id as unknown as number })
+    if (res.data.code === 0 && res.data.data) {
+      appInfo.value = res.data.data
+      await refreshVersions()
+      await updatePreview(3)
+      await refreshChatMetrics()
+      if (!historyLoaded.value) {
+        await loadChatHistory()
+      }
+    } else {
+      message.error('获取应用信息失败：' + res.data.message)
+      router.push('/')
+    }
+  } catch {
+    message.error('获取应用信息失败')
+    router.push('/')
+  }
+}
+
 const loadChatHistory = async (isLoadMore = false) => {
   if (!appId.value || loadingHistory.value) return
   loadingHistory.value = true
   try {
     const params: API.listAppChatHistoryParams = {
-      appId: appId.value,
+      appId: Number(appId.value),
       pageSize: 10,
     }
-    // 如果是加载更多，传递最后一条消息的创建时间作为游标
     if (isLoadMore && lastCreateTime.value) {
       params.lastCreateTime = lastCreateTime.value
     }
@@ -1202,42 +1499,24 @@ const loadChatHistory = async (isLoadMore = false) => {
     if (res.data.code === 0 && res.data.data) {
       const chatHistories = res.data.data.records || []
       if (chatHistories.length > 0) {
-        // 将对话历史转换为消息格式，并按时间正序排列（老消息在前）
         const historyMessages: Message[] = chatHistories
-            .map((chat) => ({
-              type: (chat.messageType === 'user' ? 'user' : 'ai') as 'user' | 'ai',
-              content: chat.messageType === 'assistant' ? sanitizeAssistantContent(chat.message || '') : (chat.message || ''),
-              turnId: chat.turnId,
-              createTime: chat.createTime,
-              processEvents:
-                chat.messageType === 'assistant' && chat.reasoningContent
-                  ? [
-                      {
-                        id: `${chat.turnId || chat.createTime || 'history'}_thinking`,
-                        type: 'thinking' as const,
-                        title: 'thinking',
-                        summary: buildEventPreview(chat.reasoningContent, 'thinking'),
-                        details: chat.reasoningContent,
-                        time: chat.createTime || formatEventTime(),
-                      },
-                    ]
-                  : [],
-            }))
-            .reverse() // 反转数组，让老消息在前
+          .map((chat: API.ChatHistory) => ({
+            type: (chat.messageType === 'user' ? 'user' : 'ai') as 'user' | 'ai',
+            content: chat.messageType === 'assistant' ? sanitizeAssistantContent(chat.message || '') : (chat.message || ''),
+            createTime: chat.createTime,
+            turnId: chat.turnId,
+            processEvents: [],
+          }))
+          .reverse()
         if (isLoadMore) {
-          // 加载更多时，将历史消息添加到开头
           messages.value.unshift(...historyMessages)
         } else {
-          // 初始加载，直接设置消息列表
           messages.value = historyMessages
         }
-        // 更新游标
         lastCreateTime.value = chatHistories[chatHistories.length - 1]?.createTime
-        // 检查是否还有更多历史
         hasMoreHistory.value = chatHistories.length === 10
         for (const msg of historyMessages) {
           if (msg.type === 'ai' && msg.turnId) {
-            // 优先展示数据库中的完整执行事件
             await hydrateTurnEventsForMessage(msg)
           }
         }
@@ -1248,251 +1527,54 @@ const loadChatHistory = async (isLoadMore = false) => {
     }
   } catch (error) {
     console.error('加载对话历史失败：', error)
-    message.error('加载对话历史失败')
   } finally {
     loadingHistory.value = false
   }
 }
 
-// 加载更多历史消息
 const loadMoreHistory = async () => {
-  await loadChatHistory(true)
-}
-
-const refreshVersions = async (selectWorking = false, versionIdsBeforeTurn?: Set<string>) => {
-  if (!appId.value || (!isOwner.value && !isAdmin.value)) return
-  loadingVersions.value = true
-  try {
-    const [response, historyResponse] = await Promise.all([
-      listAppVersions({ appId: String(appId.value) }),
-      listAppDeploymentHistory({ appId: String(appId.value) }),
-    ])
-    if (response.data.code !== 0) throw new Error(response.data.message || '读取版本列表失败')
-    versions.value = response.data.data || []
-    deploymentHistory.value = historyResponse.data.code === 0 ? historyResponse.data.data || [] : []
-    const currentWorking = versions.value.find(version => version.working)
-    const currentDeployed = versions.value.find(version => version.deployed)
-    if (appInfo.value) {
-      appInfo.value.workingVersionId = currentWorking?.id
-      appInfo.value.deployedVersionId = currentDeployed?.id
+  if (!hasMoreHistory.value || loadingHistory.value) return
+  const currentContainer = messagesContainer.value
+  const oldScrollHeight = currentContainer?.scrollHeight || 0
+  await loadChatHistory()
+  nextTick(() => {
+    if (currentContainer) {
+      const newScrollHeight = currentContainer.scrollHeight
+      currentContainer.scrollTop = newScrollHeight - oldScrollHeight
     }
-    if (selectWorking || !previewVersionId.value || !versions.value.some(version => String(version.id) === String(previewVersionId.value))) {
-      previewVersionId.value = currentWorking?.id || currentDeployed?.id
-    }
-    if (selectWorking || !baseVersionId.value || !versions.value.some(version => String(version.id) === String(baseVersionId.value))) {
-      baseVersionId.value = currentWorking?.id
-    }
-    const baseStorageKey = `epiph-code:app:${appId.value}:base-version`
-    if (baseVersionId.value) localStorage.setItem(baseStorageKey, baseVersionId.value)
-    else localStorage.removeItem(baseStorageKey)
-    if (selectWorking) {
-      const latestTurnVersion = versions.value.find(version => version.turnId
-        && version.versionType === 'GENERATED'
-        && (!versionIdsBeforeTurn || !versionIdsBeforeTurn.has(String(version.id))))
-      const latestUnlinkedReply = [...messages.value].reverse().find(item => item.type === 'ai' && !item.turnId && !item.loading)
-      if (latestTurnVersion?.turnId && latestUnlinkedReply) latestUnlinkedReply.turnId = latestTurnVersion.turnId
-    }
-  } catch (error) {
-    console.error('读取版本列表失败：', error)
-    message.error(error instanceof Error ? error.message : '读取版本列表失败')
-  } finally {
-    loadingVersions.value = false
-  }
-}
-
-const selectPreviewVersion = async (version: API.AppVersionVO) => {
-  if (!version.id) return
-  previewVersionId.value = String(version.id)
-  await updatePreview(2)
-}
-
-const setModificationBase = (version: API.AppVersionVO) => {
-  if (!version.id) return
-  baseVersionId.value = String(version.id)
-  localStorage.setItem(`epiph-code:app:${appId.value}:base-version`, baseVersionId.value)
-  message.success(`后续修改将基于 V${version.versionNo}`)
-}
-
-const openVersionCompare = (version: API.AppVersionVO) => {
-  if (!version.id || versions.value.length < 2) {
-    message.info('至少需要两个网页版本才能比较')
-    return
-  }
-  compareLeftVersionId.value = String(version.id)
-  compareRightVersionId.value = String(
-    (versions.value.find(item => item.working && String(item.id) !== String(version.id))
-      || versions.value.find(item => String(item.id) !== String(version.id)))?.id || '',
-  )
-  compareFiles.value = []
-  compareModalOpen.value = true
-  void loadVersionCompare()
-}
-
-const loadVersionCompare = async () => {
-  if (!appId.value || !compareLeftVersionId.value || !compareRightVersionId.value) return
-  loadingCompare.value = true
-  try {
-    const response = await compareAppVersions({
-      appId: String(appId.value),
-      leftVersionId: compareLeftVersionId.value,
-      rightVersionId: compareRightVersionId.value,
-    })
-    if (response.data.code !== 0) throw new Error(response.data.message || '比较版本失败')
-    compareFiles.value = response.data.data?.files || []
-  } catch (error) {
-    console.error('比较版本失败：', error)
-    message.error(error instanceof Error ? error.message : '比较版本失败')
-  } finally {
-    loadingCompare.value = false
-  }
-}
-
-const deployVersion = (version: API.AppVersionVO) => {
-  if (!version.id || !appId.value) return
-  Modal.confirm({
-    title: `部署网页版本 V${version.versionNo}？`,
-    content: version.userPrompt ? `本次版本：${version.userPrompt.slice(0, 120)}` : '线上网页将切换到此版本。',
-    okText: '部署此版本',
-    cancelText: '取消',
-    onOk: async () => {
-      deploying.value = true
-      deployingVersionId.value = String(version.id)
-      try {
-        const response = await deployAppApi({ appId: String(appId.value), versionId: String(version.id) })
-        if (response.data.code !== 0 || !response.data.data) throw new Error(response.data.message || '部署失败')
-        deployUrl.value = response.data.data
-        if (appInfo.value) appInfo.value.deployedVersionId = String(version.id)
-        deployModalVisible.value = true
-        message.success(`V${version.versionNo} 已部署`)
-        await refreshVersions()
-      } catch (error) {
-        console.error('部署版本失败：', error)
-        message.error(error instanceof Error ? error.message : '部署失败，请重试')
-      } finally {
-        deploying.value = false
-        deployingVersionId.value = undefined
-      }
-    },
   })
 }
 
-const deployApp = () => {
-  const version = workingVersion.value
-  if (!version) {
-    message.warning('当前还没有可部署的网页版本')
-    return
-  }
-  deployVersion(version)
-}
-
-// 获取应用信息
-const fetchAppInfo = async () => {
-  const id = route.params.id as string
-  if (!id) {
-    message.error('应用ID不存在')
-    router.push('/')
-    return
-  }
-
-  appId.value = id
-  baseVersionId.value = localStorage.getItem(`epiph-code:app:${id}:base-version`) || undefined
-  isWorkflowLocked.value = isAppWorkflowModeLocked(id)
-
-  try {
-    const res = await getAppVoById({ id: id as unknown as number })
-    if (res.data.code === 0 && res.data.data) {
-      appInfo.value = res.data.data
-      if (!isOwner.value && appInfo.value.deployedVersionId) {
-        previewVersionId.value = appInfo.value.deployedVersionId
-      }
-      await refreshChatMetrics()
-      await refreshVersions()
-
-      // 先加载对话历史
-      await loadChatHistory()
-      // 直接检查产物是否存在，避免有代码但历史记录未完整返回时空白预览。
-      await updatePreview()
-      // 检查是否需要自动发送初始提示词
-      // 只有在是自己的应用且没有对话历史时才自动发送
-      if (
-          appInfo.value.initPrompt &&
-          isOwner.value &&
-          messages.value.length === 0 &&
-          historyLoaded.value
-      ) {
-        await sendInitialMessage(appInfo.value.initPrompt)
-      }
-    } else {
-      message.error('获取应用信息失败')
-      router.push('/')
-    }
-  } catch (error) {
-    console.error('获取应用信息失败：', error)
-    message.error('获取应用信息失败')
-    router.push('/')
-  }
-}
-
-// 发送初始消息
-const sendInitialMessage = async (prompt: string) => {
-  // 添加用户消息
-  messages.value.push({
-    type: 'user',
-    content: prompt,
-  })
-
-  // 添加AI消息占位符
-  const aiMessageIndex = messages.value.length
-  messages.value.push({
-    type: 'ai',
-    content: '',
-    loading: true,
-  })
-
-  await nextTick()
-  scrollToBottom(true)
-
-  // 开始生成
-  isGenerating.value = true
-  const clientRequestId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
-  await generateCode(prompt, aiMessageIndex, clientRequestId)
-}
-
-// 发送消息
 const sendMessage = async () => {
-  if (!userInput.value.trim() || isGenerating.value) {
+  if (!userInput.value.trim() || isGenerating.value) return
+  if (!isOwner.value) {
+    message.warning('无法在别人的作品下对话哦~')
     return
   }
 
-  let message = userInput.value.trim()
-  // 如果有选中的元素，将元素信息添加到提示词中
-  if (selectedElementInfo.value) {
-    let elementContext = `\n\n选中元素信息：`
-    if (selectedElementInfo.value.pagePath) {
-      elementContext += `\n- 页面路径: ${selectedElementInfo.value.pagePath}`
-    }
-    elementContext += `\n- 标签: ${selectedElementInfo.value.tagName.toLowerCase()}\n- 选择器: ${selectedElementInfo.value.selector}`
-    if (selectedElementInfo.value.textContent) {
-      elementContext += `\n- 当前内容: ${selectedElementInfo.value.textContent.substring(0, 100)}`
-    }
-    message += elementContext
-  }
+  const content = userInput.value.trim()
   userInput.value = ''
-  // 添加用户消息（包含元素信息）
+  shouldAutoScroll.value = true
+
+  let elementContextPrompt = ''
+  if (selectedElementInfo.value) {
+    elementContextPrompt = `【当前正在针对页面局部元素进行修改】\n- 标签: <${selectedElementInfo.value.tagName.toLowerCase()}>\n- CSS 选择器: ${selectedElementInfo.value.selector}\n`
+    if (selectedElementInfo.value.id) elementContextPrompt += `- ID: #${selectedElementInfo.value.id}\n`
+    if (selectedElementInfo.value.className) elementContextPrompt += `- 类名: .${selectedElementInfo.value.className.split(' ').join('.')}\n`
+    if (selectedElementInfo.value.textContent) elementContextPrompt += `- 元素文本摘要: ${selectedElementInfo.value.textContent.substring(0, 100)}\n`
+    if (selectedElementInfo.value.pagePath) elementContextPrompt += `- 页面路径: ${selectedElementInfo.value.pagePath}\n`
+    elementContextPrompt += '\n请重点针对上述指定元素及周边相关结构执行修改。\n'
+  }
+
   messages.value.push({
     type: 'user',
-    content: message,
+    content: content,
   })
 
-  // 发送消息后，清除选中元素并退出编辑模式
-  if (selectedElementInfo.value) {
-    clearSelectedElement()
-    if (isEditMode.value) {
-      toggleEditMode()
-    }
-  }
+  nextTick(() => {
+    scrollToBottom(true)
+  })
 
-  // 添加AI消息占位符
   const aiMessageIndex = messages.value.length
   messages.value.push({
     type: 'ai',
@@ -1500,198 +1582,179 @@ const sendMessage = async () => {
     loading: true,
   })
 
-  await nextTick()
-  scrollToBottom(true)
-
-  // 开始生成
   isGenerating.value = true
-  const clientRequestId = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
-  await generateCode(message, aiMessageIndex, clientRequestId)
-}
 
-// 生成代码 - 使用 EventSource 处理流式响应
-const generateCode = async (userMessage: string, aiMessageIndex: number, clientRequestId: string) => {
-  let eventSource: EventSource | null = null
-  let streamCompleted = false
-  const versionIdsBeforeTurn = new Set(versions.value.map(version => String(version.id)))
+  const clientRequestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  const currentMode = getCurrentGenerationMode()
+  if (currentMode === 'workflow' && appId.value) {
+    lockAppWorkflowMode(appId.value)
+    syncAppWorkflowLockState()
+  }
+
+  const API_BASE_URL = request.defaults.baseURL || ''
+  const chatEndpoint = currentMode === 'workflow' ? '/app/chat/workflow' : '/app/chat'
+  const finalMessage = elementContextPrompt ? `${elementContextPrompt}\n用户修改诉求: ${content}` : content
+
+  const requestBody: Record<string, unknown> = {
+    appId: appId.value,
+    message: finalMessage,
+    clientRequestId,
+    agent: selectedAgent.value,
+  }
+
+  if (baseVersionId.value) {
+    requestBody.baseVersionId = baseVersionId.value
+  }
+
+  clearSelectedElement()
 
   try {
-    // 获取 axios 配置的 baseURL
-    const baseURL = request.defaults.baseURL || API_BASE_URL
-
-    // 构建URL参数
-    const params = new URLSearchParams({
-      appId: appId.value || '',
-      message: userMessage,
-      mode: getCurrentGenerationMode(),
-      agent: selectedAgent.value,
-      clientRequestId,
-    })
-    if (baseVersionId.value) params.set('baseVersionId', baseVersionId.value)
-    if (appId.value && getCurrentGenerationMode() === 'workflow') {
-      lockAppWorkflowMode(appId.value)
-      isWorkflowLocked.value = true
-    }
-
-    const url = `${baseURL}/app/chat/gen/code?${params}`
-
-    // 创建 EventSource 连接
-    eventSource = new EventSource(url, {
-      withCredentials: true,
+    const response = await fetch(`${API_BASE_URL}${chatEndpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      credentials: 'include',
     })
 
-    let fullContent = ''
-    let fullThinking = ''
-    const toolState: { activeIndex: number | null; collectingResult: boolean } = {
-      activeIndex: null,
-      collectingResult: false,
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    // 处理接收到的消息
-    eventSource.onmessage = function (event) {
-      if (streamCompleted) return
+    const reader = response.body?.getReader()
+    if (!reader) {
+      throw new Error('Response body is null')
+    }
 
-      try {
-        // 解析JSON包装的数据
-        const parsed = JSON.parse(event.data)
-        const content = parsed.d
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let assistantRaw = ''
 
-        if (content === undefined || content === null) {
-          return
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const rawData = line.slice(5).trim()
+          if (!rawData) continue
+
+          if (rawData === '[DONE]') {
+            messages.value[aiMessageIndex].loading = false
+            continue
+          }
+
+          try {
+            const parsed = JSON.parse(rawData)
+            if (parsed.d) {
+              const currentAiMsg = messages.value[aiMessageIndex]
+              consumeStreamBufferAndAppend(currentAiMsg, parsed.d, (textChunk) => {
+                const merged = mergeStreamSnapshotOrDelta(assistantRaw, textChunk)
+                assistantRaw = merged.next
+                currentAiMsg.content = sanitizeAssistantContent(assistantRaw)
+              })
+
+              nextTick(() => {
+                scrollToBottom()
+              })
+            }
+          } catch {
+            const currentAiMsg = messages.value[aiMessageIndex]
+            consumeStreamBufferAndAppend(currentAiMsg, rawData, (textChunk) => {
+              const merged = mergeStreamSnapshotOrDelta(assistantRaw, textChunk)
+              assistantRaw = merged.next
+              currentAiMsg.content = sanitizeAssistantContent(assistantRaw)
+            })
+
+            nextTick(() => {
+              scrollToBottom()
+            })
+          }
         }
-        // 结构化分片（thinking/tool）
-        const structuredChunk = parseStructuredStreamChunk(content)
-        if (structuredChunk?.type === 'thinking') {
-          const thinkingUpdate = mergeStreamSnapshotOrDelta(fullThinking, structuredChunk.data)
-          fullThinking = thinkingUpdate.next
-          upsertThinkingEvent(messages.value[aiMessageIndex], fullThinking)
-          messages.value[aiMessageIndex].loading = false
-          scrollToBottom()
-          return
-        }
-        if (
-          structuredChunk?.type === 'tool_request' ||
-          structuredChunk?.type === 'tool_executed'
-        ) {
-          appendStructuredToolEvent(messages.value[aiMessageIndex], structuredChunk)
-          messages.value[aiMessageIndex].loading = false
-          scrollToBottom()
-          return
-        }
-        // 普通文本分片（AI响应/工具输出）
-        const chunkText = typeof content === 'string' ? content : String(content)
-        const contentUpdate = mergeStreamSnapshotOrDelta(fullContent, chunkText)
-        fullContent = contentUpdate.next
-        // 流式阶段保留原始内容，确保工具调用标记可实时展示
-        messages.value[aiMessageIndex].content = fullContent
-        if (contentUpdate.delta) {
-          appendStreamChunkEvents(messages.value[aiMessageIndex], contentUpdate.delta, toolState)
-        }
-        messages.value[aiMessageIndex].loading = false
-        scrollToBottom()
-      } catch (error) {
-        console.error('解析消息失败:', error)
-        handleError(error, aiMessageIndex)
       }
     }
 
-    // 处理done事件
-    eventSource.addEventListener('done', async function () {
-      if (streamCompleted) return
-
-      streamCompleted = true
-      flushStreamBufferEvents(messages.value[aiMessageIndex], toolState)
-      const completedMessage = messages.value[aiMessageIndex]
-      completedMessage.content = sanitizeAssistantContent(fullContent)
-      if (!completedMessage.content && !completedMessage.processEvents?.length) {
-        completedMessage.content = '本轮生成已结束，但没有收到模型文本回复。请查看预览或重试。'
-      }
-      completedMessage.loading = false
-      eventSource?.close()
-      void refreshChatMetrics()
-
-      // done 到达时后端已完成版本落库；先同步工作版本和修改基线，再允许下一轮输入。
-      try {
-        await refreshVersions(true, versionIdsBeforeTurn)
-        await updatePreview(5)
-      } finally {
-        isGenerating.value = false
-      }
+    const currentAiMsg = messages.value[aiMessageIndex]
+    flushStreamBuffer(currentAiMsg, (textChunk) => {
+      const merged = mergeStreamSnapshotOrDelta(assistantRaw, textChunk)
+      assistantRaw = merged.next
+      currentAiMsg.content = sanitizeAssistantContent(assistantRaw)
     })
 
-    // 处理business-error事件（后端限流等错误）
-    eventSource.addEventListener('business-error', function (event: MessageEvent) {
-      if (streamCompleted) return
+    currentAiMsg.content = sanitizeAssistantContent(assistantRaw || currentAiMsg.content)
+    messages.value[aiMessageIndex].loading = false
 
-      try {
-        const errorData = JSON.parse(event.data)
-        console.error('SSE业务错误事件:', errorData)
-
-        // 显示具体的错误信息
-        const errorMessage = errorData.message || '生成过程中出现错误'
-        messages.value[aiMessageIndex].content = `❌ ${errorMessage}`
-        appendProcessEvent(messages.value[aiMessageIndex], {
-          type: 'error',
-          title: '业务错误',
-          summary: '处理过程中出现业务错误',
-          details: errorMessage,
-        })
-        messages.value[aiMessageIndex].loading = false
-        message.error(errorMessage)
-
-        streamCompleted = true
-        isGenerating.value = false
-        eventSource?.close()
-      } catch (parseError) {
-        console.error('解析错误事件失败:', parseError, '原始数据:', event.data)
-        handleError(new Error('服务器返回错误'), aiMessageIndex)
-      }
-    })
-
-    // 处理错误
-    eventSource.onerror = function () {
-      if (streamCompleted || !isGenerating.value) return
-      // 避免浏览器 EventSource 自动重连导致同一请求被反复触发
-      eventSource?.close()
-      handleError(new Error('SSE连接中断'), aiMessageIndex)
-    }
+    await updatePreview(4)
+    await refreshVersions()
+    await refreshChatMetrics()
   } catch (error) {
-    console.error('创建 EventSource 失败：', error)
-    handleError(error, aiMessageIndex)
+    console.error('发送消息失败：', error)
+    messages.value[aiMessageIndex].loading = false
+    messages.value[aiMessageIndex].content = '抱歉，生成过程中遇到网络或服务异常，请稍后重试。'
+  } finally {
+    isGenerating.value = false
+    nextTick(() => {
+      scrollToBottom()
+    })
   }
 }
 
-// 错误处理函数
-const handleError = (error: unknown, aiMessageIndex: number) => {
-  console.error('生成代码失败：', error)
-  const errorText = '抱歉，生成过程中出现了错误，请重试。'
-  messages.value[aiMessageIndex].content = errorText
-  appendProcessEvent(messages.value[aiMessageIndex], {
-    type: 'error',
-    title: '连接异常',
-    summary: '网络连接或流式传输异常',
-    details: errorText,
-  })
-  messages.value[aiMessageIndex].loading = false
-  message.error('生成失败，请重试')
-  isGenerating.value = false
+const showAppDetail = () => {
+  appDetailVisible.value = true
 }
 
-// 更新预览
-const updatePreview = async (retries = 0) => {
-  if (!appId.value) {
+const deployApp = async () => {
+  if (!appId.value) return
+  deploying.value = true
+  try {
+    const res = await deployAppApi({
+      appId: appId.value,
+      versionId: workingVersion.value?.id as unknown as number,
+    })
+    if (res.data.code === 0 && res.data.data) {
+      deployUrl.value = res.data.data
+      deployModalVisible.value = true
+      message.success('部署成功')
+      await fetchAppInfo()
+      await refreshVersions()
+    } else {
+      message.error('部署失败：' + res.data.message)
+    }
+  } catch {
+    message.error('部署失败，请重试')
+  } finally {
+    deploying.value = false
+  }
+}
+
+const updatePreview = async (retries = 1) => {
+  const codeGenType = appInfo.value?.codeGenType
+  const currentAppId = appId.value
+
+  if (!codeGenType || !currentAppId) {
     previewStatus.value = 'missing'
     return
   }
 
-  const codeGenType = appInfo.value?.codeGenType || CodeGenTypeEnum.HTML
-  const sourceUrl = previewVersionId.value
-    ? getStaticVersionPreviewUrl(previewVersionId.value)
-    : getStaticPreviewUrl(codeGenType, String(appId.value))
-  const hadWorkingPreview = Boolean(previewUrl.value)
-  previewStatus.value = 'checking'
+  const preferredVersionId = previewVersionId.value || workingVersion.value?.id || deployedVersion.value?.id
+  const sourceUrl = preferredVersionId
+    ? getStaticVersionPreviewUrl(preferredVersionId)
+    : getStaticPreviewUrl(codeGenType, String(currentAppId))
 
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
+  if (!sourceUrl) {
+    previewStatus.value = 'missing'
+    return
+  }
+
+  previewStatus.value = 'checking'
+  const hadWorkingPreview = Boolean(previewUrl.value)
+
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
       const response = await fetch(sourceUrl, { method: 'HEAD', cache: 'no-store' })
       if (response.ok) {
@@ -1704,7 +1767,6 @@ const updatePreview = async (retries = 0) => {
       }
     } catch (error) {
       console.warn('检查应用预览失败：', error)
-      // 跨域配置可能禁止 HEAD 请求，仍尝试让浏览器直接加载预览页。
       const separator = sourceUrl.includes('?') ? '&' : '?'
       previewUrl.value = `${sourceUrl}${separator}v=${Date.now()}`
       previewStatus.value = 'ready'
@@ -1738,7 +1800,6 @@ const handleMessagesScroll = () => {
   shouldAutoScroll.value = isNearBottom()
 }
 
-// 滚动到底部
 const scrollToBottom = (force = false) => {
   if (!force && !shouldAutoScroll.value) {
     return
@@ -1751,7 +1812,6 @@ const scrollToBottom = (force = false) => {
   }
 }
 
-// 下载代码
 const downloadCode = async () => {
   if (!appId.value) {
     message.error('应用ID不存在')
@@ -1768,42 +1828,35 @@ const downloadCode = async () => {
     if (!response.ok) {
       throw new Error(`下载失败: ${response.status}`)
     }
-    // 获取文件名
     const contentDisposition = response.headers.get('Content-Disposition')
     const fileName = contentDisposition?.match(/filename="(.+)"/)?.[1] || `app-${appId.value}.zip`
-    // 下载文件
     const blob = await response.blob()
     const downloadUrl = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = downloadUrl
     link.download = fileName
     link.click()
-    // 清理
     URL.revokeObjectURL(downloadUrl)
     message.success('代码下载成功')
-  } catch (error) {
-    console.error('下载失败：', error)
+  } catch {
     message.error('下载失败，请重试')
   } finally {
     downloading.value = false
   }
 }
 
-// 在新窗口打开预览
 const openInNewTab = () => {
   if (previewUrl.value) {
     window.open(previewUrl.value, '_blank')
   }
 }
 
-// 打开部署的网站
 const openDeployedSite = () => {
   if (deployUrl.value) {
     window.open(deployUrl.value, '_blank')
   }
 }
 
-// iframe加载完成
 const onIframeLoad = () => {
   previewReady.value = true
   previewLoadError.value = false
@@ -1819,17 +1872,14 @@ const onIframeError = () => {
   previewLoadError.value = true
 }
 
-// 编辑应用
 const editApp = () => {
   if (appInfo.value?.id) {
     router.push(`/app/edit/${appInfo.value.id}`)
   }
 }
 
-// 删除应用
 const deleteApp = async () => {
   if (!appInfo.value?.id) return
-
   try {
     const res = await deleteAppApi({ id: appInfo.value.id })
     if (res.data.code === 0) {
@@ -1839,23 +1889,15 @@ const deleteApp = async () => {
     } else {
       message.error('删除失败：' + res.data.message)
     }
-  } catch (error) {
-    console.error('删除失败：', error)
+  } catch {
     message.error('删除失败')
   }
 }
 
-// 可视化编辑相关函数
 const toggleEditMode = () => {
-  // 检查 iframe 是否已经加载
   const iframe = document.querySelector('.preview-iframe') as HTMLIFrameElement
-  if (!iframe) {
-    message.warning('请等待页面加载完成')
-    return
-  }
-  // 确保 visualEditor 已初始化
-  if (!previewReady.value) {
-    message.warning('请等待页面加载完成')
+  if (!iframe || !previewReady.value) {
+    message.warning('请等待页面渲染完成')
     return
   }
   const newEditMode = visualEditor.toggleEditMode()
@@ -1869,47 +1911,44 @@ const clearSelectedElement = () => {
 
 const getInputPlaceholder = () => {
   if (selectedElementInfo.value) {
-    return `正在编辑 ${selectedElementInfo.value.tagName.toLowerCase()} 元素，描述您想要的修改...`
+    return `针对选中元素 <${selectedElementInfo.value.tagName.toLowerCase()}> 描述您的调整要求...`
   }
-  return '请描述你想生成的网站，越详细效果越好哦'
+  return '输入你的迭代诉求（如：修改导航条颜色、新增数据统计卡片、优化排版...）'
 }
 
-// 页面加载时获取应用信息
 onMounted(() => {
   fetchAppInfo()
-
-  // 监听 iframe 消息
   window.addEventListener('message', (event) => {
     visualEditor.handleIframeMessage(event)
   })
 })
 
-// 清理资源
 onUnmounted(() => {
-  // EventSource 会在组件卸载时自动清理
+  // cleanup
 })
 </script>
 
 <style scoped>
 #appChatPage {
-  height: min(860px, calc(100vh - 180px));
-  min-height: 620px;
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  border: 1px solid rgba(226, 228, 235, 0.9);
-  border-radius: 22px;
-  background: rgba(250, 250, 252, 0.88);
-  box-shadow: 0 18px 50px rgba(32, 38, 56, 0.08);
+  width: 100%;
+  height: 100%;
+  background: #F8FAFC;
+  overflow: hidden;
 }
 
-/* 顶部栏 */
-.header-bar {
+/* Header Bar */
+.chat-header-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  min-height: 58px;
-  padding: 8px 8px 14px;
+  justify-content: space-between;
+  height: 54px;
+  padding: 0 16px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  flex-shrink: 0;
+  z-index: 20;
 }
 
 .header-left {
@@ -1918,909 +1957,991 @@ onUnmounted(() => {
   gap: 12px;
 }
 
-.code-gen-type-tag {
-  font-size: 12px;
+.back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: #64748B;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  transition: all 0.15s ease;
 }
 
-.app-name {
+.back-home-btn:hover {
+  color: #0F172A;
+  background: #E2E8F0;
+}
+
+.header-app-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-app-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 15px;
+  font-weight: 750;
+  color: #0F172A;
+  letter-spacing: -0.01em;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-status-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-codegen {
+  background: rgba(99, 102, 241, 0.08);
+  color: #6366F1;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.tag-deployed {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-radius: 4px;
   font-weight: 600;
-  color: #1a1a1a;
+}
+
+.tag-locked {
+  background: rgba(245, 158, 11, 0.1);
+  color: #D97706;
+  border-radius: 4px;
 }
 
 .header-right {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
-/* 主要内容区域 */
-.main-content {
+.btn-tool {
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.badge-version {
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: rgba(99, 102, 241, 0.1);
+  color: #4F46E5;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.btn-deploy {
+  border-radius: 8px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+}
+
+/* Dual Pane Workspace */
+.chat-workspace {
+  display: grid;
+  grid-template-columns: minmax(420px, 460px) minmax(0, 1fr);
   flex: 1;
-  min-height: 0;
-  display: flex;
-  gap: 16px;
-  padding: 8px;
+  height: calc(100% - 54px);
   overflow: hidden;
 }
 
-/* 左侧对话区域 */
-.chat-section {
-  flex: 2;
-  min-width: 0;
-  min-height: 0;
+/* Left Pane */
+.chat-pane {
   display: flex;
   flex-direction: column;
-  background: white;
-  border: 1px solid #e9eaf0;
-  border-radius: 17px;
-  box-shadow: 0 6px 20px rgba(38, 43, 62, 0.045);
+  height: 100%;
+  background: #FFFFFF;
+  border-right: 1px solid #E2E8F0;
   overflow: hidden;
 }
 
-.messages-container {
-  flex: 0.9;
-  padding: 16px;
+.messages-scroll-area {
+  flex: 1;
   overflow-y: auto;
-  scroll-behavior: smooth;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.message-item {
-  margin-bottom: 12px;
-  min-width: 0;
+.history-loader-wrap {
+  text-align: center;
+  margin-bottom: 8px;
 }
 
-.user-message {
+/* User Message */
+.user-bubble-wrap {
   display: flex;
   justify-content: flex-end;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
+  gap: 10px;
 }
 
-.ai-message {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
-}
-
-.message-content {
-  max-width: min(70%, 920px);
+.user-bubble {
+  max-width: 82%;
   padding: 12px 16px;
-  border-radius: 12px;
-  line-height: 1.5;
-  min-width: 0;
-  overflow-wrap: anywhere;
+  background: #6366F1;
+  color: #FFFFFF;
+  border-radius: 16px 4px 16px 16px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+.bubble-text {
+  font-size: 14px;
+  line-height: 1.6;
   word-break: break-word;
   white-space: pre-wrap;
 }
 
-.user-message .message-content {
-  background: #1890ff;
-  color: white;
+.avatar-user {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
-.ai-message .message-content {
-  background: #f5f5f5;
-  color: #1a1a1a;
-  padding: 8px 12px;
+/* AI Message */
+.ai-bubble-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
 }
 
-.process-timeline {
+.ai-avatar-wrap {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.avatar-ai-img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.ai-bubble-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
+  max-width: calc(100% - 46px);
+  width: 100%;
 }
 
-.process-event {
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid #ececec;
-  overflow: hidden;
+/* Agent Plan Card */
+.agent-plan-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
-.event-time {
-  font-size: 11px;
-  color: #8c8c8c;
-}
-
-.event-summary-line {
+.plan-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.plan-title-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.plan-head-icon {
+  color: #6366F1;
+}
+
+.plan-counter-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4F46E5;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
+.plan-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.plan-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.task-status-icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.icon-completed {
+  color: #10B981;
+}
+
+.icon-running {
+  color: #6366F1;
+}
+
+.icon-pending {
+  color: #CBD5E1;
+}
+
+.task--done .task-text {
+  color: #64748B;
+  text-decoration: line-through;
+  text-decoration-color: #CBD5E1;
+}
+
+.task--running .task-text {
+  color: #4F46E5;
+  font-weight: 600;
+}
+
+.plan-progress-track {
+  width: 100%;
+  height: 4px;
+  background: #E2E8F0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.plan-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6366F1, #10B981);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* Process Events */
+.process-events-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.process-item-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.event-details-tag {
+  width: 100%;
+}
+
+.event-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
   user-select: none;
+  list-style: none;
 }
 
-.event-details {
-  margin: 0;
-}
-
-.event-summary-line::-webkit-details-marker {
+.event-summary-row::-webkit-details-marker {
   display: none;
 }
 
-.event-details > summary {
-  list-style: none;
-  cursor: pointer;
+.summary-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
 }
 
-.event-summary-line-static {
-  cursor: default;
+.event-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.icon--thinking {
+  color: #F59E0B;
+}
+
+.icon--tool {
+  color: #6366F1;
+}
+
+.event-type-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
 }
 
 .event-summary-text {
   font-size: 12px;
-  color: #1f1f1f;
+  color: #334155;
   font-weight: 500;
-  line-height: 1.4;
-  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.event-plain {
+.event-time-stamp {
+  font-size: 11px;
+  color: #94A3B8;
+  flex-shrink: 0;
+}
+
+.event-details-pre-wrap {
+  padding: 10px 12px;
+  background: #0F172A;
+  border-top: 1px solid #1E293B;
+  overflow-x: auto;
+}
+
+.event-pre-code {
   margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
   line-height: 1.5;
-  font-family: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
-  background: #f7f7f7;
-  border-top: 1px solid #ececec;
-  padding: 10px;
+  color: #E2E8F0;
+  white-space: pre-wrap;
 }
 
-.final-reply {
-  margin-top: 8px;
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
+/* Final Reply */
+.final-reply-box {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
 
 .final-reply-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #F1F5F9;
   cursor: pointer;
   user-select: none;
 }
 
-.final-reply-header:hover {
-  background: #fafafa;
-}
-
-.final-reply-toggle {
-  font-size: 10px;
-  color: #8c8c8c;
-}
-
-.final-reply-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #262626;
-}
-
-.final-reply-body {
-  padding: 0 10px 10px;
-}
-
-.plan-panel {
-  margin-bottom: 10px;
-  padding: 12px;
-  background: #f0f7ff;
-  border: 1px solid #d0e3f7;
-  border-radius: 10px;
-}
-
-.plan-header {
+.final-reply-left {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-}
-
-.plan-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.plan-progress {
-  font-size: 12px;
-  color: #666;
-}
-
-.plan-items {
-  display: flex;
-  flex-direction: column;
   gap: 6px;
-  margin-bottom: 10px;
 }
 
-.plan-item {
+.final-reply-check {
+  color: #10B981;
+  font-size: 14px;
+}
+
+.final-reply-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.final-reply-caret {
+  color: #94A3B8;
+  font-size: 11px;
+}
+
+.final-reply-content {
+  padding: 14px 16px;
+}
+
+.stream-loading-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
-  color: #8c8c8c;
+  padding: 8px 12px;
+  background: #F8FAFC;
+  border-radius: 8px;
 }
 
-.plan-item-completed {
-  color: #52c41a;
-}
-
-.plan-item-active {
-  color: #1677ff;
+.stream-loading-text {
+  font-size: 12px;
+  color: #6366F1;
   font-weight: 500;
 }
 
-.plan-item-icon {
-  width: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.plan-item-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #d9d9d9;
-}
-
-.plan-item-spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid #1677ff;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: plan-spin 0.8s linear infinite;
-}
-
-@keyframes plan-spin {
-  to { transform: rotate(360deg); }
-}
-
-.plan-bar {
-  height: 4px;
-  background: #e6e6e6;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.plan-bar-fill {
-  height: 100%;
-  background: #1677ff;
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
-
-.message-avatar {
-  flex-shrink: 0;
-}
-
-.loading-indicator {
+.turn-version-card {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #666;
+  padding: 8px 12px;
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+  font-size: 12px;
 }
 
-
-/* 加载更多按钮 */
-.load-more-container {
-  text-align: center;
-  padding: 8px 0;
-  margin-bottom: 16px;
+.turn-version-label {
+  color: #6D28D9;
+  font-weight: 500;
 }
 
-/* 输入区域 */
-.input-container {
-  padding: 16px;
-  background: white;
+.turn-tag-link {
+  cursor: pointer;
+  font-weight: 600;
 }
 
-.chat-metrics {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  gap: 10px;
-  margin-bottom: 12px;
+/* Input Dock Area */
+.input-dock-container {
+  padding: 12px 16px 16px;
+  background: #FFFFFF;
+  border-top: 1px solid #E2E8F0;
+  flex-shrink: 0;
 }
 
-.chat-metric-card {
-  min-width: 0;
-  padding: 9px 11px;
-  border: 1px solid #eceef3;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #fcfcfd 0%, #f7f8fb 100%);
+.input-dock-card {
+  display: flex;
+  flex-direction: column;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.chat-metric-heading {
+.input-dock-card:focus-within {
+  border-color: #818CF8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  background: #FFFFFF;
+}
+
+.dock-meta-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  color: #838998;
+  padding: 6px 12px;
+  border-bottom: 1px solid #F1F5F9;
+  background: #FFFFFF;
+}
+
+.agent-switch-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pill-prefix {
   font-size: 11px;
+  color: #94A3B8;
   font-weight: 600;
 }
 
-.metric-heading-meta {
-  display: inline-flex;
+.compact-agent-select {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.metrics-display-pill {
+  display: flex;
   align-items: center;
   gap: 6px;
-  flex: 0 0 auto;
+  font-size: 11px;
+  color: #64748B;
 }
 
-.metric-agent-badge {
-  max-width: 104px;
-  overflow: hidden;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: #f2ebe7;
-  color: #a16b4e;
-  font-size: 9px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.pill-sep {
+  color: #CBD5E1;
 }
 
-.metric-info {
-  display: inline-grid;
-  width: 15px;
-  height: 15px;
-  place-items: center;
-  border: 1px solid #c9ced8;
-  border-radius: 50%;
-  color: #9298a5;
-  font-family: Georgia, serif;
-  font-size: 10px;
-  font-style: italic;
-  cursor: help;
-}
-
-.chat-metric-value {
-  display: block;
-  margin-top: 3px;
-  overflow: hidden;
-  color: #303544;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chat-metric-detail {
+.base-version-indicator {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-top: 4px;
-  overflow: hidden;
-  color: #9298a5;
-  font-size: 10px;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 6px;
+  font-size: 11px;
+  color: #6366F1;
+  background: rgba(99, 102, 241, 0.08);
+  padding: 1px 8px;
+  border-radius: 4px;
 }
 
-.chat-metric-detail i {
-  width: 3px;
-  height: 3px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: #c1c5ce;
+.btn-change-base {
+  background: transparent;
+  border: none;
+  color: #4F46E5;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
 }
 
-.context-meter {
-  height: 4px;
-  margin-top: 5px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #e8eaf0;
-}
-
-.context-meter span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #b97b58, #e0b18f);
-  transition: width 0.25s ease;
-}
-
-.input-wrapper {
-  position: relative;
-}
-
-.input-agent-bar {
+/* Inspector Selection Banner */
+.inspector-selection-banner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 0 10px;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
 }
 
-.input-agent-label {
-  color: #4b5563;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.input-agent-bar .ant-select {
-  min-width: 176px;
-}
-
-.input-agent-hint {
-  color: #9aa1ac;
+.inspector-info-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
+  color: #065F46;
 }
 
-@media (max-width: 640px) {
-  .chat-metrics {
-    grid-template-columns: 1fr;
-  }
-
-  .input-agent-bar {
-    flex-wrap: wrap;
-  }
+.inspector-icon {
+  color: #10B981;
 }
 
-.input-wrapper .ant-input {
-  padding-right: 50px;
+.inspector-tag-name {
+  font-weight: 700;
 }
 
-.input-actions {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
+.inspector-selector-code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 
-/* 右侧预览区域 */
-.preview-section {
-  flex: 3;
-  min-width: 0;
-  min-height: 0;
+.inspector-cancel-btn {
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  color: #DC2626;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Textarea Container */
+.textarea-container {
   display: flex;
   flex-direction: column;
-  background: white;
-  border: 1px solid #e9eaf0;
-  border-radius: 17px;
-  box-shadow: 0 6px 20px rgba(38, 43, 62, 0.045);
-  overflow: hidden;
+  padding: 10px 14px 10px;
 }
 
-.preview-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 66px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #ececf1;
-  background: linear-gradient(180deg, #fff 0%, #fdfdfe 100%);
-}
-
-.preview-heading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  margin-right: auto;
-}
-
-.preview-heading-icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #efdfd3;
-  border-radius: 11px;
-  background: #fbf5f0;
-  color: #a66846;
-  font-size: 16px;
-}
-
-.preview-header h3 {
-  margin: 0;
-  color: #2b2e3a;
+.prompt-textarea {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   font-size: 14px;
-  font-weight: 700;
+  line-height: 1.55;
+  resize: none;
+  padding: 0;
+  color: #0F172A !important;
 }
 
-.preview-heading-caption {
-  display: block;
-  margin-top: 2px;
-  color: #9a9eaa;
-  font-size: 10px;
+.textarea-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
 }
 
-.preview-status {
-  display: inline-flex;
+.textarea-hint {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+.send-circle-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
+}
+
+/* Right Pane: Live Preview */
+.preview-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #F1F5F9;
+  overflow: hidden;
+}
+
+.preview-browser-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  flex-shrink: 0;
+}
+
+.browser-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.traffic-lights {
+  display: flex;
   align-items: center;
   gap: 6px;
-  color: #a3785e;
-  font-size: 11px;
-  white-space: nowrap;
 }
 
-.preview-status i {
-  width: 7px;
-  height: 7px;
+.light {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #d8ac82;
 }
 
-.preview-status--ready {
-  color: #538763;
+.light--red {
+  background: #EF4444;
 }
 
-.preview-status--ready i {
-  background: #6bb77f;
-  box-shadow: 0 0 0 3px rgba(107, 183, 127, 0.13);
+.light--yellow {
+  background: #F59E0B;
 }
 
-.preview-actions {
+.light--green {
+  background: #10B981;
+}
+
+.device-switcher-tabs {
   display: flex;
+  align-items: center;
+  background: #F1F5F9;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.device-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #64748B;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.device-tab:hover {
+  color: #0F172A;
+}
+
+.device-tab--active {
+  background: #FFFFFF;
+  color: #4F46E5;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.simulated-url-bar {
+  display: flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  font-size: 12px;
+  max-width: 220px;
+}
+
+.url-scheme {
+  color: #94A3B8;
+}
+
+.url-host {
+  color: #334155;
+  font-weight: 500;
+}
+
+.url-route {
+  color: #6366F1;
+}
+
+.browser-header-right {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.preview-content {
-  flex: 1;
-  min-height: 0;
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 30%, rgba(230, 232, 241, 0.34), transparent 55%),
-    #f7f8fa;
-}
-
-.preview-frame-wrap {
-  position: absolute;
-  inset: 10px;
-  overflow: hidden;
-  border: 1px solid #e5e6eb;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(36, 41, 58, 0.08);
-}
-
-.preview-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 2px;
-  padding: 24px;
-  color: #7b808e;
-  text-align: center;
-}
-
-.placeholder-icon {
-  display: grid;
-  width: 58px;
-  height: 58px;
-  place-items: center;
-  margin-bottom: 12px;
-  border: 1px solid #e8e2de;
-  border-radius: 18px;
-  background: #fff;
-  color: #a96f4f;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 20px;
-  box-shadow: 0 8px 24px rgba(38, 44, 62, 0.07);
-}
-
-.preview-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 3px;
-  color: #777d8a;
-  text-align: center;
-}
-
-.preview-loading p {
-  margin: 12px 0 0;
+.inspector-toggle-btn {
   font-size: 12px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.inspector-toggle-btn--active {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.preview-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid #E2E8F0;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preview-tool-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+/* Screen Viewport */
+.preview-screen-viewport {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 12px;
+  position: relative;
+}
+
+.iframe-canvas-wrap {
+  position: relative;
+  height: 100%;
+  background: #FFFFFF;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.device-mode--desktop {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E2E8F0;
+}
+
+.device-mode--tablet {
+  width: 768px;
+  max-width: 100%;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
+  border: 1px solid #CBD5E1;
+}
+
+.device-mode--mobile {
+  width: 375px;
+  max-width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 14px 38px rgba(15, 23, 42, 0.12);
+  border: 2px solid #CBD5E1;
 }
 
 .preview-iframe {
   width: 100%;
   height: 100%;
   border: none;
+  border-radius: inherit;
 }
 
-.preview-frame-error {
-  position: absolute;
-  inset: 0;
+.preview-error-overlay,
+.preview-placeholder-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: rgba(250, 250, 252, 0.96);
-  color: #777d8a;
+  height: 100%;
+  padding: 32px;
+  text-align: center;
 }
 
-.preview-frame-error .placeholder-icon {
-  margin-bottom: 0;
-  color: #c18b4b;
+.error-center-icon {
+  font-size: 36px;
+  color: #EF4444;
+  margin-bottom: 12px;
 }
 
-.preview-frame-error p {
-  margin: 0 0 4px;
-  font-size: 12px;
-}
-
-.selected-element-alert {
-  margin: 0 16px;
-}
-
-/* 响应式设计 */
-@media (max-width: 1024px) {
-  #appChatPage {
-    height: auto;
-    min-height: calc(100vh - 180px);
-  }
-
-  .main-content {
-    flex-direction: column;
-    overflow: visible;
-  }
-
-  .chat-section,
-  .preview-section {
-    flex: none;
-    height: min(620px, 60vh);
-    min-height: 360px;
-  }
-}
-
-@media (max-width: 640px) {
-  #appChatPage {
-    min-height: calc(100vh - 150px);
-    padding: 10px;
-    border-radius: 16px;
-  }
-
-  .header-bar {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-    padding: 8px 4px 12px;
-  }
-
-  .header-right {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 7px;
-  }
-
-  .header-right :deep(.ant-btn) {
-    flex: 1;
-  }
-
-  .preview-header {
-    flex-wrap: wrap;
-    padding: 10px 12px;
-  }
-
-  .preview-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .preview-frame-wrap {
-    inset: 6px;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-bar {
-    padding: 12px 16px;
-  }
-
-  .app-name {
-    font-size: 16px;
-  }
-
-  .main-content {
-    padding: 8px;
-    gap: 8px;
-  }
-
-  .message-content {
-    max-width: 85%;
-  }
-
-  /* 选中元素信息样式 */
-  .selected-element-alert {
-    margin: 0 16px;
-  }
-
-  .selected-element-info {
-    line-height: 1.4;
-  }
-
-  .element-header {
-    margin-bottom: 8px;
-  }
-
-  .element-details {
-    margin-top: 8px;
-  }
-
-  .element-item {
-    margin-bottom: 4px;
-    font-size: 13px;
-  }
-
-  .element-item:last-child {
-    margin-bottom: 0;
-  }
-
-  .element-tag {
-    font-family: 'Monaco', 'Menlo', monospace;
-    font-size: 14px;
-    font-weight: 600;
-    color: #007bff;
-  }
-
-  .element-id {
-    color: #28a745;
-    margin-left: 4px;
-  }
-
-  .element-class {
-    color: #ffc107;
-    margin-left: 4px;
-  }
-
-  .element-selector-code {
-    font-family: 'Monaco', 'Menlo', monospace;
-    background: #f6f8fa;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 12px;
-    color: #d73a49;
-    border: 1px solid #e1e4e8;
-  }
-
-  /* 编辑模式按钮样式 */
-  .edit-mode-active {
-    background-color: #52c41a !important;
-    border-color: #52c41a !important;
-    color: white !important;
-  }
-
-  .edit-mode-active:hover {
-    background-color: #73d13d !important;
-    border-color: #73d13d !important;
-  }
-}
-
-.version-base-bar,
-.version-drawer-intro,
-.version-item-heading,
-.version-item-meta,
-.version-item-actions,
-.version-compare-controls {
+.placeholder-icon-circle {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  font-size: 24px;
+  color: #6366F1;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.version-base-bar {
+.state-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.state-desc {
+  margin: 6px 0 16px;
+  font-size: 13px;
+  color: #64748B;
+  max-width: 320px;
+}
+
+/* Drawer & Modal Styles */
+.drawer-header-meta {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
-  margin-bottom: 8px;
-  border: 1px solid #e8eaf0;
-  border-radius: 10px;
-  color: #697386;
-  font-size: 12px;
+  gap: 12px;
+  font-size: 13px;
+  color: #64748B;
+  margin-bottom: 16px;
 }
 
-.version-base-bar strong {
-  color: #385db7;
+.current-base-banner {
+  margin-bottom: 16px;
+  border-radius: 8px;
 }
 
-.turn-version-tag {
-  cursor: pointer;
-  margin-top: 6px;
-}
-
-.version-drawer-intro {
-  justify-content: space-between;
-  color: #737b8b;
-  font-size: 12px;
-  line-height: 1.5;
-  margin-bottom: 14px;
-}
-
-.version-current-base {
-  margin-bottom: 14px;
-}
-
-.version-list {
+.version-cards-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.version-item {
+.version-entry-card {
   padding: 14px;
-  border: 1px solid #e8eaf0;
-  border-radius: 14px;
-  background: #fff;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
 }
 
-.version-item-heading strong {
-  font-size: 16px;
-  color: #262b37;
+.version-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
-.version-item-time,
-.version-item-meta {
-  margin-top: 7px;
-  color: #7c8494;
+.version-number-tag {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.version-status-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.version-meta-time {
   font-size: 12px;
+  color: #64748B;
+  margin-bottom: 6px;
 }
 
-.version-item-prompt {
-  margin-top: 8px;
-  color: #424958;
+.version-prompt-text {
   font-size: 13px;
+  color: #334155;
+  background: #FFFFFF;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 8px;
   line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
-.version-item-meta {
+.version-specs {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #94A3B8;
+  margin-bottom: 12px;
+}
+
+.version-actions-bar {
+  display: flex;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
-.version-item-actions {
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.version-compare-controls {
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-.version-diff {
-  max-height: 360px;
-  overflow: auto;
-  padding: 12px;
-  margin: 0;
-  border-radius: 8px;
-  background: #171b24;
-  color: #e5e9f0;
-  font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.deployment-history-list {
+.deploy-history-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.deployment-history-item {
+.deploy-history-row {
   display: flex;
   align-items: center;
-  color: #737b8b;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #F8FAFC;
+  border-radius: 6px;
+}
+
+.deploy-time {
   font-size: 12px;
+  color: #64748B;
+}
+
+.compare-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.compare-vs-badge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6366F1;
+}
+
+.unified-diff-view {
+  background: #0F172A;
+  color: #E2E8F0;
+  padding: 14px;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  max-height: 380px;
+  overflow: auto;
+}
+
+@media (max-width: 900px) {
+  .chat-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-pane {
+    display: none;
+  }
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="user-info">
-    <a-avatar :src="user?.userAvatar" :size="size">
+    <a-avatar :src="user?.userAvatar" :size="size" class="user-avatar">
       {{ user?.userName?.charAt(0) || 'U' }}
     </a-avatar>
     <span v-if="showName" class="user-name">{{ user?.userName || '未知用户' }}</span>
@@ -22,13 +22,27 @@ withDefaults(defineProps<Props>(), {
 
 <style scoped>
 .user-info {
-  display: flex;
+  display: inline-flex;
+  min-width: 0;
   align-items: center;
   gap: 8px;
 }
 
+.user-avatar {
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
 .user-name {
-  font-size: 14px;
-  color: #1a1a1a;
+  min-width: 0;
+  max-width: 140px;
+  overflow: hidden;
+  color: #1E293B;
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

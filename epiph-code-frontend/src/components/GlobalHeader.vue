@@ -1,66 +1,91 @@
 <template>
-  <a-layout-header class="header">
+  <header class="site-header">
     <div class="header-inner">
-      <RouterLink to="/" class="brand-link">
-        <div class="brand">
-          <img class="logo" src="@/assets/logo-ai-studio.svg" alt="Epiph-code Studio" />
-          <div class="brand-text">
-            <div class="site-title">Epiph-code Studio</div>
-            <div class="site-subtitle">AI 应用生成平台</div>
-          </div>
+      <!-- Brand Logo & Title -->
+      <RouterLink to="/" class="brand-link" aria-label="回到首页">
+        <div class="brand-logo-wrap">
+          <img src="@/assets/logo-ai-studio.svg" alt="Epiph-code Logo" class="brand-logo" />
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Epiph<span class="brand-highlight">-code</span></span>
+          <span class="brand-badge">STUDIO</span>
         </div>
       </RouterLink>
 
-      <a-menu
-        v-model:selectedKeys="selectedKeys"
-        mode="horizontal"
-        :items="menuItems"
-        class="menu"
-        @click="handleMenuClick"
-      />
+      <!-- Navigation Menu -->
+      <nav class="nav-links" aria-label="主导航">
+        <button
+          v-for="item in menuItems"
+          :key="String(item?.key)"
+          type="button"
+          class="nav-link-btn"
+          :class="{ 'nav-link-btn--active': selectedKeys.includes(String(item?.key)) }"
+          @click="handleMenuClick({ key: item?.key as string })"
+        >
+          {{ item?.title }}
+        </button>
+      </nav>
 
-      <div class="mode-switcher">
-        <span class="mode-label">全局模式</span>
-        <a-segmented
-          v-model:value="globalGenerationMode"
-          :options="generationModeOptions"
-          size="small"
-          @change="onGlobalModeChange"
-        />
-      </div>
+      <!-- Right Tools -->
+      <div class="header-tools">
+        <!-- Global Generation Mode Switcher -->
+        <div class="mode-pill" title="切换全局生成模式">
+          <ThunderboltOutlined class="mode-icon" />
+          <a-segmented
+            v-model:value="globalGenerationMode"
+            :options="generationModeOptions"
+            size="small"
+            @change="onGlobalModeChange"
+          />
+        </div>
 
-      <div class="user-zone">
-        <div v-if="loginUserStore.loginUser.id">
-          <a-dropdown>
-            <a-space class="user-space">
-              <a-avatar :src="loginUserStore.loginUser.userAvatar" />
-              {{ loginUserStore.loginUser.userName ?? '无名' }}
-            </a-space>
+        <span class="header-divider"></span>
+
+        <!-- User Profile / Login -->
+        <div v-if="loginUserStore.loginUser.id" class="user-zone">
+          <a-dropdown trigger="click" placement="bottomRight">
+            <button type="button" class="user-profile-btn">
+              <a-avatar
+                :size="32"
+                :src="loginUserStore.loginUser.userAvatar"
+                class="user-avatar"
+              >
+                {{ loginUserStore.loginUser.userName?.charAt(0) || 'U' }}
+              </a-avatar>
+              <span class="user-name">{{ loginUserStore.loginUser.userName ?? '创作者' }}</span>
+              <DownOutlined class="user-caret" />
+            </button>
             <template #overlay>
-              <a-menu>
-                <a-menu-item @click="doLogout">
+              <a-menu class="user-menu-dropdown">
+                <a-menu-item key="user" disabled>
+                  <span class="menu-role-tag">角色: {{ loginUserStore.loginUser.userRole === 'admin' ? '管理员' : '创作者' }}</span>
+                </a-menu-item>
+                <a-menu-divider />
+                <a-menu-item key="logout" danger @click="doLogout">
                   <LogoutOutlined />
-                  退出登录
+                  <span>退出登录</span>
                 </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
         </div>
-        <div v-else>
-          <a-button type="primary" href="/user/login">登录</a-button>
-        </div>
+        <RouterLink v-else to="/user/login">
+          <a-button type="primary" class="login-button">
+            登录 / 注册
+          </a-button>
+        </RouterLink>
       </div>
     </div>
-  </a-layout-header>
+  </header>
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { type MenuProps, message } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser.ts'
 import { userLogout } from '@/api/userController.ts'
-import { LogoutOutlined, HomeOutlined } from '@ant-design/icons-vue'
+import { LogoutOutlined, DownOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
 import {
   getGlobalChatGenMode,
   setGlobalChatGenMode,
@@ -71,38 +96,31 @@ const loginUserStore = useLoginUserStore()
 const router = useRouter()
 const selectedKeys = ref<string[]>([router.currentRoute.value.path])
 const globalGenerationMode = ref<ChatGenMode>(getGlobalChatGenMode())
+
 const generationModeOptions = [
-  { label: '标准模式', value: 'classic' },
-  { label: '工作流模式', value: 'workflow' },
+  { label: '标准', value: 'classic' },
+  { label: '工作流', value: 'workflow' },
 ]
 
 router.afterEach((to) => {
   selectedKeys.value = [to.path]
 })
 
-const originItems = [
-  {
-    key: '/',
-    icon: () => h(HomeOutlined),
-    label: '主页',
-    title: '主页',
-  },
-  {
-    key: '/admin/userManage',
-    label: '用户管理',
-    title: '用户管理',
-  },
-  {
-    key: '/admin/appManage',
-    label: '应用管理',
-    title: '应用管理',
-  },
+interface NavItem {
+  key: string
+  title: string
+}
+
+const originItems: NavItem[] = [
+  { key: '/', title: '工作台' },
+  { key: '/admin/userManage', title: '用户管理' },
+  { key: '/admin/appManage', title: '应用管理' },
+  { key: '/admin/chatManage', title: '对话管理' },
 ]
 
-const filterMenus = (menus = [] as MenuProps['items']) => {
-  return menus?.filter((menu) => {
-    const menuKey = menu?.key as string
-    if (menuKey?.startsWith('/admin')) {
+const filterMenus = (menus: NavItem[]) => {
+  return menus.filter((menu) => {
+    if (menu.key.startsWith('/admin')) {
       const loginUser = loginUserStore.loginUser
       if (!loginUser || loginUser.userRole !== 'admin') {
         return false
@@ -112,10 +130,11 @@ const filterMenus = (menus = [] as MenuProps['items']) => {
   })
 }
 
-const menuItems = computed<MenuProps['items']>(() => filterMenus(originItems))
+const menuItems = computed<NavItem[]>(() => filterMenus(originItems))
 
-const handleMenuClick: MenuProps['onClick'] = (e) => {
-  const key = e.key as string
+const handleMenuClick = (e: { key: string }) => {
+  const key = e.key
+  if (!key) return
   selectedKeys.value = [key]
   if (key.startsWith('/')) {
     router.push(key)
@@ -143,106 +162,213 @@ const onGlobalModeChange = (value: string | number) => {
 </script>
 
 <style scoped>
-.header {
-  width: min(1360px, calc(100vw - 40px));
-  height: 68px;
-  line-height: 68px;
-  margin: 16px auto 0;
-  border-radius: 14px;
-  padding: 0 18px;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid var(--zc-border);
-  backdrop-filter: blur(8px);
-  box-shadow: var(--zc-shadow);
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
 }
 
 .header-inner {
-  display: grid;
-  grid-template-columns: 280px 1fr auto auto;
-  align-items: center;
-  gap: 16px;
-  height: 100%;
-}
-
-.brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 32px;
+  width: min(1380px, calc(100vw - 48px));
+  height: 100%;
+  margin: 0 auto;
 }
 
-.logo {
-  height: 34px;
-  width: 34px;
-  border-radius: 8px;
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  text-decoration: none;
 }
 
-.site-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--zc-text-primary);
-  line-height: 1.2;
+.brand-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
 }
 
-.site-subtitle {
-  font-size: 12px;
-  color: var(--zc-text-secondary);
-  line-height: 1.3;
+.brand-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
 }
 
-.menu {
-  background: transparent;
-  border-bottom: none !important;
-}
-
-.menu :deep(.ant-menu-item),
-.menu :deep(.ant-menu-submenu-title) {
-  color: var(--zc-text-secondary);
-}
-
-.menu :deep(.ant-menu-item-selected) {
-  color: var(--zc-primary) !important;
-}
-
-.menu :deep(.ant-menu-item-selected::after),
-.menu :deep(.ant-menu-item-active::after) {
-  border-bottom-color: var(--zc-primary) !important;
-}
-
-.user-space {
-  color: var(--zc-text-primary);
-  cursor: pointer;
-}
-
-.mode-switcher {
+.brand-text {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.mode-label {
-  font-size: 12px;
-  color: var(--zc-text-secondary);
+.brand-name {
+  color: #0F172A;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
 }
 
-@media (max-width: 900px) {
-  .header {
-    width: calc(100vw - 24px);
-    height: auto;
-    line-height: normal;
-    padding: 12px;
-  }
+.brand-highlight {
+  color: #6366F1;
+}
 
+.brand-badge {
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #6366F1;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 6px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}
+
+.nav-link-btn {
+  position: relative;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link-btn:hover {
+  color: #0F172A;
+  background: rgba(241, 245, 249, 0.9);
+}
+
+.nav-link-btn--active {
+  color: #4F46E5;
+  background: rgba(99, 102, 241, 0.08);
+  font-weight: 600;
+}
+
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.mode-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  background: #F1F5F9;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+}
+
+.mode-icon {
+  color: #6366F1;
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+.header-divider {
+  width: 1px;
+  height: 20px;
+  background: #E2E8F0;
+}
+
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #0F172A;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.user-profile-btn:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.user-name {
+  max-width: 110px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #1E293B;
+}
+
+.user-caret {
+  color: #94A3B8;
+  font-size: 10px;
+}
+
+.menu-role-tag {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.login-button {
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
   .header-inner {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    width: calc(100vw - 32px);
+    gap: 16px;
   }
 
-  .mode-switcher {
-    justify-self: end;
+  .mode-pill {
+    display: none;
   }
 
-  .user-zone {
-    justify-self: end;
+  .header-divider {
+    display: none;
+  }
+
+  .brand-badge {
+    display: none;
+  }
+
+  .user-name {
+    display: none;
   }
 }
 </style>

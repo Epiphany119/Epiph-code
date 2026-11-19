@@ -6,8 +6,6 @@
 import { computed } from 'vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
-
-// 引入代码高亮样式
 import 'highlight.js/styles/github.css'
 
 interface Props {
@@ -16,7 +14,6 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// 配置 markdown-it 实例
 const md: MarkdownIt = new MarkdownIt({
   html: true,
   linkify: true,
@@ -30,25 +27,21 @@ const md: MarkdownIt = new MarkdownIt({
           '</code></pre>'
         )
       } catch {
-        // 忽略错误，使用默认处理
+        // Fallback
       }
     }
-
     return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>'
   },
 })
 
-// 计算渲染后的 Markdown
 const renderedMarkdown = computed(() => {
   const raw = props.content || ''
   if (!raw.trim()) {
     return ''
   }
-  // 已经是 Markdown 代码块时直接渲染
   if (raw.includes('```')) {
     return md.render(raw)
   }
-  // 纯 JSON 响应自动按代码块渲染，避免被普通段落折行和引号替换影响可读性
   const normalized = raw
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
@@ -70,172 +63,122 @@ const renderedMarkdown = computed(() => {
 
 <style scoped>
 .markdown-content {
-  line-height: 1.6;
-  color: #333;
-  word-wrap: break-word;
+  color: #1E293B;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-/* 全局样式，影响 v-html 内容 */
 .markdown-content :deep(h1),
 .markdown-content :deep(h2),
 .markdown-content :deep(h3),
 .markdown-content :deep(h4),
 .markdown-content :deep(h5),
 .markdown-content :deep(h6) {
-  margin: 1.5em 0 0.5em 0;
-  font-weight: 600;
-  line-height: 1.25;
+  margin: 1.2em 0 0.5em;
+  color: #0F172A;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
 }
 
 .markdown-content :deep(h1) {
   font-size: 1.5em;
-  border-bottom: 1px solid #eee;
   padding-bottom: 0.3em;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .markdown-content :deep(h2) {
   font-size: 1.3em;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 0.3em;
 }
 
 .markdown-content :deep(h3) {
-  font-size: 1.1em;
+  font-size: 1.15em;
 }
 
 .markdown-content :deep(p) {
-  margin: 0.8em 0;
+  margin: 0.6em 0;
 }
 
 .markdown-content :deep(ul),
 .markdown-content :deep(ol) {
-  margin: 0.8em 0;
-  padding-left: 1.5em;
+  margin: 0.6em 0;
+  padding-left: 1.4em;
 }
 
 .markdown-content :deep(li) {
   margin: 0.3em 0;
 }
 
-.markdown-content :deep(blockquote) {
-  margin: 1em 0;
-  padding: 0.5em 1em;
-  border-left: 4px solid #ddd;
-  background-color: #f9f9f9;
-  color: #666;
+.markdown-content :deep(code:not(pre code)) {
+  padding: 2px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.88em;
+  background: #F1F5F9;
+  color: #4F46E5;
+  border-radius: 4px;
+  border: 1px solid #E2E8F0;
 }
 
-.markdown-content :deep(code) {
-  background-color: #f1f1f1;
-  padding: 0.2em 0.4em;
-  border-radius: 3px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 0.9em;
-}
-
-.markdown-content :deep(pre) {
-  background-color: #f8f8f8;
-  border: 1px solid #e1e1e1;
-  border-radius: 6px;
-  padding: 1em;
+.markdown-content :deep(pre.hljs) {
+  margin: 0.8em 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #0F172A;
+  color: #E2E8F0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
   overflow-x: auto;
-  margin: 1em 0;
+  border: 1px solid #1E293B;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.markdown-content :deep(pre code) {
-  background-color: transparent;
+.markdown-content :deep(pre.hljs code) {
+  background: transparent;
   padding: 0;
-  border-radius: 0;
-  font-size: 0.9em;
-  line-height: 1.4;
+  color: inherit;
+  font-size: inherit;
+}
+
+.markdown-content :deep(blockquote) {
+  margin: 0.8em 0;
+  padding: 8px 16px;
+  border-left: 3px solid #6366F1;
+  background: rgba(99, 102, 241, 0.05);
+  border-radius: 0 8px 8px 0;
+  color: #475569;
 }
 
 .markdown-content :deep(table) {
-  border-collapse: collapse;
-  margin: 1em 0;
   width: 100%;
+  margin: 0.8em 0;
+  border-collapse: collapse;
 }
 
-.markdown-content :deep(table th),
-.markdown-content :deep(table td) {
-  border: 1px solid #ddd;
-  padding: 0.5em 0.8em;
-  text-align: left;
+.markdown-content :deep(th),
+.markdown-content :deep(td) {
+  padding: 8px 12px;
+  border: 1px solid #E2E8F0;
+  font-size: 13px;
 }
 
-.markdown-content :deep(table th) {
-  background-color: #f5f5f5;
+.markdown-content :deep(th) {
+  background: #F8FAFC;
   font-weight: 600;
-}
-
-.markdown-content :deep(table tr:nth-child(even)) {
-  background-color: #f9f9f9;
+  color: #1E293B;
 }
 
 .markdown-content :deep(a) {
-  color: #1890ff;
-  text-decoration: none;
-}
-
-.markdown-content :deep(a:hover) {
+  color: #4F46E5;
   text-decoration: underline;
-}
-
-.markdown-content :deep(img) {
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
-  margin: 0.5em 0;
+  text-underline-offset: 2px;
 }
 
 .markdown-content :deep(hr) {
-  border: none;
-  border-top: 1px solid #eee;
   margin: 1.5em 0;
-}
-
-/* 代码高亮样式优化 */
-.markdown-content :deep(.hljs) {
-  background-color: #f8f8f8 !important;
-  border-radius: 6px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 0.9em;
-  line-height: 1.4;
-}
-
-/* 特定语言的代码块样式 */
-.markdown-content :deep(.hljs-keyword) {
-  color: #d73a49;
-  font-weight: 600;
-}
-
-.markdown-content :deep(.hljs-string) {
-  color: #032f62;
-}
-
-.markdown-content :deep(.hljs-comment) {
-  color: #6a737d;
-  font-style: italic;
-}
-
-.markdown-content :deep(.hljs-number) {
-  color: #005cc5;
-}
-
-.markdown-content :deep(.hljs-function) {
-  color: #6f42c1;
-}
-
-.markdown-content :deep(.hljs-tag) {
-  color: #22863a;
-}
-
-.markdown-content :deep(.hljs-attr) {
-  color: #6f42c1;
-}
-
-.markdown-content :deep(.hljs-title) {
-  color: #6f42c1;
-  font-weight: 600;
+  border: 0;
+  border-top: 1px solid #E2E8F0;
 }
 </style>

@@ -1,90 +1,115 @@
 <template>
   <div id="appManagePage">
-    <!-- 搜索表单 -->
-    <a-form layout="inline" :model="searchParams" @finish="doSearch">
-      <a-form-item label="应用名称">
-        <a-input v-model:value="searchParams.appName" placeholder="输入应用名称" />
-      </a-form-item>
-      <a-form-item label="创建者">
-        <a-input v-model:value="searchParams.userId" placeholder="输入用户ID" />
-      </a-form-item>
-      <a-form-item label="生成类型">
-        <a-select
-          v-model:value="searchParams.codeGenType"
-          placeholder="选择生成类型"
-          style="width: 150px"
-        >
-          <a-select-option value="">全部</a-select-option>
-          <a-select-option
-            v-for="option in CODE_GEN_TYPE_OPTIONS"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item>
-        <a-button type="primary" html-type="submit">搜索</a-button>
-      </a-form-item>
-    </a-form>
-    <a-divider />
+    <div class="page-header">
+      <h1 class="page-title">应用管理</h1>
+      <p class="page-subtitle">浏览与维护全平台应用工程、配置精选状态及管理上线记录。</p>
+    </div>
 
-    <!-- 表格 -->
-    <a-table
-      :columns="columns"
-      :data-source="data"
-      :pagination="pagination"
-      @change="doTableChange"
-      :scroll="{ x: 1200 }"
-    >
-      <template #bodyCell="{ column, record }">
-        <template v-if="column.dataIndex === 'cover'">
-          <a-image v-if="record.cover" :src="record.cover" :width="80" :height="60" />
-          <div v-else class="no-cover">无封面</div>
-        </template>
-        <template v-else-if="column.dataIndex === 'initPrompt'">
-          <a-tooltip :title="record.initPrompt">
-            <div class="prompt-text">{{ record.initPrompt }}</div>
-          </a-tooltip>
-        </template>
-        <template v-else-if="column.dataIndex === 'codeGenType'">
-          {{ formatCodeGenType(record.codeGenType) }}
-        </template>
-        <template v-else-if="column.dataIndex === 'priority'">
-          <a-tag v-if="record.priority === 99" color="gold">精选</a-tag>
-          <span v-else>{{ record.priority || 0 }}</span>
-        </template>
-        <template v-else-if="column.dataIndex === 'deployedTime'">
-          <span v-if="record.deployedTime">
-            {{ formatTime(record.deployedTime) }}
-          </span>
-          <span v-else class="text-gray">未部署</span>
-        </template>
-        <template v-else-if="column.dataIndex === 'createTime'">
-          {{ formatTime(record.createTime) }}
-        </template>
-        <template v-else-if="column.dataIndex === 'user'">
-          <UserInfo :user="record.user" size="small" />
-        </template>
-        <template v-else-if="column.key === 'action'">
-          <a-space>
-            <a-button type="primary" size="small" @click="editApp(record)"> 编辑 </a-button>
-            <a-button
-              type="default"
-              size="small"
-              @click="toggleFeatured(record)"
-              :class="{ 'featured-btn': record.priority === 99 }"
+    <!-- Filter Card -->
+    <a-card class="filter-card">
+      <a-form layout="inline" :model="searchParams" class="search-form" @finish="doSearch">
+        <a-form-item label="应用名称">
+          <a-input v-model:value="searchParams.appName" placeholder="输入名称查找" allow-clear />
+        </a-form-item>
+        <a-form-item label="创建者 ID">
+          <a-input v-model:value="searchParams.userId" placeholder="输入用户 ID" allow-clear />
+        </a-form-item>
+        <a-form-item label="生成类型">
+          <a-select
+            v-model:value="searchParams.codeGenType"
+            placeholder="全部生成类型"
+            style="min-width: 140px"
+            allow-clear
+          >
+            <a-select-option value="">全部类型</a-select-option>
+            <a-select-option
+              v-for="option in CODE_GEN_TYPE_OPTIONS"
+              :key="option.value"
+              :value="option.value"
             >
-              {{ record.priority === 99 ? '取消精选' : '精选' }}
+              {{ option.label }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item>
+          <a-space>
+            <a-button type="primary" html-type="submit">
+              <template #icon><SearchOutlined /></template>
+              查询
             </a-button>
-            <a-popconfirm title="确定要删除这个应用吗？" @confirm="deleteApp(record.id)">
-              <a-button danger size="small">删除</a-button>
-            </a-popconfirm>
+            <a-button @click="resetSearch">重置</a-button>
           </a-space>
+        </a-form-item>
+      </a-form>
+    </a-card>
+
+    <!-- Data Table Card -->
+    <a-card class="table-card">
+      <a-table
+        :columns="columns"
+        :data-source="data"
+        :pagination="pagination"
+        :loading="loading"
+        row-key="id"
+        :scroll="{ x: 1100 }"
+        @change="doTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'cover'">
+            <div class="cover-thumb">
+              <a-image v-if="record.cover" :src="record.cover" :width="64" :height="44" class="thumb-img" />
+              <span v-else class="no-cover-text">无封面</span>
+            </div>
+          </template>
+          <template v-else-if="column.dataIndex === 'initPrompt'">
+            <a-tooltip :title="record.initPrompt">
+              <div class="prompt-text">{{ record.initPrompt }}</div>
+            </a-tooltip>
+          </template>
+          <template v-else-if="column.dataIndex === 'codeGenType'">
+            <a-tag color="indigo">{{ formatCodeGenType(record.codeGenType) }}</a-tag>
+          </template>
+          <template v-else-if="column.dataIndex === 'priority'">
+            <a-tag v-if="record.priority === 99" color="gold">★ 精选</a-tag>
+            <span v-else class="text-muted">{{ record.priority || 0 }}</span>
+          </template>
+          <template v-else-if="column.dataIndex === 'deployedTime'">
+            <span v-if="record.deployedTime" class="text-success">
+              {{ formatTime(record.deployedTime) }}
+            </span>
+            <span v-else class="text-muted">未部署</span>
+          </template>
+          <template v-else-if="column.dataIndex === 'createTime'">
+            {{ formatTime(record.createTime) }}
+          </template>
+          <template v-else-if="column.dataIndex === 'user'">
+            <UserInfo :user="record.user" size="small" />
+          </template>
+          <template v-else-if="column.key === 'action'">
+            <a-space>
+              <a-button type="link" size="small" @click="editApp(record)">编辑</a-button>
+              <a-button
+                type="link"
+                size="small"
+                :class="{ 'featured-link': record.priority === 99 }"
+                @click="toggleFeatured(record)"
+              >
+                {{ record.priority === 99 ? '取消精选' : '设为精选' }}
+              </a-button>
+              <a-popconfirm
+                title="确定要彻底删除该应用及其工程版本吗？"
+                ok-text="确认删除"
+                cancel-text="取消"
+                ok-type="danger"
+                @confirm="deleteApp(record.id)"
+              >
+                <a-button type="link" danger size="small">删除</a-button>
+              </a-popconfirm>
+            </a-space>
+          </template>
         </template>
-      </template>
-    </a-table>
+      </a-table>
+    </a-card>
   </div>
 </template>
 
@@ -96,6 +121,7 @@ import { listAppVoByPageByAdmin, deleteAppByAdmin, updateAppByAdmin } from '@/ap
 import { CODE_GEN_TYPE_OPTIONS, formatCodeGenType } from '@/utils/codeGenTypes'
 import { formatTime } from '@/utils/time'
 import UserInfo from '@/components/UserInfo.vue'
+import { SearchOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
 
@@ -109,176 +135,203 @@ const columns = [
   {
     title: '应用名称',
     dataIndex: 'appName',
-    width: 150,
+    width: 160,
   },
   {
     title: '封面',
     dataIndex: 'cover',
-    width: 100,
+    width: 90,
   },
   {
     title: '初始提示词',
     dataIndex: 'initPrompt',
-    width: 200,
+    width: 220,
   },
   {
-    title: '生成类型',
+    title: '生成架构',
     dataIndex: 'codeGenType',
-    width: 100,
+    width: 120,
   },
   {
-    title: '优先级',
+    title: '精选权重',
     dataIndex: 'priority',
-    width: 80,
+    width: 90,
   },
   {
-    title: '部署时间',
+    title: '部署状态',
     dataIndex: 'deployedTime',
-    width: 160,
+    width: 170,
   },
   {
     title: '创建者',
     dataIndex: 'user',
-    width: 120,
+    width: 140,
   },
   {
     title: '创建时间',
     dataIndex: 'createTime',
-    width: 160,
+    width: 170,
   },
   {
     title: '操作',
     key: 'action',
-    width: 200,
+    width: 180,
     fixed: 'right',
   },
 ]
 
-// 数据
 const data = ref<API.AppVO[]>([])
 const total = ref(0)
+const loading = ref(false)
 
-// 搜索条件
 const searchParams = reactive<API.AppQueryRequest>({
   pageNum: 1,
   pageSize: 10,
+  appName: '',
+  userId: undefined,
+  codeGenType: '',
 })
 
-// 获取数据
 const fetchData = async () => {
+  loading.value = true
   try {
-    const res = await listAppVoByPageByAdmin({
-      ...searchParams,
-    })
+    const res = await listAppVoByPageByAdmin({ ...searchParams })
     if (res.data.data) {
       data.value = res.data.data.records ?? []
       total.value = res.data.data.totalRow ?? 0
     } else {
-      message.error('获取数据失败，' + res.data.message)
+      message.error('获取应用列表失败：' + res.data.message)
     }
-  } catch (error) {
-    console.error('获取数据失败：', error)
-    message.error('获取数据失败')
+  } catch {
+    message.error('加载应用列表异常')
+  } finally {
+    loading.value = false
   }
 }
 
-// 页面加载时请求一次
 onMounted(() => {
   fetchData()
 })
 
-// 分页参数
 const pagination = computed(() => {
   return {
     current: searchParams.pageNum ?? 1,
     pageSize: searchParams.pageSize ?? 10,
     total: total.value,
     showSizeChanger: true,
-    showTotal: (total: number) => `共 ${total} 条`,
+    showTotal: (total: number) => `共 ${total} 个应用`,
   }
 })
 
-// 表格变化处理
 const doTableChange = (page: { current: number; pageSize: number }) => {
   searchParams.pageNum = page.current
   searchParams.pageSize = page.pageSize
   fetchData()
 }
 
-// 搜索
 const doSearch = () => {
-  // 重置页码
   searchParams.pageNum = 1
   fetchData()
 }
 
-// 编辑应用
+const resetSearch = () => {
+  searchParams.appName = ''
+  searchParams.userId = undefined
+  searchParams.codeGenType = ''
+  searchParams.pageNum = 1
+  fetchData()
+}
+
 const editApp = (app: API.AppVO) => {
   router.push(`/app/edit/${app.id}`)
 }
 
-// 切换精选状态
 const toggleFeatured = async (app: API.AppVO) => {
   if (!app.id) return
-
   const newPriority = app.priority === 99 ? 0 : 99
-
   try {
     const res = await updateAppByAdmin({
       id: app.id,
       priority: newPriority,
     })
-
     if (res.data.code === 0) {
-      message.success(newPriority === 99 ? '已设为精选' : '已取消精选')
-      // 刷新数据
+      message.success(newPriority === 99 ? '已将该应用设为精选' : '已取消精选')
       fetchData()
     } else {
       message.error('操作失败：' + res.data.message)
     }
-  } catch (error) {
-    console.error('操作失败：', error)
-    message.error('操作失败')
+  } catch {
+    message.error('操作异常')
   }
 }
 
-// 删除应用
 const deleteApp = async (id: number | undefined) => {
   if (!id) return
-
   try {
     const res = await deleteAppByAdmin({ id })
     if (res.data.code === 0) {
       message.success('删除成功')
-      // 刷新数据
       fetchData()
     } else {
       message.error('删除失败：' + res.data.message)
     }
-  } catch (error) {
-    console.error('删除失败：', error)
-    message.error('删除失败')
+  } catch {
+    message.error('删除异常')
   }
 }
 </script>
 
 <style scoped>
 #appManagePage {
-  padding: 24px;
-  background: white;
-  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.no-cover {
-  width: 80px;
-  height: 60px;
-  background: #f5f5f5;
+.page-header {
+  margin-bottom: 4px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #64748B;
+}
+
+.filter-card,
+.table-card {
+  border-radius: 12px;
+}
+
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cover-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
-  font-size: 12px;
-  border-radius: 4px;
+  width: 64px;
+  height: 44px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+}
+
+.no-cover-text {
+  font-size: 11px;
+  color: #94A3B8;
 }
 
 .prompt-text {
@@ -286,24 +339,19 @@ const deleteApp = async (id: number | undefined) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 13px;
+  color: #334155;
 }
 
-.text-gray {
-  color: #999;
+.text-success {
+  color: #10B981;
 }
 
-.featured-btn {
-  background: #faad14;
-  border-color: #faad14;
-  color: white;
+.text-muted {
+  color: #94A3B8;
 }
 
-.featured-btn:hover {
-  background: #d48806;
-  border-color: #d48806;
-}
-
-:deep(.ant-table-tbody > tr > td) {
-  vertical-align: middle;
+.featured-link {
+  color: #F59E0B;
 }
 </style>

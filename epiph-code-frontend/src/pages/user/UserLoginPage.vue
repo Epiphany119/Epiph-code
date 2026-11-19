@@ -1,27 +1,80 @@
 <template>
   <div id="userLoginPage">
-    <div class="login-shell">
-      <aside class="login-brand">
-        <div class="brand-tag">Epiph-code Studio</div>
-        <h1>欢迎回来</h1>
-        <p>
-          继续你的 AI 应用创作流程。登录后可以查看历史作品、继续对话生成并部署站点。
-        </p>
-        <ul class="brand-points">
-          <li>自然语言生成页面结构</li>
-          <li>可视化迭代与即时预览</li>
-          <li>一键部署与代码下载</li>
-        </ul>
+    <div class="auth-card">
+      <!-- Left Brand Showcase -->
+      <aside class="auth-showcase">
+        <div class="showcase-glow"></div>
+        <div class="showcase-content">
+          <div class="showcase-tag">
+            <span class="tag-dot"></span>
+            <span>Epiph-code Studio</span>
+          </div>
+
+          <h1 class="showcase-title">探索 AI 驱动的<br />全栈构建体验</h1>
+          <p class="showcase-desc">
+            登录后即可继续你的应用迭代工作流，管理生成的网页版本、配置模型 Agent 并一键部署至公网。
+          </p>
+
+          <ul class="feature-bullets">
+            <li>
+              <CheckCircleFilled class="bullet-icon" />
+              <span>结构化 TODO 任务规划与依赖追踪</span>
+            </li>
+            <li>
+              <CheckCircleFilled class="bullet-icon" />
+              <span>三层长对话上下文压缩与记忆管理</span>
+            </li>
+            <li>
+              <CheckCircleFilled class="bullet-icon" />
+              <span>所见即所得的可视化局部点选修改</span>
+            </li>
+            <li>
+              <CheckCircleFilled class="bullet-icon" />
+              <span>多版本不可变快照与稳定一键上线</span>
+            </li>
+          </ul>
+
+          <div class="showcase-footer">
+            <span class="showcase-ver">STUDIO ENGINE / v2.0</span>
+          </div>
+        </div>
       </aside>
 
-      <section class="login-panel">
-        <h2>账号登录</h2>
-        <div class="desc">请输入你的账号和密码</div>
-        <a-form :model="formState" name="login" autocomplete="off" @finish="handleSubmit">
-          <a-form-item name="userAccount" :rules="[{ required: true, message: '请输入账号' }]">
-            <a-input v-model:value="formState.userAccount" size="large" placeholder="请输入账号" />
-          </a-form-item>
+      <!-- Right Login Form -->
+      <section class="auth-form-panel">
+        <div class="panel-header">
+          <span class="panel-kicker">WELCOME BACK</span>
+          <h2 class="panel-title">账号登录</h2>
+          <p class="panel-desc">请输入你的平台账号与密码以进入工作台</p>
+        </div>
+
+        <a-form
+          class="auth-form"
+          :model="formState"
+          name="login"
+          autocomplete="off"
+          layout="vertical"
+          @finish="handleSubmit"
+        >
           <a-form-item
+            label="账号"
+            name="userAccount"
+            :rules="[{ required: true, message: '请输入账号' }]"
+          >
+            <a-input
+              v-model:value="formState.userAccount"
+              size="large"
+              placeholder="请输入账号"
+              class="auth-input"
+            >
+              <template #prefix>
+                <UserOutlined class="input-icon" />
+              </template>
+            </a-input>
+          </a-form-item>
+
+          <a-form-item
+            label="密码"
             name="userPassword"
             :rules="[
               { required: true, message: '请输入密码' },
@@ -31,16 +84,29 @@
             <a-input-password
               v-model:value="formState.userPassword"
               size="large"
-              placeholder="请输入密码"
-            />
+              placeholder="请输入密码（至少 8 位）"
+              class="auth-input"
+            >
+              <template #prefix>
+                <LockOutlined class="input-icon" />
+              </template>
+            </a-input-password>
           </a-form-item>
-          <div class="tips">
-            没有账号？
-            <RouterLink to="/user/register">去注册</RouterLink>
+
+          <div class="form-options">
+            <span class="hint-text">还没有账号？</span>
+            <RouterLink to="/user/register" class="link-highlight">立即注册</RouterLink>
           </div>
-          <a-form-item>
-            <a-button type="primary" html-type="submit" size="large" style="width: 100%">
-              登录
+
+          <a-form-item class="submit-item">
+            <a-button
+              type="primary"
+              html-type="submit"
+              size="large"
+              class="submit-button"
+              :loading="loading"
+            >
+              登 录
             </a-button>
           </a-form-item>
         </a-form>
@@ -50,140 +116,254 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { userLogin } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/loginUser.ts'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import { UserOutlined, LockOutlined, CheckCircleFilled } from '@ant-design/icons-vue'
 
 const formState = reactive<API.UserLoginRequest>({
   userAccount: '',
   userPassword: '',
 })
 
+const loading = ref(false)
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
 
 const handleSubmit = async (values: API.UserLoginRequest) => {
-  const res = await userLogin(values)
-  if (res.data.code === 0 && res.data.data) {
-    await loginUserStore.fetchLoginUser()
-    message.success('登录成功')
-    router.push({
-      path: '/',
-      replace: true,
-    })
-  } else {
-    message.error('登录失败，' + res.data.message)
+  loading.value = true
+  try {
+    const res = await userLogin(values)
+    if (res.data.code === 0 && res.data.data) {
+      await loginUserStore.fetchLoginUser()
+      message.success('登录成功，欢迎回来')
+      router.push({
+        path: '/',
+        replace: true,
+      })
+    } else {
+      message.error('登录失败：' + res.data.message)
+    }
+  } catch {
+    message.error('登录请求异常，请稍后重试')
+  } finally {
+    loading.value = false
   }
 }
 </script>
 
 <style scoped>
 #userLoginPage {
-  min-height: calc(100vh - 220px);
-  display: grid;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  padding: 24px 0;
 }
 
-.login-shell {
+.auth-card {
   display: grid;
-  grid-template-columns: minmax(320px, 1.2fr) minmax(320px, 1fr);
-  border-radius: 22px;
+  grid-template-columns: minmax(360px, 1.1fr) minmax(380px, 0.9fr);
+  width: min(1000px, 100%);
+  min-height: 560px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
   overflow: hidden;
-  border: 1px solid var(--zc-border);
-  background: #fff;
-  box-shadow: var(--zc-shadow);
 }
 
-.login-brand {
-  padding: 34px;
-  background:
-    radial-gradient(circle at 8% 12%, rgba(205, 167, 137, 0.3), transparent 42%),
-    radial-gradient(circle at 100% 100%, rgba(224, 197, 163, 0.2), transparent 40%),
-    #f7f3ed;
+/* Left Showcase */
+.auth-showcase {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px;
+  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+  color: #FFFFFF;
+  overflow: hidden;
 }
 
-.brand-tag {
+.showcase-glow {
+  position: absolute;
+  top: -100px;
+  left: -100px;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.showcase-content {
+  position: relative;
+  z-index: 1;
+}
+
+.showcase-tag {
   display: inline-flex;
-  padding: 6px 10px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-  color: #825136;
-  background: #f0dfcf;
+  color: #E0E7FF;
+  margin-bottom: 24px;
 }
 
-.login-brand h1 {
-  margin: 18px 0 10px;
-  font-size: 34px;
-  color: var(--zc-text-primary);
+.tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38BDF8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
 }
 
-.login-brand p {
+.showcase-title {
   margin: 0;
-  color: var(--zc-text-secondary);
-  line-height: 1.65;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
 }
 
-.brand-points {
-  margin: 28px 0 0;
-  padding-left: 18px;
-  color: #7b7164;
-  line-height: 1.8;
+.showcase-desc {
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #C7D2FE;
 }
 
-.login-panel {
-  padding: 34px;
-  background: #fff;
+.feature-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.login-panel h2 {
-  margin: 0;
-  font-size: 28px;
-  color: var(--zc-text-primary);
-}
-
-.desc {
-  margin: 6px 0 18px;
-  color: var(--zc-text-secondary);
-}
-
-.login-panel :deep(.ant-input),
-.login-panel :deep(.ant-input-affix-wrapper) {
-  background: #fff;
-  border-color: var(--zc-border);
-  color: var(--zc-text-primary);
-}
-
-.login-panel :deep(.ant-input::placeholder) {
-  color: #a19586;
-}
-
-.tips {
-  text-align: right;
-  color: var(--zc-text-secondary);
+.feature-bullets li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 13px;
-  margin-bottom: 14px;
+  color: #E0E7FF;
 }
 
-.tips a {
-  color: var(--zc-primary);
+.bullet-icon {
+  color: #38BDF8;
+  font-size: 15px;
 }
 
-@media (max-width: 900px) {
-  #userLoginPage {
-    min-height: auto;
-  }
+.showcase-footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
 
-  .login-shell {
+.showcase-ver {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #A5B4FC;
+}
+
+/* Right Form */
+.auth-form-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px;
+  background: #FFFFFF;
+}
+
+.panel-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #6366F1;
+}
+
+.panel-title {
+  margin: 6px 0 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+}
+
+.panel-desc {
+  margin: 6px 0 28px;
+  font-size: 14px;
+  color: #64748B;
+}
+
+.auth-form :deep(.ant-form-item-label > label) {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.auth-input {
+  border-radius: 10px !important;
+}
+
+.input-icon {
+  color: #94A3B8;
+  font-size: 15px;
+  margin-right: 4px;
+}
+
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 24px;
+  font-size: 13px;
+}
+
+.hint-text {
+  color: #64748B;
+}
+
+.link-highlight {
+  color: #6366F1;
+  font-weight: 600;
+}
+
+.link-highlight:hover {
+  color: #4F46E5;
+  text-decoration: underline;
+}
+
+.submit-button {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (max-width: 820px) {
+  .auth-card {
     grid-template-columns: 1fr;
-    border-radius: 16px;
   }
 
-  .login-brand,
-  .login-panel {
-    padding: 20px;
+  .auth-showcase {
+    display: none;
+  }
+
+  .auth-form-panel {
+    padding: 32px 24px;
   }
 }
 </style>

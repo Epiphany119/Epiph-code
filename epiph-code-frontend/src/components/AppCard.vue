@@ -1,65 +1,96 @@
 <template>
   <article class="app-card" :class="{ 'app-card--featured': featured }">
-    <div class="app-preview" :class="{ 'app-preview--live': hasLivePreview }">
-      <img
-        v-if="!hasLivePreview && app.cover"
-        class="preview-cover"
-        :src="app.cover"
-        :alt="`${app.appName || '应用'}封面`"
-        loading="lazy"
-      />
-
-      <iframe
-        v-else-if="hasLivePreview"
-        class="preview-iframe"
-        :src="iframeSrc"
-        :title="`${app.appName || '应用'}实时预览`"
-        loading="lazy"
-        sandbox="allow-scripts allow-forms allow-popups"
-        tabindex="-1"
-        aria-hidden="true"
-      ></iframe>
-
-      <div v-else class="preview-empty">
-        <div class="preview-empty-icon"><span>&lt;/&gt;</span></div>
-        <span class="preview-empty-title">
-          {{ previewStatus === 'checking' ? '正在查找页面' : '等待首个版本' }}
-        </span>
-        <p>{{ app.initPrompt || '生成完成后，这里会显示应用的真实页面。' }}</p>
-      </div>
-
-      <div class="app-overlay">
-        <a-space>
-          <a-button type="primary" @click="handleViewChat">打开工作台</a-button>
-          <a-button v-if="app.deployKey" class="published-button" @click="handleViewWork">
-            查看线上版本
-          </a-button>
-        </a-space>
-      </div>
-    </div>
-
-    <div class="app-info">
-      <a-avatar class="app-avatar" :src="app.user?.userAvatar" :size="38">
-        {{ app.user?.userName?.charAt(0) || 'U' }}
-      </a-avatar>
-      <div class="app-info-main">
-        <h3 class="app-title">{{ app.appName || '未命名应用' }}</h3>
-        <div class="app-meta">
-          <span class="app-author">{{ app.user?.userName || (featured ? '官方团队' : '我的作品') }}</span>
-          <span class="meta-divider"></span>
-          <span class="app-state" :class="{ 'app-state--published': app.deployKey }">
-            <span class="app-state-dot"></span>
-            {{ app.deployKey ? '已部署' : hasLivePreview ? '可预览' : '进行中' }}
+    <!-- Browser Mockup Window -->
+    <div class="card-preview">
+      <!-- Browser Topbar -->
+      <div class="browser-topbar">
+        <div class="window-controls">
+          <span class="control-dot dot--close"></span>
+          <span class="control-dot dot--min"></span>
+          <span class="control-dot dot--max"></span>
+        </div>
+        <div class="browser-address-bar">
+          <span class="address-text">{{ app.appName || 'app-preview' }}</span>
+        </div>
+        <div class="browser-status">
+          <span v-if="app.deployKey" class="status-pill status-pill--live">
+            <span class="pulse-beacon"></span>
+            LIVE
           </span>
-          <span v-if="app.deployedVersionNo" class="app-version-badge app-version-badge--deployed">
-            线上 V{{ app.deployedVersionNo }}
-          </span>
-          <span v-else-if="app.workingVersionNo" class="app-version-badge">
-            工作 V{{ app.workingVersionNo }}
+          <span v-else-if="hasLivePreview" class="status-pill status-pill--preview">
+            PREVIEW
           </span>
         </div>
       </div>
-      <span class="card-arrow" aria-hidden="true">↗</span>
+
+      <!-- Preview Screen -->
+      <div class="preview-screen">
+        <img
+          v-if="!hasLivePreview && app.cover"
+          class="preview-cover"
+          :src="app.cover"
+          :alt="`${app.appName || '应用'}封面`"
+          loading="lazy"
+        />
+
+        <iframe
+          v-else-if="hasLivePreview"
+          class="preview-iframe"
+          :src="iframeSrc"
+          :title="`${app.appName || '应用'}实时预览`"
+          loading="lazy"
+          sandbox="allow-scripts allow-forms allow-popups"
+          tabindex="-1"
+          aria-hidden="true"
+        ></iframe>
+
+        <div v-else class="preview-empty">
+          <div class="empty-code-icon">
+            <CodeOutlined />
+          </div>
+          <span class="empty-title">
+            {{ previewStatus === 'checking' ? '正在连接页面...' : '等待构建首个版本' }}
+          </span>
+          <p class="empty-desc">{{ app.initPrompt || '生成完成后，这里会展示真实的运行页面' }}</p>
+        </div>
+
+        <!-- Hover Overlay -->
+        <div class="card-overlay">
+          <button type="button" class="action-btn action-btn--primary" @click="handleViewChat">
+            <span>进入工作台</span>
+            <ArrowRightOutlined />
+          </button>
+          <button v-if="app.deployKey" type="button" class="action-btn action-btn--secondary" @click="handleViewWork">
+            <EyeOutlined />
+            <span>访问站点</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Info Footer -->
+    <div class="card-body">
+      <a-avatar class="card-avatar" :src="app.user?.userAvatar" :size="36">
+        {{ app.user?.userName?.charAt(0) || 'U' }}
+      </a-avatar>
+      <div class="card-meta-wrap">
+        <h3 class="card-title" :title="app.appName || '未命名应用'">
+          {{ app.appName || '未命名应用' }}
+        </h3>
+        <div class="card-tags">
+          <span class="card-author">{{ app.user?.userName || (featured ? '社区创作者' : '我的作品') }}</span>
+          <span class="card-dot-sep">·</span>
+          <span v-if="app.deployKey" class="version-tag version-tag--live">
+            已部署 V{{ app.deployedVersionNo || 1 }}
+          </span>
+          <span v-else-if="app.workingVersionNo" class="version-tag version-tag--working">
+            工作 V{{ app.workingVersionNo }}
+          </span>
+          <span v-else class="version-tag version-tag--draft">
+            草稿
+          </span>
+        </div>
+      </div>
     </div>
   </article>
 </template>
@@ -67,6 +98,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { getStaticPreviewUrl, getStaticVersionPreviewUrl } from '@/config/env'
+import { CodeOutlined, ArrowRightOutlined, EyeOutlined } from '@ant-design/icons-vue'
 
 interface Props {
   app: API.AppVO
@@ -108,6 +140,7 @@ const iframeSrc = computed(() => {
 })
 
 const hasLivePreview = computed(() => previewStatus.value === 'ready' && !!previewUrl.value)
+
 watch(
   previewUrl,
   async (url) => {
@@ -125,7 +158,6 @@ watch(
         previewStatus.value = response.ok ? 'ready' : 'missing'
       }
     } catch {
-      // 跨域部署环境可能不允许 HEAD；此时仍尝试直接加载 iframe。
       if (currentCheck === checkId) {
         previewStatus.value = 'ready'
       }
@@ -152,264 +184,289 @@ const handleViewWork = () => {
 
 <style scoped>
 .app-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
   overflow: hidden;
-  min-width: 0;
-  border: 1px solid #e8e9ef;
-  border-radius: 20px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(33, 38, 56, 0.045);
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-card:hover {
-  transform: translateY(-4px);
-  border-color: #d7c4b7;
-  box-shadow: 0 18px 40px rgba(33, 38, 56, 0.12);
+  transform: translateY(-3px);
+  border-color: #CBD5E1;
+  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
 }
 
-.app-card--featured {
-  border-color: #e4d9d1;
-}
-
-.app-preview {
+.card-preview {
   position: relative;
-  height: 205px;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 80% 15%, rgba(244, 205, 174, 0.8), transparent 34%),
-    linear-gradient(135deg, #f2f1f8 0%, #f8f3ef 100%);
+  display: flex;
+  flex-direction: column;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
 }
 
-.app-preview--live {
-  background: #f6f7fa;
+.browser-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0 12px;
+  background: #F1F5F9;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.control-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dot--close {
+  background: #FDA4AF;
+}
+
+.dot--min {
+  background: #FDE68A;
+}
+
+.dot--max {
+  background: #86EFAC;
+}
+
+.browser-address-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 160px;
+  height: 20px;
+  padding: 0 8px;
+  background: #FFFFFF;
+  border-radius: 4px;
+  border: 1px solid #E2E8F0;
+}
+
+.address-text {
+  font-size: 11px;
+  color: #64748B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.browser-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.status-pill--live {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.status-pill--preview {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366F1;
+}
+
+.pulse-beacon {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10B981;
+}
+
+.preview-screen {
+  position: relative;
+  height: 190px;
+  overflow: hidden;
+  background: #FFFFFF;
 }
 
 .preview-cover,
 .preview-iframe {
-  position: absolute;
-  inset: 0;
-  display: block;
   width: 100%;
   height: 100%;
   border: 0;
-}
-
-.preview-cover {
   object-fit: cover;
-}
-
-.preview-iframe {
-  background: #fff;
   pointer-events: none;
 }
 
 .preview-empty {
-  position: absolute;
-  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 42px 28px 20px;
+  height: 100%;
+  padding: 20px;
   text-align: center;
+  background: radial-gradient(circle at center, #F8FAFC 0%, #EEF2F6 100%);
 }
 
-.preview-empty-icon {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  border-radius: 15px;
-  background: rgba(255, 255, 255, 0.68);
-  box-shadow: 0 8px 20px rgba(53, 58, 82, 0.08);
-  color: #9d6a50;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 15px;
-  font-weight: 700;
+.empty-code-icon {
+  font-size: 24px;
+  color: #94A3B8;
+  margin-bottom: 8px;
 }
 
-.preview-empty-title {
-  margin-top: 10px;
-  color: #4c4f5c;
+.empty-title {
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
+  color: #475569;
 }
 
-.preview-empty p {
-  width: min(100%, 330px);
-  margin: 5px 0 0;
-  overflow: hidden;
-  color: #858a97;
+.empty-desc {
+  margin: 4px 0 0;
   font-size: 11px;
-  line-height: 1.5;
+  color: #94A3B8;
+  max-width: 220px;
+  overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.app-state-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #b7bbc5;
-}
-
-.app-state--published .app-state-dot {
-  background: #65ad78;
-  box-shadow: 0 0 0 3px rgba(101, 173, 120, 0.13);
-}
-
-.app-overlay {
+.card-overlay {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(28, 32, 46, 0.28);
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.2s ease;
 }
 
-.app-card:hover .app-overlay,
-.app-card:focus-within .app-overlay {
+.app-card:hover .card-overlay {
   opacity: 1;
+  pointer-events: auto;
 }
 
-.published-button {
-  border-color: rgba(255, 255, 255, 0.8);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
 }
 
-.published-button:hover {
-  border-color: #fff !important;
-  color: #fff !important;
-  background: rgba(255, 255, 255, 0.22) !important;
+.action-btn--primary {
+  background: #6366F1;
+  color: #FFFFFF;
 }
 
-.app-info {
+.action-btn--primary:hover {
+  background: #4F46E5;
+  transform: translateY(-1px);
+}
+
+.action-btn--secondary {
+  background: rgba(255, 255, 255, 0.95);
+  color: #0F172A;
+}
+
+.action-btn--secondary:hover {
+  background: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.card-body {
   display: flex;
   align-items: center;
-  gap: 11px;
-  min-width: 0;
-  padding: 15px 16px;
+  gap: 12px;
+  padding: 14px 16px;
 }
 
-.app-avatar {
-  flex: 0 0 auto;
-  background: #eee9e5;
-  color: #89715f;
+.card-avatar {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #FFFFFF;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
-.app-info-main {
+.card-meta-wrap {
   min-width: 0;
   flex: 1;
 }
 
-.app-title {
+.card-title {
   margin: 0;
-  overflow: hidden;
-  color: #292c37;
   font-size: 14px;
   font-weight: 650;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.app-meta {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 5px;
-  color: #8c919f;
-  font-size: 11px;
-}
-
-.app-author {
-  max-width: 120px;
+  color: #0F172A;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.meta-divider {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #c6c8d0;
-}
-
-.app-state {
-  display: inline-flex;
+.card-tags {
+  display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.card-author {
+  color: #64748B;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 90px;
 }
 
-.app-state--published {
-  color: #548663;
+.card-dot-sep {
+  color: #CBD5E1;
 }
 
-.app-version-badge {
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: #f1f2f6;
-  color: #727786;
-  font-size: 10px;
-  white-space: nowrap;
+.version-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
-.app-version-badge--deployed {
-  background: #edf6ef;
-  color: #548663;
+.version-tag--live {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
 }
 
-.card-arrow {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #ececf1;
-  border-radius: 10px;
-  color: #838896;
-  font-size: 14px;
-  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+.version-tag--working {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4F46E5;
 }
 
-.app-card:hover .card-arrow {
-  border-color: #e9d7ca;
-  background: #fbf5f0;
-  color: #a56543;
-}
-
-@media (max-width: 520px) {
-  .app-preview {
-    height: 190px;
-  }
-
-  .app-overlay {
-    opacity: 1;
-    inset: auto 10px 10px auto;
-    width: auto;
-    height: auto;
-    background: transparent;
-  }
-
-  .app-overlay :deep(.ant-space) {
-    gap: 6px !important;
-  }
-
-  .app-overlay :deep(.ant-btn) {
-    min-height: 30px;
-    padding: 0 10px;
-    border: 0;
-    border-radius: 9px;
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 3px 12px rgba(32, 36, 49, 0.12);
-    color: #4c4f5c;
-    font-size: 11px;
-  }
+.version-tag--draft {
+  background: #F1F5F9;
+  color: #94A3B8;
 }
 </style>
