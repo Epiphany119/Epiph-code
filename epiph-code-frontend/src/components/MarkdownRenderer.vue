@@ -112,27 +112,27 @@ const renderedMarkdown = computed(() => {
 }
 
 .markdown-content :deep(code:not(pre code)) {
-  padding: 2px 6px;
+  padding: 2px 7px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.88em;
-  background: #F1F5F9;
-  color: #4F46E5;
-  border-radius: 4px;
-  border: 1px solid #E2E8F0;
+  background: #EFF5FF;
+  color: #2563EB;
+  border-radius: 8px;
+  border: 1px solid #DCE8FD;
 }
 
 .markdown-content :deep(pre.hljs) {
   margin: 0.8em 0;
-  padding: 14px 16px;
-  border-radius: 10px;
-  background: #0F172A;
-  color: #E2E8F0;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: #F5F8FD;
+  color: #1E293B;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.65;
   overflow-x: auto;
-  border: 1px solid #1E293B;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E6ECF5;
+  box-shadow: none;
 }
 
 .markdown-content :deep(pre.hljs code) {
@@ -144,10 +144,10 @@ const renderedMarkdown = computed(() => {
 
 .markdown-content :deep(blockquote) {
   margin: 0.8em 0;
-  padding: 8px 16px;
-  border-left: 3px solid #6366F1;
-  background: rgba(99, 102, 241, 0.05);
-  border-radius: 0 8px 8px 0;
+  padding: 10px 16px;
+  border-left: 3px solid #3B7DED;
+  background: #F5F8FD;
+  border-radius: 0 12px 12px 0;
   color: #475569;
 }
 
@@ -160,18 +160,18 @@ const renderedMarkdown = computed(() => {
 .markdown-content :deep(th),
 .markdown-content :deep(td) {
   padding: 8px 12px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #E6ECF5;
   font-size: 13px;
 }
 
 .markdown-content :deep(th) {
-  background: #F8FAFC;
+  background: #F5F8FD;
   font-weight: 600;
   color: #1E293B;
 }
 
 .markdown-content :deep(a) {
-  color: #4F46E5;
+  color: #2563EB;
   text-decoration: underline;
   text-underline-offset: 2px;
 }

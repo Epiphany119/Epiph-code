@@ -427,12 +427,47 @@ public class AppController {
                                                        @RequestParam(required = false) String clientRequestId,
                                                        @RequestParam(required = false) Long baseVersionId,
                                                        HttpServletRequest request) {
+        return streamChat(appId, message, mode, agent, clientRequestId, baseVersionId, request);
+    }
+
+    /**
+     * 新版 Studio 前端使用 POST + JSON 发起对话生成（classic 模式）。
+     */
+    @RateLimit(limitType = RateLimitType.USER, rate = 10, rateInterval = 60, message = "AI 对话请求过于频繁，请稍后再试")
+    @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> chat(@RequestBody ChatGenerationRequest body,
+                                              HttpServletRequest request) {
+        return streamChat(body, "classic", request);
+    }
+
+    /**
+     * 新版 Studio 前端使用 POST + JSON 发起对话生成（workflow 模式）。
+     */
+    @RateLimit(limitType = RateLimitType.USER, rate = 10, rateInterval = 60, message = "AI 对话请求过于频繁，请稍后再试")
+    @PostMapping(value = "/chat/workflow", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> chatWorkflow(@RequestBody ChatGenerationRequest body,
+                                                      HttpServletRequest request) {
+        return streamChat(body, "workflow", request);
+    }
+
+    private Flux<ServerSentEvent<String>> streamChat(ChatGenerationRequest body, String defaultMode,
+                                                     HttpServletRequest request) {
+        ThrowUtils.throwIf(body == null, ErrorCode.PARAMS_ERROR, "请求体不能为空");
+        String mode = StrUtil.isBlank(body.getMode()) ? defaultMode : body.getMode();
+        String agent = StrUtil.isBlank(body.getAgent()) ? "default" : body.getAgent();
+        return streamChat(body.getAppId(), body.getMessage(), mode, agent,
+                body.getClientRequestId(), body.getBaseVersionId(), request);
+    }
+
+    private Flux<ServerSentEvent<String>> streamChat(Long appId, String message, String mode, String agent,
+                                                     String clientRequestId, Long baseVersionId,
+                                                     HttpServletRequest request) {
         // 参数校验
         ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
         ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户消息不能为空");
         // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
-        // 浏览器 EventSource 断线自动重连会重复发起同一 URL，这里用 clientRequestId 做幂等防重
+        // SSE 断线重连会重复发起同一请求，这里用 clientRequestId 做幂等防重
         if (StrUtil.isNotBlank(clientRequestId)) {
             String dedupeKey = String.format("sse:chat:dedupe:%d:%d:%s:%s:%s:%s",
                     loginUser.getId(), appId, clientRequestId, mode, agent, baseVersionId);

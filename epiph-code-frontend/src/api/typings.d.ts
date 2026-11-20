@@ -259,7 +259,7 @@ declare namespace API {
   }
 
   type listAppChatHistoryParams = {
-    appId: number
+    appId: number | string
     pageSize?: number
     lastCreateTime?: string
   }
@@ -363,6 +363,11 @@ declare namespace API {
     userAvatar?: string
     userProfile?: string
     userRole?: string
+  }
+
+  type UserResetPasswordRequest = {
+    id?: number
+    newPassword?: string
   }
 
   type UserVO = {

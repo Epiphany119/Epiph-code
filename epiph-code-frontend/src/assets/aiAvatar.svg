@@ -1,33 +1,23 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="aiAvatarBg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#EEF2FF"/>
-      <stop offset="1" stop-color="#E0E7FF"/>
+    <linearGradient id="orbSurface" x1="16" y1="12" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EDF4FF"/>
+      <stop offset="100%" stop-color="#DCE8FD"/>
     </linearGradient>
-    <linearGradient id="aiBotGrad" x1="32" y1="28" x2="96" y2="92" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4F46E5"/>
-      <stop offset="1" stop-color="#7C3AED"/>
+    <linearGradient id="sparkleMain" x1="34" y1="30" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B7DED"/>
+      <stop offset="52%" stop-color="#6E8CF8"/>
+      <stop offset="100%" stop-color="#A37CE8"/>
     </linearGradient>
-    <linearGradient id="visorGrad" x1="40" y1="48" x2="88" y2="68" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#0F172A"/>
-      <stop offset="1" stop-color="#1E293B"/>
+    <linearGradient id="sparkleSub" x1="82" y1="24" x2="104" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
     </linearGradient>
   </defs>
-  <rect width="128" height="128" rx="28" fill="url(#aiAvatarBg)"/>
-  <!-- Antenna -->
-  <path d="M64 26V16" stroke="#6366F1" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="64" cy="14" r="5" fill="#8B5CF6"/>
-  <!-- Head -->
-  <rect x="28" y="28" width="72" height="64" rx="20" fill="url(#aiBotGrad)"/>
-  <!-- Visor -->
-  <rect x="38" y="44" width="52" height="28" rx="12" fill="url(#visorGrad)"/>
-  <!-- Glowing Eyes -->
-  <circle cx="52" cy="58" r="5" fill="#38BDF8"/>
-  <circle cx="53.5" cy="56.5" r="1.8" fill="white"/>
-  <circle cx="76" cy="58" r="5" fill="#38BDF8"/>
-  <circle cx="77.5" cy="56.5" r="1.8" fill="white"/>
-  <!-- Smile/Status indicator -->
-  <rect x="54" y="80" width="20" height="4" rx="2" fill="white" fill-opacity="0.8"/>
-  <!-- Neck/Base -->
-  <rect x="48" y="96" width="32" height="10" rx="5" fill="#818CF8"/>
+  <rect width="128" height="128" rx="64" fill="url(#orbSurface)"/>
+  <rect x="2" y="2" width="124" height="124" rx="62" stroke="#C7DAFC" stroke-width="2"/>
+  <!-- Primary Gemini Sparkle -->
+  <path d="M62 28C63.6 47.5 76.5 60.4 96 62C76.5 63.6 63.6 76.5 62 96C60.4 76.5 47.5 63.6 28 62C47.5 60.4 60.4 47.5 62 28Z" fill="url(#sparkleMain)"/>
+  <!-- Secondary Mini Sparkle -->
+  <path d="M93 22C93.6 28.2 97.8 32.4 104 33C97.8 33.6 93.6 37.8 93 44C92.4 37.8 88.2 33.6 82 33C88.2 32.4 92.4 28.2 93 22Z" fill="url(#sparkleSub)"/>
 </svg>

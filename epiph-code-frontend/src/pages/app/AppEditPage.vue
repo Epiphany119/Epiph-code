@@ -280,7 +280,7 @@ onMounted(() => {
 
 .back-link {
   padding: 0;
-  color: #6366F1;
+  color: #1A73E8;
   font-weight: 500;
   margin-bottom: 12px;
 }

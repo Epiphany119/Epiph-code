@@ -46,13 +46,13 @@
           <a-dropdown trigger="click" placement="bottomRight">
             <button type="button" class="user-profile-btn">
               <a-avatar
-                :size="32"
+                :size="30"
                 :src="loginUserStore.loginUser.userAvatar"
                 class="user-avatar"
               >
-                {{ loginUserStore.loginUser.userName?.charAt(0) || 'U' }}
+                {{ displayUserName.charAt(0).toUpperCase() }}
               </a-avatar>
-              <span class="user-name">{{ loginUserStore.loginUser.userName ?? '创作者' }}</span>
+              <span class="user-name">{{ displayUserName }}</span>
               <DownOutlined class="user-caret" />
             </button>
             <template #overlay>
@@ -129,6 +129,13 @@ const filterMenus = (menus: NavItem[]) => {
     return true
   })
 }
+
+const displayUserName = computed(() => {
+  const user = loginUserStore.loginUser
+  const name = user?.userName?.trim()
+  if (name && name !== '无名') return name
+  return user?.userAccount || '创作者'
+})
 
 const menuItems = computed<NavItem[]>(() => filterMenus(originItems))
 
@@ -220,18 +227,18 @@ const onGlobalModeChange = (value: string | number) => {
 }
 
 .brand-highlight {
-  color: #6366F1;
+  color: #1A73E8;
 }
 
 .brand-badge {
-  padding: 2px 7px;
+  padding: 2px 8px;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #6366F1;
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  border-radius: 6px;
+  letter-spacing: 0.06em;
+  color: #0B57D0;
+  background: #E8F0FE;
+  border: 1px solid #D2E3FC;
+  border-radius: 999px;
 }
 
 .nav-links {
@@ -244,32 +251,32 @@ const onGlobalModeChange = (value: string | number) => {
 .nav-link-btn {
   position: relative;
   height: 36px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
-  color: #475569;
+  color: #444746;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.18s ease;
 }
 
 .nav-link-btn:hover {
-  color: #0F172A;
-  background: rgba(241, 245, 249, 0.9);
+  color: #1F1F1F;
+  background: #F0F4F9;
 }
 
 .nav-link-btn--active {
-  color: #4F46E5;
-  background: rgba(99, 102, 241, 0.08);
+  color: #0B57D0;
+  background: #E8F0FE;
   font-weight: 600;
 }
 
 .header-tools {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   margin-left: auto;
 }
 
@@ -278,45 +285,43 @@ const onGlobalModeChange = (value: string | number) => {
   align-items: center;
   gap: 6px;
   padding: 3px 6px;
-  background: #F1F5F9;
-  border-radius: 8px;
-  border: 1px solid #E2E8F0;
+  background: #F0F4F9;
+  border-radius: 999px;
+  border: 1px solid #E3E3E3;
 }
 
 .mode-icon {
-  color: #6366F1;
+  color: #1A73E8;
   font-size: 13px;
-  margin-left: 4px;
+  margin-left: 6px;
 }
 
 .header-divider {
   width: 1px;
   height: 20px;
-  background: #E2E8F0;
+  background: #E3E3E3;
 }
 
 .user-profile-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px 4px 4px;
-  border: 1px solid #E2E8F0;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid #E3E3E3;
   border-radius: 999px;
   background: #FFFFFF;
-  color: #0F172A;
+  color: #1F1F1F;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .user-profile-btn:hover {
-  border-color: #CBD5E1;
-  background: #F8FAFC;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: #D2E3FC;
+  background: #F8FAFD;
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  background: #1A73E8;
   color: #FFFFFF;
   font-weight: 600;
 }

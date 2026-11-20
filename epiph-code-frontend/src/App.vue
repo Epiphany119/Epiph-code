@@ -3,63 +3,63 @@ import BasicLayout from '@/layouts/BasicLayout.vue'
 
 const theme = {
   token: {
-    colorPrimary: '#6366F1',
-    colorInfo: '#3B82F6',
-    colorSuccess: '#10B981',
+    colorPrimary: '#3B7DED',
+    colorInfo: '#3B7DED',
+    colorSuccess: '#16A34A',
     colorWarning: '#F59E0B',
     colorError: '#EF4444',
-    colorText: '#0F172A',
+    colorText: '#1E293B',
     colorTextSecondary: '#475569',
     colorTextTertiary: '#94A3B8',
-    colorBgBase: '#F8FAFC',
+    colorBgBase: '#F6F9FE',
     colorBgContainer: '#FFFFFF',
     colorBgElevated: '#FFFFFF',
-    colorBgLayout: '#F8FAFC',
-    colorBorder: '#E2E8F0',
-    colorBorderSecondary: '#F1F5F9',
-    borderRadius: 10,
-    borderRadiusLG: 14,
-    borderRadiusSM: 6,
+    colorBgLayout: '#F6F9FE',
+    colorBorder: '#E6ECF5',
+    colorBorderSecondary: '#EFF4FB',
+    borderRadius: 14,
+    borderRadiusLG: 22,
+    borderRadiusSM: 10,
     fontFamily:
-      "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
+      "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif",
     fontSize: 14,
     controlHeight: 38,
   },
   components: {
     Button: {
-      colorPrimary: '#6366F1',
-      colorPrimaryHover: '#4F46E5',
-      colorPrimaryActive: '#4338CA',
-      borderRadius: 8,
+      colorPrimary: '#3B7DED',
+      colorPrimaryHover: '#2B6CB0',
+      colorPrimaryActive: '#2563EB',
+      borderRadius: 999,
     },
     Table: {
-      headerBg: '#F8FAFC',
+      headerBg: '#F6F9FE',
       headerColor: '#475569',
-      rowHoverBg: '#F8FAFC',
-      borderColor: '#E2E8F0',
-      borderRadius: 10,
+      rowHoverBg: '#EFF5FF',
+      borderColor: '#E6ECF5',
+      borderRadius: 16,
     },
     Menu: {
       itemColor: '#475569',
-      itemSelectedColor: '#6366F1',
-      itemSelectedBg: 'rgba(99, 102, 241, 0.08)',
-      horizontalItemHoverBg: 'rgba(99, 102, 241, 0.04)',
+      itemSelectedColor: '#2563EB',
+      itemSelectedBg: '#EBF3FE',
+      horizontalItemHoverBg: '#F0F6FF',
     },
     Input: {
-      activeBorderColor: '#6366F1',
-      hoverBorderColor: '#818CF8',
+      activeBorderColor: '#3B7DED',
+      hoverBorderColor: '#93C5FD',
       colorBgContainer: '#FFFFFF',
     },
     Card: {
       colorBgContainer: '#FFFFFF',
-      colorBorderSecondary: '#E2E8F0',
+      colorBorderSecondary: '#E6ECF5',
     },
     Modal: {
       colorBgElevated: '#FFFFFF',
-      borderRadiusLG: 16,
+      borderRadiusLG: 24,
     },
     Tag: {
-      borderRadiusSM: 6,
+      borderRadiusSM: 999,
     },
   },
 }
@@ -73,27 +73,27 @@ const theme = {
 
 <style>
 :root {
-  --bg-page: #F8FAFC;
+  --bg-page: #F6F9FE;
+  --bg-surface: #EEF4FC;
   --bg-card: #FFFFFF;
-  --bg-muted: #F1F5F9;
-  --line: #E2E8F0;
+  --bg-muted: #F1F5FB;
+  --line: #E6ECF5;
   --line-strong: #CBD5E1;
-  --text-main: #0F172A;
-  --text-muted: #475569;
+  --text-main: #1E293B;
+  --text-muted: #526075;
   --text-dim: #94A3B8;
-  --primary: #6366F1;
-  --primary-hover: #4F46E5;
-  --primary-light: rgba(99, 102, 241, 0.08);
-  --primary-glow: rgba(99, 102, 241, 0.25);
-  --accent-cyan: #06B6D4;
-  --accent-purple: #8B5CF6;
-  --success: #10B981;
+  --primary: #3B7DED;
+  --primary-hover: #2563EB;
+  --primary-light: #EBF3FE;
+  --primary-glow: rgba(59, 125, 237, 0.16);
+  --gemini-gradient: linear-gradient(135deg, #4285F4 0%, #6E8CF8 55%, #A37CE8 100%);
+  --success: #16A34A;
   --warning: #F59E0B;
   --danger: #EF4444;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(30, 41, 59, 0.04);
+  --shadow-md: 0 6px 20px rgba(30, 41, 59, 0.055);
+  --shadow-lg: 0 12px 32px rgba(30, 41, 59, 0.08);
+  --shadow-xl: 0 20px 48px rgba(30, 41, 59, 0.12);
 }
 
 * {
@@ -116,20 +116,19 @@ body {
   color: var(--text-main);
   background-color: var(--bg-page);
   background-image:
-    radial-gradient(1000px circle at 50% -80px, rgba(99, 102, 241, 0.07), transparent 70%),
-    radial-gradient(800px circle at 90% 150px, rgba(59, 130, 246, 0.05), transparent 60%),
-    radial-gradient(700px circle at 10% 400px, rgba(139, 92, 246, 0.04), transparent 60%);
+    radial-gradient(960px circle at 15% -80px, rgba(66, 133, 244, 0.07), transparent 65%),
+    radial-gradient(820px circle at 88% 30px, rgba(163, 124, 232, 0.05), transparent 60%);
   background-attachment: fixed;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC',
-    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue',
+    'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
 ::selection {
-  background: rgba(99, 102, 241, 0.2);
-  color: #4338CA;
+  background: #DBEAFE;
+  color: #1D4ED8;
 }
 
 a {
@@ -156,36 +155,39 @@ select {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #D5DFEC;
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #B8C7DB;
 }
 
-/* Ant Design Global Polish */
+/* Ant Design Global Soft Gemini Polish */
 .ant-btn {
   font-weight: 500;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 999px;
+  box-shadow: none;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .ant-btn-primary {
-  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%) !important;
+  background: linear-gradient(135deg, #4285F4 0%, #3B7DED 100%) !important;
   border-color: transparent !important;
   color: #FFFFFF !important;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.28) !important;
+  box-shadow: 0 3px 10px rgba(59, 125, 237, 0.22) !important;
 }
 
-.ant-btn-primary:hover {
-  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%) !important;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.38) !important;
+.ant-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3B7DED 0%, #2563EB 100%) !important;
+  box-shadow: 0 5px 14px rgba(59, 125, 237, 0.3) !important;
   transform: translateY(-1px);
 }
 
-.ant-btn-primary:active {
-  transform: translateY(0);
+.ant-btn-primary:disabled {
+  background: #E2E8F0 !important;
+  color: #94A3B8 !important;
+  box-shadow: none !important;
 }
 
 .ant-btn-default {
@@ -194,16 +196,17 @@ select {
   color: var(--text-main) !important;
 }
 
-.ant-btn-default:hover {
-  border-color: #818CF8 !important;
-  color: #4F46E5 !important;
-  background: #F8FAFC !important;
+.ant-btn-default:hover:not(:disabled) {
+  border-color: #BFDBFE !important;
+  color: #2563EB !important;
+  background: #F4F8FE !important;
 }
 
 .ant-input,
 .ant-input-affix-wrapper,
 .ant-select-selector {
   border-color: var(--line) !important;
+  border-radius: 14px !important;
   transition: all 0.2s ease !important;
 }
 
@@ -215,38 +218,39 @@ select {
 .ant-input:focus,
 .ant-input-affix-wrapper-focused,
 .ant-select-focused .ant-select-selector {
-  border-color: #6366F1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+  border-color: #3B7DED !important;
+  box-shadow: 0 0 0 3px rgba(59, 125, 237, 0.12) !important;
 }
 
 .ant-card {
-  border-radius: 12px;
+  border-radius: 22px;
   border: 1px solid var(--line) !important;
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .ant-modal-content {
-  border-radius: 16px !important;
+  border-radius: 24px !important;
   box-shadow: var(--shadow-xl) !important;
   border: 1px solid var(--line);
 }
 
 .ant-segmented {
-  background: #F1F5F9 !important;
+  background: #EFF4FB !important;
   padding: 3px;
-  border-radius: 8px;
+  border-radius: 999px;
 }
 
 .ant-segmented-item-selected {
   background: #FFFFFF !important;
-  color: #4F46E5 !important;
-  box-shadow: var(--shadow-sm) !important;
+  color: #2563EB !important;
+  box-shadow: 0 2px 6px rgba(30, 41, 59, 0.08) !important;
   font-weight: 600;
 }
 
 .ant-tag {
   border: none;
+  border-radius: 999px;
   font-weight: 500;
 }
 </style>

@@ -71,14 +71,14 @@
     <!-- Card Info Footer -->
     <div class="card-body">
       <a-avatar class="card-avatar" :src="app.user?.userAvatar" :size="36">
-        {{ app.user?.userName?.charAt(0) || 'U' }}
+        {{ authorName.charAt(0).toUpperCase() }}
       </a-avatar>
       <div class="card-meta-wrap">
         <h3 class="card-title" :title="app.appName || '未命名应用'">
           {{ app.appName || '未命名应用' }}
         </h3>
         <div class="card-tags">
-          <span class="card-author">{{ app.user?.userName || (featured ? '社区创作者' : '我的作品') }}</span>
+          <span class="card-author">{{ authorName }}</span>
           <span class="card-dot-sep">·</span>
           <span v-if="app.deployKey" class="version-tag version-tag--live">
             已部署 V{{ app.deployedVersionNo || 1 }}
@@ -118,6 +118,12 @@ const emit = defineEmits<Emits>()
 const previewStatus = ref<'checking' | 'ready' | 'missing'>('checking')
 const previewRevision = ref(Date.now())
 let checkId = 0
+
+const authorName = computed(() => {
+  const name = props.app.user?.userName?.trim()
+  if (name && name !== '无名') return name
+  return props.app.user?.userAccount || (props.featured ? '社区创作者' : '我的作品')
+})
 
 const previewUrl = computed(() => {
   if (props.app.deployedVersionId) {
@@ -188,35 +194,35 @@ const handleViewWork = () => {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 14px;
+  border: 1px solid #E6ECF5;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 16px rgba(30, 41, 59, 0.04);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-card:hover {
   transform: translateY(-3px);
-  border-color: #CBD5E1;
-  box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
+  border-color: #C7DAFC;
+  box-shadow: 0 14px 30px -6px rgba(59, 125, 237, 0.12), 0 4px 10px -2px rgba(30, 41, 59, 0.04);
 }
 
 .card-preview {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #F8FAFC;
-  border-bottom: 1px solid #E2E8F0;
+  background: #F6F9FE;
+  border-bottom: 1px solid #E6ECF5;
 }
 
 .browser-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 32px;
-  padding: 0 12px;
-  background: #F1F5F9;
-  border-bottom: 1px solid #E2E8F0;
+  height: 34px;
+  padding: 0 14px;
+  background: #F2F6FC;
+  border-bottom: 1px solid #E6ECF5;
 }
 
 .window-controls {
@@ -370,28 +376,28 @@ const handleViewWork = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
 .action-btn--primary {
-  background: #6366F1;
+  background: #3B7DED;
   color: #FFFFFF;
 }
 
 .action-btn--primary:hover {
-  background: #4F46E5;
+  background: #2563EB;
   transform: translateY(-1px);
 }
 
 .action-btn--secondary {
-  background: rgba(255, 255, 255, 0.95);
-  color: #0F172A;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1E293B;
 }
 
 .action-btn--secondary:hover {
@@ -403,11 +409,11 @@ const handleViewWork = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 14px 18px;
 }
 
 .card-avatar {
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  background: #3B7DED;
   color: #FFFFFF;
   font-weight: 600;
   flex-shrink: 0;

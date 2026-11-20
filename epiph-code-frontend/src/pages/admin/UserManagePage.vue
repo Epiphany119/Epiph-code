@@ -50,25 +50,52 @@
             {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
           </template>
           <template v-else-if="column.key === 'action'">
-            <a-popconfirm
-              title="确定要删除该用户账号吗？"
-              ok-text="确认"
-              cancel-text="取消"
-              ok-type="danger"
-              @confirm="doDelete(record.id)"
-            >
-              <a-button type="link" danger size="small">删除</a-button>
-            </a-popconfirm>
+            <a-space size="small">
+              <a-button type="link" size="small" @click="openResetModal(record)">重置密码</a-button>
+              <a-popconfirm
+                title="确定要删除该用户账号吗？"
+                ok-text="确认"
+                cancel-text="取消"
+                ok-type="danger"
+                @confirm="doDelete(record.id)"
+              >
+                <a-button type="link" danger size="small">删除</a-button>
+              </a-popconfirm>
+            </a-space>
           </template>
         </template>
       </a-table>
     </a-card>
+
+    <!-- Reset Password Modal -->
+    <a-modal
+      v-model:open="resetModalOpen"
+      title="重置用户密码"
+      ok-text="确认重置"
+      cancel-text="取消"
+      :confirm-loading="resetLoading"
+      @ok="handleResetPassword"
+    >
+      <p v-if="resetTargetUser" class="reset-target-tip">
+        正在为账号 <strong>{{ resetTargetUser.userAccount }}</strong>
+        <span v-if="resetTargetUser.userName">（{{ resetTargetUser.userName }}）</span> 重置登录密码：
+      </p>
+      <a-form layout="vertical">
+        <a-form-item label="新密码（至少 8 位，留空则重置为 12345678）">
+          <a-input-password
+            v-model:value="resetPasswordValue"
+            placeholder="输入新密码，默认 12345678"
+            allow-clear
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue'
-import { deleteUser, listUserVoByPage } from '@/api/userController.ts'
+import { deleteUser, listUserVoByPage, resetUserPassword } from '@/api/userController.ts'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { SearchOutlined } from '@ant-design/icons-vue'
@@ -110,7 +137,7 @@ const columns = [
   {
     title: '操作',
     key: 'action',
-    width: 100,
+    width: 170,
   },
 ]
 
@@ -167,6 +194,43 @@ const doTableChange = (page: { current: number; pageSize: number }) => {
   searchParams.pageSize = page.pageSize
   pagination.pageSize = page.pageSize
   fetchData()
+}
+
+const resetModalOpen = ref(false)
+const resetLoading = ref(false)
+const resetTargetUser = ref<API.UserVO | null>(null)
+const resetPasswordValue = ref('12345678')
+
+const openResetModal = (record: API.UserVO) => {
+  resetTargetUser.value = record
+  resetPasswordValue.value = '12345678'
+  resetModalOpen.value = true
+}
+
+const handleResetPassword = async () => {
+  if (!resetTargetUser.value?.id) return
+  const pwd = resetPasswordValue.value.trim()
+  if (pwd && pwd.length < 8) {
+    message.warning('新密码长度不能小于 8 位')
+    return
+  }
+  resetLoading.value = true
+  try {
+    const res = await resetUserPassword({
+      id: resetTargetUser.value.id,
+      newPassword: pwd || '12345678',
+    })
+    if (res.data.code === 0 && res.data.data) {
+      message.success(`已将 ${resetTargetUser.value.userAccount} 的密码重置为 ${pwd || '12345678'}`)
+      resetModalOpen.value = false
+    } else {
+      message.error('重置密码失败：' + res.data.message)
+    }
+  } catch {
+    message.error('重置密码请求异常')
+  } finally {
+    resetLoading.value = false
+  }
 }
 
 const doDelete = async (id: number) => {
@@ -226,7 +290,7 @@ onMounted(() => {
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  background: #1A73E8;
   color: #FFFFFF;
   font-weight: 600;
 }

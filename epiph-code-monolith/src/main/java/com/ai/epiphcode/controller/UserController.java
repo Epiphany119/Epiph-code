@@ -210,6 +210,30 @@ public class UserController {
     }
 
     /**
+     * 管理员重置用户密码
+     */
+    @PostMapping("/reset/password")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> resetUserPassword(@RequestBody UserResetPasswordRequest userResetPasswordRequest) {
+        if (userResetPasswordRequest == null || userResetPasswordRequest.getId() == null || userResetPasswordRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户 ID 不能为空");
+        }
+        User targetUser = userService.getById(userResetPasswordRequest.getId());
+        ThrowUtils.throwIf(targetUser == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        String rawPassword = userResetPasswordRequest.getNewPassword();
+        String finalPassword = (rawPassword == null || rawPassword.isBlank()) ? "12345678" : rawPassword.trim();
+        if (finalPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度不能小于 8 位");
+        }
+        User updateUser = new User();
+        updateUser.setId(targetUser.getId());
+        updateUser.setUserPassword(userService.getEncryptPassword(finalPassword));
+        boolean result = userService.updateById(updateUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
+
+    /**
      * 分页获取用户封装列表（仅管理员）
      *
      * @param userQueryRequest 查询请求参数

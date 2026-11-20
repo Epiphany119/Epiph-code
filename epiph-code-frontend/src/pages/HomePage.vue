@@ -402,8 +402,8 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 4px 12px 4px 10px;
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(26, 115, 232, 0.08);
+  border: 1px solid rgba(26, 115, 232, 0.2);
   border-radius: 999px;
   margin-bottom: 24px;
 }
@@ -412,21 +412,21 @@ onMounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #6366F1;
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+  background: #3B7DED;
+  box-shadow: 0 0 8px rgba(26, 115, 232, 0.6);
 }
 
 .hero-pill-text {
   font-size: 13px;
   font-weight: 600;
-  color: #4F46E5;
+  color: #2563EB;
 }
 
 .hero-pill-badge {
   font-size: 11px;
   font-weight: 700;
   padding: 1px 6px;
-  background: #6366F1;
+  background: #3B7DED;
   color: #FFFFFF;
   border-radius: 999px;
 }
@@ -441,7 +441,7 @@ onMounted(() => {
 }
 
 .hero-gradient-title {
-  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #2563EB 100%);
+  background: linear-gradient(135deg, #3B7DED 0%, #4285F4 55%, #2563EB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -469,8 +469,8 @@ onMounted(() => {
   gap: 6px;
   padding: 6px 14px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
+  border: 1px solid #E6ECF5;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 500;
   color: #334155;
@@ -478,7 +478,7 @@ onMounted(() => {
 }
 
 .capability-icon {
-  color: #6366F1;
+  color: #3B7DED;
   font-size: 14px;
 }
 
@@ -487,8 +487,8 @@ onMounted(() => {
   width: min(840px, 100%);
   margin-top: 40px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 18px;
+  border: 1px solid #E6ECF5;
+  border-radius: 28px;
   box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
   overflow: hidden;
   text-align: left;
@@ -496,8 +496,8 @@ onMounted(() => {
 }
 
 .prompt-studio-card:focus-within {
-  box-shadow: 0 24px 48px -12px rgba(99, 102, 241, 0.14), 0 0 0 2px rgba(99, 102, 241, 0.25);
-  border-color: #818CF8;
+  box-shadow: 0 24px 48px -12px rgba(26, 115, 232, 0.14), 0 0 0 2px rgba(26, 115, 232, 0.25);
+  border-color: #8AB4F8;
 }
 
 .studio-card-header {
@@ -521,8 +521,8 @@ onMounted(() => {
   justify-content: center;
   width: 22px;
   height: 22px;
-  border-radius: 6px;
-  background: #6366F1;
+  border-radius: 999px;
+  background: #3B7DED;
   color: #FFFFFF;
   font-size: 11px;
   font-weight: 700;
@@ -594,8 +594,8 @@ onMounted(() => {
 .idea-chip {
   padding: 4px 10px;
   background: #F1F5F9;
-  border: 1px solid #E2E8F0;
-  border-radius: 6px;
+  border: 1px solid #E6ECF5;
+  border-radius: 999px;
   color: #475569;
   font-size: 12px;
   cursor: pointer;
@@ -603,9 +603,9 @@ onMounted(() => {
 }
 
 .idea-chip:hover {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: #818CF8;
-  color: #4F46E5;
+  background: rgba(26, 115, 232, 0.08);
+  border-color: #8AB4F8;
+  color: #2563EB;
   transform: translateY(-1px);
 }
 
@@ -653,7 +653,7 @@ onMounted(() => {
   align-items: flex-end;
   justify-content: space-between;
   padding-bottom: 8px;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid #E6ECF5;
 }
 
 .section-badge {
@@ -662,7 +662,7 @@ onMounted(() => {
   gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #6366F1;
+  color: #3B7DED;
   letter-spacing: 0.06em;
   margin-bottom: 6px;
 }
@@ -684,7 +684,7 @@ onMounted(() => {
 .stat-pill {
   padding: 4px 12px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #E6ECF5;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;

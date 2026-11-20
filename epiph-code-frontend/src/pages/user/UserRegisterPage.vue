@@ -209,7 +209,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   flex-direction: column;
   justify-content: center;
   padding: 48px;
-  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+  background: linear-gradient(145deg, #0F172A 0%, #174EA6 58%, #1A73E8 100%);
   color: #FFFFFF;
   overflow: hidden;
 }
@@ -221,7 +221,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   width: 400px;
   height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(26, 115, 232, 0.4) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -316,7 +316,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #6366F1;
+  color: #1A73E8;
 }
 
 .panel-title {
@@ -363,12 +363,12 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
 }
 
 .link-highlight {
-  color: #6366F1;
+  color: #1A73E8;
   font-weight: 600;
 }
 
 .link-highlight:hover {
-  color: #4F46E5;
+  color: #0B57D0;
   text-decoration: underline;
 }
 

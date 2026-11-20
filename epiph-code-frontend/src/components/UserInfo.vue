@@ -1,22 +1,30 @@
 <template>
   <div class="user-info">
     <a-avatar :src="user?.userAvatar" :size="size" class="user-avatar">
-      {{ user?.userName?.charAt(0) || 'U' }}
+      {{ displayName.charAt(0).toUpperCase() }}
     </a-avatar>
-    <span v-if="showName" class="user-name">{{ user?.userName || '未知用户' }}</span>
+    <span v-if="showName" class="user-name">{{ displayName }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 interface Props {
   user?: API.UserVO
   size?: number | 'small' | 'default' | 'large'
   showName?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   size: 'default',
   showName: true,
+})
+
+const displayName = computed(() => {
+  const name = props.user?.userName?.trim()
+  if (name && name !== '无名') return name
+  return props.user?.userAccount || '未知用户'
 })
 </script>
 
@@ -30,7 +38,7 @@ withDefaults(defineProps<Props>(), {
 
 .user-avatar {
   flex: 0 0 auto;
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  background: #1A73E8;
   color: #FFFFFF;
   font-weight: 600;
 }
@@ -39,7 +47,7 @@ withDefaults(defineProps<Props>(), {
   min-width: 0;
   max-width: 140px;
   overflow: hidden;
-  color: #1E293B;
+  color: #1F1F1F;
   font-size: 13px;
   font-weight: 500;
   text-overflow: ellipsis;

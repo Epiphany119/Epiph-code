@@ -94,8 +94,11 @@
           </a-form-item>
 
           <div class="form-options">
-            <span class="hint-text">还没有账号？</span>
-            <RouterLink to="/user/register" class="link-highlight">立即注册</RouterLink>
+            <a class="forgot-link" @click.prevent="showForgotTip">忘记密码？</a>
+            <div class="register-hint">
+              <span class="hint-text">还没有账号？</span>
+              <RouterLink to="/user/register" class="link-highlight">立即注册</RouterLink>
+            </div>
           </div>
 
           <a-form-item class="submit-item">
@@ -120,7 +123,7 @@ import { reactive, ref } from 'vue'
 import { userLogin } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/loginUser.ts'
 import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { UserOutlined, LockOutlined, CheckCircleFilled } from '@ant-design/icons-vue'
 
 const formState = reactive<API.UserLoginRequest>({
@@ -131,6 +134,14 @@ const formState = reactive<API.UserLoginRequest>({
 const loading = ref(false)
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
+
+const showForgotTip = () => {
+  Modal.info({
+    title: '忘记密码怎么办？',
+    content: '请联系平台管理员（如 test 管理员账号）在「用户管理」页面为您重置密码，重置后可使用新密码登录。',
+    okText: '我知道了',
+  })
+}
 
 const handleSubmit = async (values: API.UserLoginRequest) => {
   loading.value = true
@@ -182,7 +193,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   flex-direction: column;
   justify-content: center;
   padding: 48px;
-  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+  background: linear-gradient(145deg, #0F172A 0%, #174EA6 58%, #1A73E8 100%);
   color: #FFFFFF;
   overflow: hidden;
 }
@@ -194,7 +205,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   width: 400px;
   height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(26, 115, 232, 0.4) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -289,7 +300,7 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #6366F1;
+  color: #1A73E8;
 }
 
 .panel-title {
@@ -325,10 +336,26 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 .form-options {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 6px;
   margin-bottom: 24px;
   font-size: 13px;
+}
+
+.register-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.forgot-link {
+  color: #64748B;
+  cursor: pointer;
+}
+
+.forgot-link:hover {
+  color: #1A73E8;
+  text-decoration: underline;
 }
 
 .hint-text {
@@ -336,12 +363,12 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 }
 
 .link-highlight {
-  color: #6366F1;
+  color: #1A73E8;
   font-weight: 600;
 }
 
 .link-highlight:hover {
-  color: #4F46E5;
+  color: #0B57D0;
   text-decoration: underline;
 }
 
