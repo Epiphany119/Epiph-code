@@ -91,6 +91,25 @@
           </span>
         </div>
       </div>
+      <a-popconfirm
+        v-if="!featured"
+        title="删除后数据将在数据库保留 30 天，到期后将彻底清理数据库记录及本地产物，确认删除？"
+        ok-text="确认删除"
+        cancel-text="取消"
+        ok-type="danger"
+        @confirm="handleDelete"
+      >
+        <a-button
+          type="text"
+          size="small"
+          danger
+          class="card-delete-btn"
+          title="删除应用"
+          @click.stop
+        >
+          <template #icon><DeleteOutlined /></template>
+        </a-button>
+      </a-popconfirm>
     </div>
   </article>
 </template>
@@ -98,7 +117,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { getStaticPreviewUrl, getStaticVersionPreviewUrl } from '@/config/env'
-import { CodeOutlined, ArrowRightOutlined, EyeOutlined } from '@ant-design/icons-vue'
+import { CodeOutlined, ArrowRightOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 
 interface Props {
   app: API.AppVO
@@ -108,6 +127,7 @@ interface Props {
 interface Emits {
   (e: 'view-chat', appId: string | number | undefined): void
   (e: 'view-work', app: API.AppVO): void
+  (e: 'delete-app', appId: string | number | undefined): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -185,6 +205,10 @@ const handleViewChat = () => {
 
 const handleViewWork = () => {
   emit('view-work', props.app)
+}
+
+const handleDelete = () => {
+  emit('delete-app', props.app.id)
 }
 </script>
 

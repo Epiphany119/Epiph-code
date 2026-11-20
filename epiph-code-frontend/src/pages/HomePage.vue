@@ -142,6 +142,7 @@
           :app="app"
           @view-chat="viewChat"
           @view-work="viewWork"
+          @delete-app="handleDeleteApp"
         />
       </div>
 
@@ -219,7 +220,7 @@ import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { addApp, listGoodAppVoByPage, listMyAppVoByPage } from '@/api/appController'
+import { addApp, deleteApp, listGoodAppVoByPage, listMyAppVoByPage } from '@/api/appController'
 import { getDeployUrl } from '@/config/env'
 import AppCard from '@/components/AppCard.vue'
 import {
@@ -364,6 +365,21 @@ const viewWork = (app: API.AppVO) => {
   if (app.deployKey) {
     const url = getDeployUrl(app.deployKey)
     window.open(url, '_blank')
+  }
+}
+
+const handleDeleteApp = async (appId: string | number | undefined) => {
+  if (!appId) return
+  try {
+    const res = await deleteApp({ id: appId as unknown as number })
+    if (res.data.code === 0 && res.data.data) {
+      message.success('已删除（数据将在 30 天后彻底清理）')
+      await loadMyApps()
+    } else {
+      message.error('删除失败：' + res.data.message)
+    }
+  } catch {
+    message.error('删除请求异常，请稍后重试')
   }
 }
 
