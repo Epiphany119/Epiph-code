@@ -194,25 +194,25 @@ const handleViewWork = () => {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(30, 41, 59, 0.04);
+  box-shadow: none;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-card:hover {
   transform: translateY(-3px);
-  border-color: #C7DAFC;
-  box-shadow: 0 14px 30px -6px rgba(59, 125, 237, 0.12), 0 4px 10px -2px rgba(30, 41, 59, 0.04);
+  border-color: #A8C7FA;
+  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.08);
 }
 
 .card-preview {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #F6F9FE;
-  border-bottom: 1px solid #E6ECF5;
+  background: #F8F9FA;
+  border-bottom: 1px solid #E3E3E3;
 }
 
 .browser-topbar {
@@ -221,8 +221,8 @@ const handleViewWork = () => {
   justify-content: space-between;
   height: 34px;
   padding: 0 14px;
-  background: #F2F6FC;
-  border-bottom: 1px solid #E6ECF5;
+  background: #F8F9FA;
+  border-bottom: 1px solid #E3E3E3;
 }
 
 .window-controls {
@@ -386,12 +386,12 @@ const handleViewWork = () => {
 }
 
 .action-btn--primary {
-  background: #3B7DED;
+  background: #0B57D0;
   color: #FFFFFF;
 }
 
 .action-btn--primary:hover {
-  background: #2563EB;
+  background: #0842A0;
   transform: translateY(-1px);
 }
 
@@ -413,7 +413,7 @@ const handleViewWork = () => {
 }
 
 .card-avatar {
-  background: #3B7DED;
+  background: #0B57D0;
   color: #FFFFFF;
   font-weight: 600;
   flex-shrink: 0;
@@ -428,7 +428,7 @@ const handleViewWork = () => {
   margin: 0;
   font-size: 14px;
   font-weight: 650;
-  color: #0F172A;
+  color: #1F1F1F;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

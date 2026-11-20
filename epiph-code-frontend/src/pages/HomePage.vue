@@ -412,21 +412,21 @@ onMounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #3B7DED;
+  background: #0B57D0;
   box-shadow: 0 0 8px rgba(26, 115, 232, 0.6);
 }
 
 .hero-pill-text {
   font-size: 13px;
   font-weight: 600;
-  color: #2563EB;
+  color: #0842A0;
 }
 
 .hero-pill-badge {
   font-size: 11px;
   font-weight: 700;
   padding: 1px 6px;
-  background: #3B7DED;
+  background: #0B57D0;
   color: #FFFFFF;
   border-radius: 999px;
 }
@@ -437,11 +437,11 @@ onMounted(() => {
   font-weight: 850;
   line-height: 1.15;
   letter-spacing: -0.04em;
-  color: #0F172A;
+  color: #1F1F1F;
 }
 
 .hero-gradient-title {
-  background: linear-gradient(135deg, #3B7DED 0%, #4285F4 55%, #2563EB 100%);
+  background: linear-gradient(135deg, #0B57D0 0%, #4285F4 55%, #0842A0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -451,7 +451,7 @@ onMounted(() => {
   margin: 18px auto 0;
   font-size: 16px;
   line-height: 1.65;
-  color: #64748B;
+  color: #444746;
 }
 
 .hero-capabilities {
@@ -469,7 +469,7 @@ onMounted(() => {
   gap: 6px;
   padding: 6px 14px;
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 500;
@@ -478,7 +478,7 @@ onMounted(() => {
 }
 
 .capability-icon {
-  color: #3B7DED;
+  color: #0B57D0;
   font-size: 14px;
 }
 
@@ -487,16 +487,16 @@ onMounted(() => {
   width: min(840px, 100%);
   margin-top: 40px;
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   border-radius: 28px;
-  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
+  box-shadow: none;
   overflow: hidden;
   text-align: left;
   transition: box-shadow 0.2s ease;
 }
 
 .prompt-studio-card:focus-within {
-  box-shadow: 0 24px 48px -12px rgba(26, 115, 232, 0.14), 0 0 0 2px rgba(26, 115, 232, 0.25);
+  box-shadow: 0 0 0 2px rgba(11, 87, 208, 0.14);
   border-color: #8AB4F8;
 }
 
@@ -505,7 +505,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: #F8FAFC;
+  background: #F0F4F9;
   border-bottom: 1px solid #F1F5F9;
 }
 
@@ -522,7 +522,7 @@ onMounted(() => {
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  background: #3B7DED;
+  background: #0B57D0;
   color: #FFFFFF;
   font-size: 11px;
   font-weight: 700;
@@ -532,7 +532,7 @@ onMounted(() => {
   margin: 0;
   font-size: 15px;
   font-weight: 700;
-  color: #1E293B;
+  color: #1F1F1F;
 }
 
 .studio-header-controls {
@@ -543,7 +543,7 @@ onMounted(() => {
 
 .agent-label {
   font-size: 12px;
-  color: #64748B;
+  color: #444746;
 }
 
 .agent-select {
@@ -581,7 +581,7 @@ onMounted(() => {
 .inspiration-label {
   font-size: 12px;
   font-weight: 600;
-  color: #64748B;
+  color: #444746;
 }
 
 .inspiration-chips {
@@ -593,8 +593,8 @@ onMounted(() => {
 
 .idea-chip {
   padding: 4px 10px;
-  background: #F1F5F9;
-  border: 1px solid #E6ECF5;
+  background: #FFFFFF;
+  border: 1px solid #DADCE0;
   border-radius: 999px;
   color: #475569;
   font-size: 12px;
@@ -605,7 +605,7 @@ onMounted(() => {
 .idea-chip:hover {
   background: rgba(26, 115, 232, 0.08);
   border-color: #8AB4F8;
-  color: #2563EB;
+  color: #0842A0;
   transform: translateY(-1px);
 }
 
@@ -614,13 +614,13 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: #F8FAFC;
+  background: #F0F4F9;
   border-top: 1px solid #F1F5F9;
 }
 
 .prompt-length-hint {
   font-size: 12px;
-  color: #64748B;
+  color: #444746;
 }
 
 .prompt-length-hint .dim {
@@ -662,7 +662,7 @@ onMounted(() => {
   gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #3B7DED;
+  color: #0B57D0;
   letter-spacing: 0.06em;
   margin-bottom: 6px;
 }
@@ -671,20 +671,20 @@ onMounted(() => {
   margin: 0;
   font-size: 22px;
   font-weight: 750;
-  color: #0F172A;
+  color: #1F1F1F;
   letter-spacing: -0.02em;
 }
 
 .section-desc {
   margin: 4px 0 0;
   font-size: 14px;
-  color: #64748B;
+  color: #444746;
 }
 
 .stat-pill {
   padding: 4px 12px;
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
@@ -715,13 +715,13 @@ onMounted(() => {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #1E293B;
+  color: #1F1F1F;
 }
 
 .login-prompt-content p {
   margin: 6px 0 0;
   font-size: 13px;
-  color: #64748B;
+  color: #444746;
 }
 
 .empty-icon {
@@ -734,13 +734,13 @@ onMounted(() => {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #1E293B;
+  color: #1F1F1F;
 }
 
 .empty-state-card p {
   margin: 0 0 8px;
   font-size: 13px;
-  color: #64748B;
+  color: #444746;
 }
 
 .pagination-wrap {

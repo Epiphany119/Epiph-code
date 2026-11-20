@@ -3,23 +3,23 @@ import BasicLayout from '@/layouts/BasicLayout.vue'
 
 const theme = {
   token: {
-    colorPrimary: '#3B7DED',
-    colorInfo: '#3B7DED',
-    colorSuccess: '#16A34A',
-    colorWarning: '#F59E0B',
-    colorError: '#EF4444',
-    colorText: '#1E293B',
-    colorTextSecondary: '#475569',
-    colorTextTertiary: '#94A3B8',
-    colorBgBase: '#F6F9FE',
+    colorPrimary: '#0B57D0',
+    colorInfo: '#0B57D0',
+    colorSuccess: '#146C2E',
+    colorWarning: '#B06000',
+    colorError: '#B3261E',
+    colorText: '#1F1F1F',
+    colorTextSecondary: '#444746',
+    colorTextTertiary: '#747775',
+    colorBgBase: '#FFFFFF',
     colorBgContainer: '#FFFFFF',
     colorBgElevated: '#FFFFFF',
-    colorBgLayout: '#F6F9FE',
-    colorBorder: '#E6ECF5',
-    colorBorderSecondary: '#EFF4FB',
-    borderRadius: 14,
-    borderRadiusLG: 22,
-    borderRadiusSM: 10,
+    colorBgLayout: '#FFFFFF',
+    colorBorder: '#DADCE0',
+    colorBorderSecondary: '#E3E3E3',
+    borderRadius: 12,
+    borderRadiusLG: 20,
+    borderRadiusSM: 8,
     fontFamily:
       "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif",
     fontSize: 14,
@@ -27,32 +27,32 @@ const theme = {
   },
   components: {
     Button: {
-      colorPrimary: '#3B7DED',
-      colorPrimaryHover: '#2B6CB0',
-      colorPrimaryActive: '#2563EB',
+      colorPrimary: '#0B57D0',
+      colorPrimaryHover: '#0842A0',
+      colorPrimaryActive: '#062E6F',
       borderRadius: 999,
     },
     Table: {
-      headerBg: '#F6F9FE',
-      headerColor: '#475569',
-      rowHoverBg: '#EFF5FF',
-      borderColor: '#E6ECF5',
+      headerBg: '#F8F9FA',
+      headerColor: '#444746',
+      rowHoverBg: '#F0F4F9',
+      borderColor: '#E3E3E3',
       borderRadius: 16,
     },
     Menu: {
-      itemColor: '#475569',
-      itemSelectedColor: '#2563EB',
-      itemSelectedBg: '#EBF3FE',
-      horizontalItemHoverBg: '#F0F6FF',
+      itemColor: '#444746',
+      itemSelectedColor: '#0B57D0',
+      itemSelectedBg: '#E8F0FE',
+      horizontalItemHoverBg: '#F0F4F9',
     },
     Input: {
-      activeBorderColor: '#3B7DED',
-      hoverBorderColor: '#93C5FD',
+      activeBorderColor: '#0B57D0',
+      hoverBorderColor: '#7CACF8',
       colorBgContainer: '#FFFFFF',
     },
     Card: {
       colorBgContainer: '#FFFFFF',
-      colorBorderSecondary: '#E6ECF5',
+      colorBorderSecondary: '#DADCE0',
     },
     Modal: {
       colorBgElevated: '#FFFFFF',
@@ -73,27 +73,26 @@ const theme = {
 
 <style>
 :root {
-  --bg-page: #F6F9FE;
-  --bg-surface: #EEF4FC;
+  --bg-page: #FFFFFF;
+  --bg-surface: #F0F4F9;
   --bg-card: #FFFFFF;
-  --bg-muted: #F1F5FB;
-  --line: #E6ECF5;
-  --line-strong: #CBD5E1;
-  --text-main: #1E293B;
-  --text-muted: #526075;
-  --text-dim: #94A3B8;
-  --primary: #3B7DED;
-  --primary-hover: #2563EB;
-  --primary-light: #EBF3FE;
-  --primary-glow: rgba(59, 125, 237, 0.16);
-  --gemini-gradient: linear-gradient(135deg, #4285F4 0%, #6E8CF8 55%, #A37CE8 100%);
-  --success: #16A34A;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --shadow-sm: 0 2px 8px rgba(30, 41, 59, 0.04);
-  --shadow-md: 0 6px 20px rgba(30, 41, 59, 0.055);
-  --shadow-lg: 0 12px 32px rgba(30, 41, 59, 0.08);
-  --shadow-xl: 0 20px 48px rgba(30, 41, 59, 0.12);
+  --bg-muted: #F8F9FA;
+  --line: #DADCE0;
+  --line-soft: #E3E3E3;
+  --text-main: #1F1F1F;
+  --text-muted: #444746;
+  --text-dim: #747775;
+  --primary: #0B57D0;
+  --primary-hover: #0842A0;
+  --primary-light: #E8F0FE;
+  --primary-glow: rgba(11, 87, 208, 0.14);
+  --success: #146C2E;
+  --warning: #B06000;
+  --danger: #B3261E;
+  --shadow-sm: none;
+  --shadow-md: 0 1px 3px rgba(60, 64, 67, 0.08), 0 4px 12px rgba(60, 64, 67, 0.05);
+  --shadow-lg: 0 4px 16px rgba(60, 64, 67, 0.1);
+  --shadow-xl: 0 12px 32px rgba(60, 64, 67, 0.14);
 }
 
 * {
@@ -115,10 +114,6 @@ body,
 body {
   color: var(--text-main);
   background-color: var(--bg-page);
-  background-image:
-    radial-gradient(960px circle at 15% -80px, rgba(66, 133, 244, 0.07), transparent 65%),
-    radial-gradient(820px circle at 88% 30px, rgba(163, 124, 232, 0.05), transparent 60%);
-  background-attachment: fixed;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue',
     'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -127,8 +122,8 @@ body {
 }
 
 ::selection {
-  background: #DBEAFE;
-  color: #1D4ED8;
+  background: #D3E3FD;
+  color: #062E6F;
 }
 
 a {
@@ -155,96 +150,91 @@ select {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D5DFEC;
+  background: #DADCE0;
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B8C7DB;
+  background: #BDC1C6;
 }
 
-/* Ant Design Global Soft Gemini Polish */
+/* Ant Design Material 3 Polish */
 .ant-btn {
   font-weight: 500;
   border-radius: 999px;
-  box-shadow: none;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: none !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .ant-btn-primary {
-  background: linear-gradient(135deg, #4285F4 0%, #3B7DED 100%) !important;
+  background: #0B57D0 !important;
   border-color: transparent !important;
   color: #FFFFFF !important;
-  box-shadow: 0 3px 10px rgba(59, 125, 237, 0.22) !important;
 }
 
 .ant-btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3B7DED 0%, #2563EB 100%) !important;
-  box-shadow: 0 5px 14px rgba(59, 125, 237, 0.3) !important;
-  transform: translateY(-1px);
+  background: #0842A0 !important;
 }
 
 .ant-btn-primary:disabled {
-  background: #E2E8F0 !important;
-  color: #94A3B8 !important;
-  box-shadow: none !important;
+  background: #E3E3E3 !important;
+  color: #8E918F !important;
 }
 
 .ant-btn-default {
-  border-color: var(--line) !important;
+  border-color: #DADCE0 !important;
   background: #FFFFFF !important;
-  color: var(--text-main) !important;
+  color: #1F1F1F !important;
 }
 
 .ant-btn-default:hover:not(:disabled) {
-  border-color: #BFDBFE !important;
-  color: #2563EB !important;
-  background: #F4F8FE !important;
+  border-color: #A8C7FA !important;
+  color: #0B57D0 !important;
+  background: #F0F4F9 !important;
 }
 
 .ant-input,
 .ant-input-affix-wrapper,
 .ant-select-selector {
-  border-color: var(--line) !important;
-  border-radius: 14px !important;
-  transition: all 0.2s ease !important;
+  border-color: #DADCE0 !important;
+  border-radius: 12px !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
 }
 
 .ant-input::placeholder,
 .ant-input-affix-wrapper input::placeholder {
-  color: #94A3B8 !important;
+  color: #747775 !important;
 }
 
 .ant-input:focus,
 .ant-input-affix-wrapper-focused,
 .ant-select-focused .ant-select-selector {
-  border-color: #3B7DED !important;
-  box-shadow: 0 0 0 3px rgba(59, 125, 237, 0.12) !important;
+  border-color: #0B57D0 !important;
+  box-shadow: 0 0 0 2px rgba(11, 87, 208, 0.12) !important;
 }
 
 .ant-card {
-  border-radius: 22px;
-  border: 1px solid var(--line) !important;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  border-radius: 20px;
+  border: 1px solid #DADCE0 !important;
+  box-shadow: none !important;
 }
 
 .ant-modal-content {
   border-radius: 24px !important;
   box-shadow: var(--shadow-xl) !important;
-  border: 1px solid var(--line);
+  border: 1px solid #E3E3E3;
 }
 
 .ant-segmented {
-  background: #EFF4FB !important;
+  background: #F0F4F9 !important;
   padding: 3px;
   border-radius: 999px;
 }
 
 .ant-segmented-item-selected {
   background: #FFFFFF !important;
-  color: #2563EB !important;
-  box-shadow: 0 2px 6px rgba(30, 41, 59, 0.08) !important;
+  color: #0B57D0 !important;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.12) !important;
   font-weight: 600;
 }
 

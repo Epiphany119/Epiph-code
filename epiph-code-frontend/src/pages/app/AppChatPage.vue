@@ -1888,7 +1888,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   padding: 10px 16px 14px;
-  background: #F6F9FE;
+  background: #FFFFFF;
   overflow: hidden;
 }
 
@@ -1912,7 +1912,7 @@ onUnmounted(() => {
 .code-gen-type-tag {
   font-size: 12px;
   background: #E8F0FE;
-  color: #2563EB;
+  color: #0842A0;
   border-radius: 999px;
   padding: 1px 10px;
 }
@@ -1953,9 +1953,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   border-radius: 24px;
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.06);
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -1987,8 +1987,8 @@ onUnmounted(() => {
   max-width: 82%;
   padding: 12px 16px;
   border-radius: 18px 4px 18px 18px;
-  background: #EBF3FE;
-  color: #1E293B;
+  background: #E8F0FE;
+  color: #1F1F1F;
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -1996,7 +1996,7 @@ onUnmounted(() => {
 }
 
 .user-msg-avatar {
-  background: #3B7DED;
+  background: #0B57D0;
   color: #FFFFFF;
   font-weight: 600;
 }
@@ -2022,8 +2022,8 @@ onUnmounted(() => {
 
 /* 任务计划面板 */
 .plan-panel {
-  background: #F8FAFD;
-  border: 1px solid #E6ECF5;
+  background: #F8F9FA;
+  border: 1px solid #DADCE0;
   border-radius: 16px;
   padding: 12px 14px;
 }
@@ -2044,7 +2044,7 @@ onUnmounted(() => {
 .plan-progress {
   font-size: 12px;
   font-weight: 600;
-  color: #2563EB;
+  color: #0842A0;
   background: #E8F0FE;
   padding: 1px 8px;
   border-radius: 999px;
@@ -2071,7 +2071,7 @@ onUnmounted(() => {
 }
 
 .plan-item-active .plan-item-text {
-  color: #2563EB;
+  color: #0842A0;
   font-weight: 600;
 }
 
@@ -2088,7 +2088,7 @@ onUnmounted(() => {
   width: 10px;
   height: 10px;
   border: 2px solid #D2E3FC;
-  border-top-color: #3B7DED;
+  border-top-color: #0B57D0;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -2113,7 +2113,7 @@ onUnmounted(() => {
 
 .plan-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3B7DED, #1E8E3E);
+  background: linear-gradient(90deg, #0B57D0, #1E8E3E);
   transition: width 0.3s ease;
 }
 
@@ -2125,8 +2125,8 @@ onUnmounted(() => {
 }
 
 .process-event {
-  background: #F8FAFD;
-  border: 1px solid #E6ECF5;
+  background: #F8F9FA;
+  border: 1px solid #DADCE0;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -2177,7 +2177,7 @@ onUnmounted(() => {
 /* 最终回复 */
 .final-reply {
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   border-radius: 16px;
   overflow: hidden;
 }
@@ -2187,7 +2187,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 9px 14px;
-  background: #F8FAFD;
+  background: #F8F9FA;
   border-bottom: 1px solid #F0F4F9;
   cursor: pointer;
   user-select: none;
@@ -2216,10 +2216,10 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #F6F9FE;
+  background: #FFFFFF;
   border-radius: 10px;
   font-size: 12.5px;
-  color: #2563EB;
+  color: #0842A0;
 }
 
 .turn-version-tag {
@@ -2259,8 +2259,8 @@ onUnmounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #F6F9FE;
-  border: 1px solid #E6ECF5;
+  background: #FFFFFF;
+  border: 1px solid #DADCE0;
   border-radius: 22px;
   padding: 8px 12px 10px;
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
@@ -2268,7 +2268,7 @@ onUnmounted(() => {
 
 .input-wrapper:focus-within {
   background: #FFFFFF;
-  border-color: #3B7DED;
+  border-color: #0B57D0;
   box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
 }
 
@@ -2323,7 +2323,7 @@ onUnmounted(() => {
 .context-meter > span {
   display: block;
   height: 100%;
-  background: #3B7DED;
+  background: #0B57D0;
   border-radius: 999px;
   transition: width 0.25s ease;
 }
@@ -2333,7 +2333,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 4px;
   font-size: 11.5px;
-  color: #2563EB;
+  color: #0842A0;
   background: #E8F0FE;
   padding: 1px 8px;
   border-radius: 999px;
@@ -2379,9 +2379,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   border-radius: 24px;
-  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.06);
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -2408,8 +2408,8 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: #F6F9FE;
-  color: #3B7DED;
+  background: #FFFFFF;
+  color: #0B57D0;
   font-weight: 700;
 }
 
@@ -2492,13 +2492,13 @@ onUnmounted(() => {
   height: 52px;
   border-radius: 50%;
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   font-weight: 700;
-  color: #3B7DED;
+  color: #0B57D0;
 }
 
 /* 版本抽屉与对比弹窗 */
@@ -2528,8 +2528,8 @@ onUnmounted(() => {
 
 .version-card {
   padding: 14px;
-  background: #F8FAFD;
-  border: 1px solid #E6ECF5;
+  background: #F8F9FA;
+  border: 1px solid #DADCE0;
   border-radius: 16px;
 }
 
@@ -2558,7 +2558,7 @@ onUnmounted(() => {
 .version-prompt {
   padding: 8px 10px;
   background: #FFFFFF;
-  border: 1px solid #E6ECF5;
+  border: 1px solid #DADCE0;
   border-radius: 8px;
   font-size: 12.5px;
   color: #1F1F1F;

@@ -175,17 +175,14 @@ const onGlobalModeChange = (value: string | number) => {
   z-index: 100;
   width: 100%;
   height: 64px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+  background: #FFFFFF;
+  border-bottom: 1px solid #E3E3E3;
 }
 
 .header-inner {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 28px;
   width: min(1380px, calc(100vw - 48px));
   height: 100%;
   margin: 0 auto;
@@ -194,7 +191,7 @@ const onGlobalModeChange = (value: string | number) => {
 .brand-link {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: 0 0 auto;
   text-decoration: none;
 }
@@ -203,13 +200,13 @@ const onGlobalModeChange = (value: string | number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
 }
 
 .brand-logo {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
 }
 
@@ -220,63 +217,70 @@ const onGlobalModeChange = (value: string | number) => {
 }
 
 .brand-name {
-  color: #0F172A;
+  color: #1F1F1F;
   font-size: 18px;
-  font-weight: 750;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .brand-highlight {
-  color: #1A73E8;
+  color: #0B57D0;
 }
 
 .brand-badge {
   padding: 2px 8px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.06em;
   color: #0B57D0;
-  background: #E8F0FE;
-  border: 1px solid #D2E3FC;
+  background: #F0F4F9;
   border-radius: 999px;
 }
 
 .nav-links {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: stretch;
+  gap: 8px;
   height: 100%;
 }
 
 .nav-link-btn {
   position: relative;
-  height: 36px;
-  padding: 0 16px;
+  height: 100%;
+  padding: 0 12px;
   border: 0;
-  border-radius: 999px;
   background: transparent;
   color: #444746;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: all 0.18s ease;
+  transition: color 0.16s ease;
 }
 
 .nav-link-btn:hover {
   color: #1F1F1F;
-  background: #F0F4F9;
 }
 
 .nav-link-btn--active {
   color: #0B57D0;
-  background: #E8F0FE;
   font-weight: 600;
+}
+
+.nav-link-btn--active::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 3px;
+  background: #0B57D0;
+  border-radius: 3px 3px 0 0;
 }
 
 .header-tools {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   margin-left: auto;
 }
 
@@ -287,11 +291,10 @@ const onGlobalModeChange = (value: string | number) => {
   padding: 3px 6px;
   background: #F0F4F9;
   border-radius: 999px;
-  border: 1px solid #E3E3E3;
 }
 
 .mode-icon {
-  color: #1A73E8;
+  color: #0B57D0;
   font-size: 13px;
   margin-left: 6px;
 }
@@ -307,21 +310,21 @@ const onGlobalModeChange = (value: string | number) => {
   align-items: center;
   gap: 8px;
   padding: 4px 12px 4px 4px;
-  border: 1px solid #E3E3E3;
+  border: 1px solid #DADCE0;
   border-radius: 999px;
   background: #FFFFFF;
   color: #1F1F1F;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
 }
 
 .user-profile-btn:hover {
-  border-color: #D2E3FC;
-  background: #F8FAFD;
+  border-color: #C4C7C5;
+  background: #F0F4F9;
 }
 
 .user-avatar {
-  background: #1A73E8;
+  background: #0B57D0;
   color: #FFFFFF;
   font-weight: 600;
 }
@@ -330,26 +333,26 @@ const onGlobalModeChange = (value: string | number) => {
   max-width: 110px;
   overflow: hidden;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #1E293B;
+  color: #1F1F1F;
 }
 
 .user-caret {
-  color: #94A3B8;
+  color: #747775;
   font-size: 10px;
 }
 
 .menu-role-tag {
   font-size: 12px;
-  color: #64748B;
+  color: #444746;
 }
 
 .login-button {
   height: 36px;
-  padding: 0 18px;
-  border-radius: 8px;
+  padding: 0 20px;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -361,18 +364,6 @@ const onGlobalModeChange = (value: string | number) => {
   }
 
   .mode-pill {
-    display: none;
-  }
-
-  .header-divider {
-    display: none;
-  }
-
-  .brand-badge {
-    display: none;
-  }
-
-  .user-name {
     display: none;
   }
 }
