@@ -218,4 +218,5 @@
 - 对话工作台提供版本时间线、预览切换、修改基线选择、文本差异查看和指定版本部署；作品卡展示当前线上版本号或工作版本号。
 - 新部署必须显式携带版本 ID。版本生成不会自动更新线上目录。
 - 应用截图默认使用 `tmp/screenshots/` 本地文件，并通过静态资源路由供封面读取；COS 不再是本地运行的必需依赖。
+- 已逻辑删除（`isDelete = 1`）的应用默认在数据库保留 30 天（可通过 `epiphcode.cleanup.retention-days` 配置）；`AppCleanupService` 在服务启动完成及每日凌晨 3 点自动扫描超过保留期的已删除应用，递归清理 `tmp/code_output/*_{appId}`、`tmp/code_versions/{appId}`、`tmp/code_deploy/{deployKey}` 与关联封面截图，并物理删除数据库主表及版本/部署/对话关联记录，以控制长期磁盘占用。
 - 现有数据库升级需执行 `sql/migration_app_versions.sql`；源码阶段仅做静态核对，实际构建和运行验证需在数据库迁移后完成。
