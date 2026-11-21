@@ -315,8 +315,8 @@ const handleDelete = () => {
 }
 
 .status-pill--preview {
-  background: rgba(99, 102, 241, 0.12);
-  color: #6366F1;
+  background: #E8F0FE;
+  color: #0B57D0;
 }
 
 .pulse-beacon {
@@ -492,7 +492,7 @@ const handleDelete = () => {
 
 .version-tag--working {
   background: rgba(99, 102, 241, 0.1);
-  color: #4F46E5;
+  color: #0B57D0;
 }
 
 .version-tag--draft {

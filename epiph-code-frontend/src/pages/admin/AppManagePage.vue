@@ -295,20 +295,20 @@ const deleteApp = async (id: number | undefined) => {
 .page-title {
   margin: 0;
   font-size: 24px;
-  font-weight: 800;
-  color: #0F172A;
+  font-weight: 600;
+  color: #1F1F1F;
   letter-spacing: -0.02em;
 }
 
 .page-subtitle {
   margin: 4px 0 0;
   font-size: 14px;
-  color: #64748B;
+  color: #444746;
 }
 
 .filter-card,
 .table-card {
-  border-radius: 12px;
+  border-radius: 20px;
 }
 
 .search-form {
@@ -326,7 +326,7 @@ const deleteApp = async (id: number | undefined) => {
   border-radius: 6px;
   overflow: hidden;
   background: #F1F5F9;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #DADCE0;
 }
 
 .no-cover-text {

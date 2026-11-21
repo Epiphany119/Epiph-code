@@ -17,7 +17,7 @@
         </div>
         <div class="info-cell">
           <span class="info-label">生成类型</span>
-          <a-tag v-if="app?.codeGenType" color="indigo" class="type-tag">
+          <a-tag v-if="app?.codeGenType" class="type-tag">
             {{ formatCodeGenType(app.codeGenType) }}
           </a-tag>
           <span v-else class="info-val text-dim">未知类型</span>
@@ -26,7 +26,7 @@
 
       <!-- Initial Prompt Display -->
       <div v-if="app?.initPrompt" class="prompt-preview-box">
-        <span class="prompt-box-label">初始提示词需求:</span>
+        <span class="prompt-box-label">初始提示词需求</span>
         <p class="prompt-box-text">{{ app.initPrompt }}</p>
       </div>
 
@@ -39,7 +39,7 @@
           编辑信息
         </a-button>
         <a-popconfirm
-          title="确定要彻底删除该应用吗？此操作无法撤销。"
+          title="删除后数据将在数据库保留 30 天，到期后将彻底清理数据库记录及本地产物，确认删除？"
           @confirm="handleDelete"
           ok-text="确认删除"
           cancel-text="取消"
@@ -100,7 +100,7 @@ const handleDelete = () => {
 .app-detail-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   padding: 12px 0 4px;
 }
 
@@ -108,10 +108,10 @@ const handleDelete = () => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  padding: 16px;
-  background: #F8FAFC;
-  border-radius: 12px;
-  border: 1px solid #E2E8F0;
+  padding: 16px 18px;
+  background: #F8F9FA;
+  border-radius: 16px;
+  border: 1px solid #E3E3E3;
 }
 
 .info-cell {
@@ -122,12 +122,12 @@ const handleDelete = () => {
 
 .info-label {
   font-size: 12px;
-  color: #64748B;
+  color: #747775;
 }
 
 .info-val {
   font-size: 14px;
-  color: #0F172A;
+  color: #1F1F1F;
 }
 
 .info-val.font-bold {
@@ -135,38 +135,38 @@ const handleDelete = () => {
 }
 
 .text-dim {
-  color: #94A3B8;
+  color: #747775;
 }
 
 .type-tag {
   align-self: flex-start;
-  background: rgba(99, 102, 241, 0.1);
-  color: #4F46E5;
-  border-radius: 4px;
-  font-weight: 600;
+  background: #E8F0FE;
+  color: #0B57D0;
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-weight: 500;
 }
 
 .prompt-preview-box {
-  padding: 14px 16px;
-  background: #F8FAFC;
-  border-radius: 10px;
-  border: 1px solid #E2E8F0;
+  padding: 14px 18px;
+  background: #F0F4F9;
+  border-radius: 16px;
 }
 
 .prompt-box-label {
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
+  color: #444746;
   margin-bottom: 6px;
 }
 
 .prompt-box-text {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #334155;
-  max-height: 120px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #1F1F1F;
+  max-height: 140px;
   overflow-y: auto;
 }
 
@@ -174,8 +174,8 @@ const handleDelete = () => {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #F1F5F9;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #E3E3E3;
 }
 </style>

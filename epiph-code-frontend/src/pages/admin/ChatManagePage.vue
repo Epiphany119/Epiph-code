@@ -233,20 +233,20 @@ const deleteMessage = async (id: number | undefined) => {
 .page-title {
   margin: 0;
   font-size: 24px;
-  font-weight: 800;
-  color: #0F172A;
+  font-weight: 600;
+  color: #1F1F1F;
   letter-spacing: -0.02em;
 }
 
 .page-subtitle {
   margin: 4px 0 0;
   font-size: 14px;
-  color: #64748B;
+  color: #444746;
 }
 
 .filter-card,
 .table-card {
-  border-radius: 12px;
+  border-radius: 20px;
 }
 
 .search-form {

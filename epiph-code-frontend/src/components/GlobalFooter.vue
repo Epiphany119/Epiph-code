@@ -4,7 +4,7 @@
       <div class="footer-brand">
         <span class="footer-logo-dot"></span>
         <span class="footer-brand-title">Epiph-code Studio</span>
-        <span class="footer-tagline">全栈 AI 应用工程化生成平台</span>
+        <span class="footer-tagline">AI 应用工程化生成工作台</span>
       </div>
       <div class="footer-meta">
         <span class="footer-status">
@@ -12,7 +12,7 @@
           <span>服务运行正常</span>
         </span>
         <span class="footer-sep">·</span>
-        <span>© {{ currentYear }} Epiph-code. All rights reserved.</span>
+        <span>© {{ currentYear }} Epiph-code</span>
       </div>
     </div>
   </footer>
@@ -26,9 +26,8 @@ const currentYear = new Date().getFullYear()
 .site-footer {
   width: 100%;
   margin-top: auto;
-  border-top: 1px solid rgba(226, 232, 240, 0.85);
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
+  border-top: 1px solid #E3E3E3;
+  background: #FFFFFF;
 }
 
 .footer-inner {
@@ -37,10 +36,10 @@ const currentYear = new Date().getFullYear()
   justify-content: space-between;
   gap: 20px;
   width: min(1380px, calc(100vw - 48px));
-  min-height: 64px;
+  min-height: 60px;
   margin: 0 auto;
-  padding: 16px 0;
-  color: #64748B;
+  padding: 14px 0;
+  color: #747775;
   font-size: 13px;
 }
 
@@ -54,17 +53,17 @@ const currentYear = new Date().getFullYear()
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  background: #0B57D0;
 }
 
 .footer-brand-title {
-  color: #1E293B;
+  color: #1F1F1F;
   font-weight: 600;
 }
 
 .footer-tagline {
-  color: #94A3B8;
-  font-size: 12px;
+  color: #747775;
+  font-size: 12.5px;
 }
 
 .footer-meta {
@@ -74,7 +73,7 @@ const currentYear = new Date().getFullYear()
 }
 
 .footer-sep {
-  color: #CBD5E1;
+  color: #DADCE0;
 }
 
 .footer-status {
@@ -82,10 +81,9 @@ const currentYear = new Date().getFullYear()
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: #E6F4EA;
   border-radius: 999px;
-  color: #059669;
+  color: #146C2E;
   font-size: 12px;
   font-weight: 500;
 }
@@ -94,20 +92,7 @@ const currentYear = new Date().getFullYear()
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10B981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-  animation: pulse 2s infinite ease-in-out;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(1.2);
-  }
+  background: #1E8E3E;
 }
 
 @media (max-width: 768px) {

@@ -196,9 +196,9 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   width: min(1000px, 100%);
   min-height: 590px;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
+  border: 1px solid #DADCE0;
+  border-radius: 28px;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -209,8 +209,9 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   flex-direction: column;
   justify-content: center;
   padding: 48px;
-  background: linear-gradient(145deg, #0F172A 0%, #174EA6 58%, #1A73E8 100%);
-  color: #FFFFFF;
+  background: #F0F4F9;
+  border-right: 1px solid #E3E3E3;
+  color: #1F1F1F;
   overflow: hidden;
 }
 
@@ -221,7 +222,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   width: 400px;
   height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(26, 115, 232, 0.4) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(11, 87, 208, 0.07) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -235,12 +236,12 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   align-items: center;
   gap: 8px;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #FFFFFF;
+  border: 1px solid #DADCE0;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-  color: #E0E7FF;
+  color: #0B57D0;
   margin-bottom: 24px;
 }
 
@@ -248,24 +249,23 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #38BDF8;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  background: #0B57D0;
 }
 
 .showcase-title {
   margin: 0;
   font-size: 32px;
-  font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.03em;
-  color: #FFFFFF;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+  color: #1F1F1F;
 }
 
 .showcase-desc {
   margin: 16px 0 0;
   font-size: 14px;
   line-height: 1.7;
-  color: #C7D2FE;
+  color: #444746;
 }
 
 .feature-bullets {
@@ -282,25 +282,25 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: #E0E7FF;
+  color: #1F1F1F;
 }
 
 .bullet-icon {
-  color: #38BDF8;
+  color: #0B57D0;
   font-size: 15px;
 }
 
 .showcase-footer {
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid #DADCE0;
 }
 
 .showcase-ver {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #A5B4FC;
+  color: #747775;
 }
 
 /* Right Form */
@@ -316,31 +316,31 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #1A73E8;
+  color: #0B57D0;
 }
 
 .panel-title {
   margin: 6px 0 0;
   font-size: 26px;
-  font-weight: 800;
-  color: #0F172A;
+  font-weight: 600;
+  color: #1F1F1F;
   letter-spacing: -0.02em;
 }
 
 .panel-desc {
   margin: 6px 0 28px;
   font-size: 14px;
-  color: #64748B;
+  color: #444746;
 }
 
 .auth-form :deep(.ant-form-item-label > label) {
   font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: #1F1F1F;
 }
 
 .auth-input {
-  border-radius: 10px !important;
+  border-radius: 14px !important;
 }
 
 .input-icon {
@@ -359,11 +359,11 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
 }
 
 .hint-text {
-  color: #64748B;
+  color: #444746;
 }
 
 .link-highlight {
-  color: #1A73E8;
+  color: #0B57D0;
   font-weight: 600;
 }
 
@@ -375,7 +375,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
 .submit-button {
   width: 100%;
   height: 44px;
-  border-radius: 10px;
+  border-radius: 999px;
   font-size: 15px;
   font-weight: 600;
 }

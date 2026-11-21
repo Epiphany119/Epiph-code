@@ -280,7 +280,7 @@ onMounted(() => {
 
 .back-link {
   padding: 0;
-  color: #1A73E8;
+  color: #0B57D0;
   font-weight: 500;
   margin-bottom: 12px;
 }
@@ -288,15 +288,15 @@ onMounted(() => {
 .page-title {
   margin: 0;
   font-size: 24px;
-  font-weight: 800;
-  color: #0F172A;
+  font-weight: 600;
+  color: #1F1F1F;
   letter-spacing: -0.02em;
 }
 
 .page-subtitle {
   margin: 4px 0 0;
   font-size: 14px;
-  color: #64748B;
+  color: #444746;
 }
 
 .edit-grid {
@@ -314,7 +314,7 @@ onMounted(() => {
   margin-top: 10px;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #DADCE0;
   display: inline-block;
 }
 

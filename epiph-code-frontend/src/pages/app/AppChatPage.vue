@@ -43,9 +43,9 @@
     </div>
 
     <!-- 主要内容区域 -->
-    <div class="main-content">
+    <div ref="mainContentRef" class="main-content" :class="{ 'is-resizing': isResizingSplit }">
       <!-- 左侧对话区域 -->
-      <div class="chat-section">
+      <div v-show="!isPreviewFullscreen" class="chat-section" :style="chatPaneStyle">
         <!-- 消息区域 -->
         <div class="messages-container" ref="messagesContainer" @scroll="handleMessagesScroll">
           <!-- 加载更多按钮 -->
@@ -251,6 +251,20 @@
           </div>
         </div>
       </div>
+
+      <!-- 中间可拖拽分栏调节线（双击恢复默认比例） -->
+      <div
+        v-show="!isPreviewFullscreen"
+        class="split-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        title="左右拖拽调整对话与预览比例，双击恢复默认"
+        @mousedown="startSplitResize"
+        @dblclick="resetSplitRatio"
+      >
+        <span class="split-resizer-handle"></span>
+      </div>
+
       <!-- 右侧网页展示区域 -->
       <div class="preview-section">
         <div class="preview-header">
@@ -283,6 +297,17 @@
                 <EditOutlined />
               </template>
               {{ isEditMode ? '退出编辑' : '编辑模式' }}
+            </a-button>
+            <a-button
+                type="link"
+                @click="togglePreviewFullscreen"
+                style="padding: 0; height: auto; margin-right: 12px"
+            >
+              <template #icon>
+                <FullscreenExitOutlined v-if="isPreviewFullscreen" />
+                <FullscreenOutlined v-else />
+              </template>
+              {{ isPreviewFullscreen ? '退出全屏' : '全屏预览' }}
             </a-button>
             <a-button v-if="previewUrl" type="link" @click="openInNewTab">
               <template #icon>
@@ -438,6 +463,8 @@ import {
   InfoCircleOutlined,
   DownloadOutlined,
   EditOutlined,
+  FullscreenOutlined,
+  FullscreenExitOutlined,
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
@@ -1865,6 +1892,60 @@ const getInputPlaceholder = () => {
   return '请描述你想生成的网站，越详细效果越好哦'
 }
 
+// 可拖拽分栏比例与预览全屏状态
+const SPLIT_RATIO_STORAGE_KEY = 'epiph-code:chat-split-ratio'
+const DEFAULT_CHAT_RATIO = 42
+const mainContentRef = ref<HTMLElement>()
+const isResizingSplit = ref(false)
+const isPreviewFullscreen = ref(false)
+const savedRatio = Number(localStorage.getItem(SPLIT_RATIO_STORAGE_KEY))
+const chatPaneRatio = ref<number>(
+  Number.isFinite(savedRatio) && savedRatio >= 24 && savedRatio <= 76
+    ? savedRatio
+    : DEFAULT_CHAT_RATIO,
+)
+
+const chatPaneStyle = computed(() => ({
+  flex: `0 0 ${chatPaneRatio.value}%`,
+}))
+
+const handleSplitMouseMove = (event: MouseEvent) => {
+  if (!isResizingSplit.value || !mainContentRef.value) return
+  const rect = mainContentRef.value.getBoundingClientRect()
+  if (rect.width <= 0) return
+  const rawPercent = ((event.clientX - rect.left) / rect.width) * 100
+  const clamped = Math.min(76, Math.max(24, rawPercent))
+  chatPaneRatio.value = Math.round(clamped * 10) / 10
+}
+
+const stopSplitResize = () => {
+  if (!isResizingSplit.value) return
+  isResizingSplit.value = false
+  localStorage.setItem(SPLIT_RATIO_STORAGE_KEY, String(chatPaneRatio.value))
+  window.removeEventListener('mousemove', handleSplitMouseMove)
+  window.removeEventListener('mouseup', stopSplitResize)
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
+
+const startSplitResize = (event: MouseEvent) => {
+  event.preventDefault()
+  isResizingSplit.value = true
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+  window.addEventListener('mousemove', handleSplitMouseMove)
+  window.addEventListener('mouseup', stopSplitResize)
+}
+
+const resetSplitRatio = () => {
+  chatPaneRatio.value = DEFAULT_CHAT_RATIO
+  localStorage.setItem(SPLIT_RATIO_STORAGE_KEY, String(DEFAULT_CHAT_RATIO))
+}
+
+const togglePreviewFullscreen = () => {
+  isPreviewFullscreen.value = !isPreviewFullscreen.value
+}
+
 // 页面加载时获取应用信息
 onMounted(() => {
   fetchAppInfo()
@@ -1877,7 +1958,7 @@ onMounted(() => {
 
 // 清理资源
 onUnmounted(() => {
-  // EventSource 会在组件卸载时自动清理
+  stopSplitResize()
 })
 </script>
 
@@ -1940,15 +2021,17 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   display: flex;
-  gap: 14px;
+  gap: 0;
   overflow: hidden;
+}
+
+.main-content.is-resizing .preview-iframe {
+  pointer-events: none;
 }
 
 /* 左侧对话区域 */
 .chat-section {
-  flex: 0 0 460px;
-  max-width: 48%;
-  min-width: 380px;
+  min-width: 320px;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -1957,6 +2040,32 @@ onUnmounted(() => {
   border-radius: 24px;
   box-shadow: none;
   overflow: hidden;
+}
+
+/* 中间可拖拽分栏调节线 */
+.split-resizer {
+  flex: 0 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  user-select: none;
+  position: relative;
+}
+
+.split-resizer-handle {
+  width: 4px;
+  height: 44px;
+  border-radius: 999px;
+  background: #DADCE0;
+  transition: background-color 0.16s ease, height 0.16s ease, width 0.16s ease;
+}
+
+.split-resizer:hover .split-resizer-handle,
+.main-content.is-resizing .split-resizer-handle {
+  width: 5px;
+  height: 64px;
+  background: #0B57D0;
 }
 
 .messages-container {
