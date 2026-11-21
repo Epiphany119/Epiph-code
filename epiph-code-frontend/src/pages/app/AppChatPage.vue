@@ -101,25 +101,10 @@
                     <div class="plan-bar-fill" :style="{ width: (currentPlan.filter(i => i.status === 'completed').length / currentPlan.length * 100) + '%' }"></div>
                   </div>
                 </div>
-                <div v-if="message.processEvents?.length" class="process-timeline">
-                  <div
-                    v-for="eventItem in message.processEvents"
-                    :key="eventItem.id"
-                    class="process-event"
-                  >
-                    <details v-if="eventItem.details" class="event-details">
-                      <summary class="event-summary-line">
-                        <span class="event-summary-text">{{ eventItem.summary || '过程' }}</span>
-                        <span class="event-time">{{ eventItem.time }}</span>
-                      </summary>
-                      <pre class="event-plain">{{ eventItem.details }}</pre>
-                    </details>
-                    <div v-else class="event-summary-line event-summary-line-static">
-                      <span class="event-summary-text">{{ eventItem.summary || '过程' }}</span>
-                      <span class="event-time">{{ eventItem.time }}</span>
-                    </div>
-                  </div>
-                </div>
+                <ProcessTimeline
+                  v-if="message.processEvents?.length"
+                  :events="message.processEvents"
+                />
                 <div v-if="message.content" class="final-reply">
                   <div class="final-reply-header" @click="toggleFinalReply(index)">
                     <span class="final-reply-toggle">{{ !collapsedReplies.has(index) ? '▼' : '▶' }}</span>
@@ -450,6 +435,7 @@ import {
 } from '@/utils/chatGenMode'
 
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import ProcessTimeline from '@/components/ProcessTimeline.vue'
 import AppDetailModal from '@/components/AppDetailModal.vue'
 import DeploySuccessModal from '@/components/DeploySuccessModal.vue'
 import aiAvatar from '@/assets/aiAvatar.svg'

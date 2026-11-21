@@ -221,6 +221,35 @@ public class AppController {
     }
 
     /**
+     * 用户或管理员切换应用的精选展示状态
+     */
+    @PostMapping("/featured")
+    public BaseResponse<Boolean> toggleAppFeatured(@RequestBody AppFeaturedRequest appFeaturedRequest, HttpServletRequest request) {
+        if (appFeaturedRequest == null || appFeaturedRequest.getId() == null || appFeaturedRequest.getId() <= 0 || appFeaturedRequest.getFeatured() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        long id = appFeaturedRequest.getId();
+        App oldApp = appService.getById(id);
+        ThrowUtils.throwIf(oldApp == null, ErrorCode.NOT_FOUND_ERROR);
+        boolean isOwner = oldApp.getUserId().equals(loginUser.getId());
+        boolean isAdmin = UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole());
+        if (!isOwner && !isAdmin) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        App app = new App();
+        app.setId(id);
+        app.setPriority(Boolean.TRUE.equals(appFeaturedRequest.getFeatured())
+                ? AppConstant.GOOD_APP_PRIORITY
+                : AppConstant.DEFAULT_APP_PRIORITY);
+        app.setEditTime(LocalDateTime.now());
+        boolean result = appService.updateById(app);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        evictGoodAppPageCache();
+        return ResultUtils.success(true);
+    }
+
+    /**
      * 删除应用（用户只能删除自己的应用）
      *
      * @param deleteRequest 删除请求

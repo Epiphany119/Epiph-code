@@ -143,6 +143,7 @@
           @view-chat="viewChat"
           @view-work="viewWork"
           @delete-app="handleDeleteApp"
+          @toggle-featured="handleToggleFeatured"
         />
       </div>
 
@@ -220,7 +221,7 @@ import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
-import { addApp, deleteApp, listGoodAppVoByPage, listMyAppVoByPage } from '@/api/appController'
+import { addApp, deleteApp, listGoodAppVoByPage, listMyAppVoByPage, toggleAppFeatured } from '@/api/appController'
 import { getDeployUrl } from '@/config/env'
 import AppCard from '@/components/AppCard.vue'
 import {
@@ -374,12 +375,31 @@ const handleDeleteApp = async (appId: string | number | undefined) => {
     const res = await deleteApp({ id: appId as unknown as number })
     if (res.data.code === 0 && res.data.data) {
       message.success('已删除（数据将在 30 天后彻底清理）')
-      await loadMyApps()
+      await Promise.all([loadMyApps(), loadFeaturedApps()])
     } else {
       message.error('删除失败：' + res.data.message)
     }
   } catch {
     message.error('删除请求异常，请稍后重试')
+  }
+}
+
+const handleToggleFeatured = async (app: API.AppVO) => {
+  if (!app.id) return
+  const nextFeatured = (app.priority ?? 0) < 99
+  try {
+    const res = await toggleAppFeatured({
+      id: app.id,
+      featured: nextFeatured,
+    })
+    if (res.data.code === 0 && res.data.data) {
+      message.success(nextFeatured ? '已添加到精选应用展示' : '已从精选应用展示移除')
+      await Promise.all([loadMyApps(), loadFeaturedApps()])
+    } else {
+      message.error('操作失败：' + res.data.message)
+    }
+  } catch {
+    message.error('设置精选失败，请稍后重试')
   }
 }
 

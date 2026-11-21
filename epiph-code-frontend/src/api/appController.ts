@@ -208,3 +208,18 @@ export async function updateApp(body: API.AppUpdateRequest, options?: { [key: st
     ...(options || {}),
   })
 }
+
+/** 切换应用的精选展示状态 POST /app/featured */
+export async function toggleAppFeatured(
+  body: API.AppFeaturedRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean>('/app/featured', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}

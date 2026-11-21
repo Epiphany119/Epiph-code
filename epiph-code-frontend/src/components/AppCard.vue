@@ -80,6 +80,9 @@
         <div class="card-tags">
           <span class="card-author">{{ authorName }}</span>
           <span class="card-dot-sep">·</span>
+          <span v-if="codeTypeBadge" class="type-badge" :class="codeTypeBadge.className">
+            {{ codeTypeBadge.label }}
+          </span>
           <span v-if="app.deployKey" class="version-tag version-tag--live">
             已部署 V{{ app.deployedVersionNo || 1 }}
           </span>
@@ -91,25 +94,40 @@
           </span>
         </div>
       </div>
-      <a-popconfirm
-        v-if="!featured"
-        title="删除后数据将在数据库保留 30 天，到期后将彻底清理数据库记录及本地产物，确认删除？"
-        ok-text="确认删除"
-        cancel-text="取消"
-        ok-type="danger"
-        @confirm="handleDelete"
-      >
-        <a-button
-          type="text"
-          size="small"
-          danger
-          class="card-delete-btn"
-          title="删除应用"
-          @click.stop
+      <div v-if="!featured" class="card-footer-actions">
+        <a-tooltip :title="isFeaturedApp ? '已在精选展示中，点击取消精选' : '添加到精选应用展示'">
+          <a-button
+            type="text"
+            size="small"
+            class="card-star-btn"
+            :class="{ 'card-star-btn--active': isFeaturedApp }"
+            @click.stop="handleToggleFeatured"
+          >
+            <template #icon>
+              <StarFilled v-if="isFeaturedApp" />
+              <StarOutlined v-else />
+            </template>
+          </a-button>
+        </a-tooltip>
+        <a-popconfirm
+          title="删除后数据将在数据库保留 30 天，到期后将彻底清理数据库记录及本地产物，确认删除？"
+          ok-text="确认删除"
+          cancel-text="取消"
+          ok-type="danger"
+          @confirm="handleDelete"
         >
-          <template #icon><DeleteOutlined /></template>
-        </a-button>
-      </a-popconfirm>
+          <a-button
+            type="text"
+            size="small"
+            danger
+            class="card-delete-btn"
+            title="删除应用"
+            @click.stop
+          >
+            <template #icon><DeleteOutlined /></template>
+          </a-button>
+        </a-popconfirm>
+      </div>
     </div>
   </article>
 </template>
@@ -117,7 +135,15 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { getStaticPreviewUrl, getStaticVersionPreviewUrl } from '@/config/env'
-import { CodeOutlined, ArrowRightOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { CodeGenTypeEnum } from '@/utils/codeGenTypes'
+import {
+  CodeOutlined,
+  ArrowRightOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+  StarOutlined,
+  StarFilled,
+} from '@ant-design/icons-vue'
 
 interface Props {
   app: API.AppVO
@@ -128,6 +154,7 @@ interface Emits {
   (e: 'view-chat', appId: string | number | undefined): void
   (e: 'view-work', app: API.AppVO): void
   (e: 'delete-app', appId: string | number | undefined): void
+  (e: 'toggle-featured', app: API.AppVO): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -207,8 +234,28 @@ const handleViewWork = () => {
   emit('view-work', props.app)
 }
 
+const isFeaturedApp = computed(() => (props.app.priority ?? 0) >= 99)
+
+const codeTypeBadge = computed(() => {
+  const type = props.app.codeGenType
+  if (type === CodeGenTypeEnum.VUE_PROJECT) {
+    return { label: 'Vue 工程', className: 'type-badge--vue' }
+  }
+  if (type === CodeGenTypeEnum.MULTI_FILE) {
+    return { label: '多文件', className: 'type-badge--multi' }
+  }
+  if (type === CodeGenTypeEnum.HTML) {
+    return { label: 'HTML', className: 'type-badge--html' }
+  }
+  return null
+})
+
 const handleDelete = () => {
   emit('delete-app', props.app.id)
+}
+
+const handleToggleFeatured = () => {
+  emit('toggle-featured', props.app)
 }
 </script>
 
@@ -498,5 +545,48 @@ const handleDelete = () => {
 .version-tag--draft {
   background: #F1F5F9;
   color: #94A3B8;
+}
+
+.type-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.type-badge--vue {
+  background: #E6F4EA;
+  color: #146C2E;
+}
+
+.type-badge--multi {
+  background: #E8F0FE;
+  color: #0B57D0;
+}
+
+.type-badge--html {
+  background: #FEF3E6;
+  color: #B06000;
+}
+
+.card-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.card-star-btn {
+  color: #747775;
+}
+
+.card-star-btn:hover {
+  color: #F9AB00;
+  background: #FEF7E0 !important;
+}
+
+.card-star-btn--active {
+  color: #F9AB00;
 }
 </style>

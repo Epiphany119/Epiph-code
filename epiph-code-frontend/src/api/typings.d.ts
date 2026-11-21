@@ -35,6 +35,11 @@ declare namespace API {
     appName?: string
   }
 
+  type AppFeaturedRequest = {
+    id?: number | string
+    featured?: boolean
+  }
+
   type AppVO = {
     id?: number
     appName?: string

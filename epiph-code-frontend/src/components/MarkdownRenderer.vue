@@ -285,6 +285,31 @@ const renderMarkdownWithBlocks = (source: string): { html: string; blocks: CodeB
     )
   }
 
+  // Hide redundant raw tool-marker lines & internal <reminder> tags from rendered prose
+  // while keeping them intact during filename extraction above
+  const defaultParagraphOpen =
+    md.renderer.rules.paragraph_open || ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options))
+
+  md.renderer.rules.paragraph_open = (tokens, idx, options, env, self) => {
+    const inlineToken = tokens[idx + 1]
+    if (inlineToken && inlineToken.type === 'inline') {
+      const cleanedLines = (inlineToken.content || '')
+        .replace(/<reminder>[\s\S]*?<\/reminder>/gi, '')
+        .split('\n')
+        .filter((line) => !/^\s*\[(?:选择工具|工具调用|工具结果|执行结束)\]/.test(line))
+        .map((line) => line.replace(/\[(?:x|>|\s)\]\s*/gi, '').replace(/#+(\d+)/g, '步骤 $1'))
+        .join('\n')
+        .trim()
+      if (!cleanedLines) {
+        inlineToken.content = ''
+        inlineToken.children = []
+        return '<p class="md-hidden-meta" style="display:none">'
+      }
+      inlineToken.content = cleanedLines
+    }
+    return defaultParagraphOpen(tokens, idx, options, env, self)
+  }
+
   return {
     html: md.render(source),
     blocks,
