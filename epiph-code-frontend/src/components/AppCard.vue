@@ -1,34 +1,22 @@
 <template>
-  <article class="app-card" :class="{ 'app-card--featured': featured }" @click="handleViewChat">
-    <!-- Browser Mockup Window -->
-    <div class="card-preview">
-      <!-- Browser Topbar -->
-      <div class="browser-topbar" @click.stop>
-        <div class="window-controls">
-          <span class="control-dot dot--close"></span>
-          <span class="control-dot dot--min"></span>
-          <span class="control-dot dot--max"></span>
+  <article class="kaggle-card" :class="{ 'kaggle-card--featured': featured }" @click="handleViewChat">
+    <!-- Top Media / Live Preview -->
+    <div class="card-media">
+      <div class="media-topbar" @click.stop>
+        <div class="media-dots">
+          <span class="m-dot"></span>
+          <span class="m-dot"></span>
+          <span class="m-dot"></span>
         </div>
-        <div class="browser-address-bar" :title="previewUrl || app.appName || 'studio.epiph.ai'">
-          <span class="address-lock">🔒</span>
-          <span class="address-text">studio.epiph.ai/{{ app.deployKey || app.id || 'preview' }}</span>
-        </div>
-        <div class="browser-status">
-          <span v-if="app.deployKey" class="status-pill status-pill--live">
-            <span class="pulse-beacon"></span>
-            LIVE
-          </span>
-          <span v-else-if="hasLivePreview" class="status-pill status-pill--preview">
-            READY
-          </span>
-          <span v-else class="status-pill status-pill--draft">
-            DRAFT
-          </span>
-        </div>
+        <span class="media-domain">epiph.studio/{{ app.deployKey || app.id || 'app' }}</span>
+        <span v-if="app.deployKey" class="media-pill media-pill--live">
+          <span class="live-dot"></span>LIVE
+        </span>
+        <span v-else-if="hasLivePreview" class="media-pill media-pill--ready">READY</span>
+        <span v-else class="media-pill media-pill--draft">DRAFT</span>
       </div>
 
-      <!-- Preview Screen -->
-      <div class="preview-screen">
+      <div class="media-stage">
         <img
           v-if="!hasLivePreview && app.cover"
           class="preview-cover"
@@ -50,68 +38,64 @@
         </div>
 
         <div v-else class="preview-empty">
-          <div class="blueprint-grid" aria-hidden="true"></div>
-          <div class="empty-code-icon">
+          <div class="empty-geo-icon">
             <CodeOutlined />
           </div>
           <span class="empty-title">
-            {{ previewStatus === 'checking' ? '正在同步预览画布...' : (app.appName || 'AI 应用工程') }}
+            {{ previewStatus === 'checking' ? '正在加载实时画布...' : (app.appName || 'AI 应用工程') }}
           </span>
-          <p class="empty-desc">{{ app.initPrompt || '点击进入工作台，实时查看与迭代生成页面' }}</p>
         </div>
 
-        <!-- Hover Overlay -->
+        <!-- Hover Action Overlay -->
         <div class="card-overlay" @click.stop>
-          <button type="button" class="action-btn action-btn--primary" @click="handleViewChat">
-            <span>进入工作台</span>
+          <button type="button" class="overlay-btn overlay-btn--dark" @click="handleViewChat">
+            <span>打开工作台</span>
             <ArrowRightOutlined />
           </button>
-          <button v-if="app.deployKey" type="button" class="action-btn action-btn--secondary" @click="handleViewWork">
+          <button v-if="app.deployKey" type="button" class="overlay-btn overlay-btn--light" @click="handleViewWork">
             <EyeOutlined />
-            <span>访问线上站点</span>
+            <span>访问站点</span>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Card Info Footer -->
-    <div class="card-body">
-      <a-avatar class="card-avatar" :src="app.user?.userAvatar" :size="38">
-        {{ authorName.charAt(0).toUpperCase() }}
-      </a-avatar>
-      <div class="card-meta-wrap">
-        <div class="card-title-row">
-          <h3 class="card-title" :title="app.appName || '未命名应用'">
-            {{ app.appName || '未命名应用' }}
-          </h3>
-        </div>
-        <p v-if="app.initPrompt" class="card-prompt-excerpt" :title="app.initPrompt">
-          {{ app.initPrompt }}
-        </p>
-        <div class="card-tags">
-          <span class="card-author">{{ authorName }}</span>
-          <span class="card-dot-sep">·</span>
-          <span v-if="codeTypeBadge" class="type-badge" :class="codeTypeBadge.className">
-            {{ codeTypeBadge.label }}
-          </span>
-          <span v-if="app.deployKey" class="version-tag version-tag--live">
-            线上 V{{ app.deployedVersionNo || 1 }}
-          </span>
-          <span v-else-if="app.workingVersionNo" class="version-tag version-tag--working">
-            工作 V{{ app.workingVersionNo }}
-          </span>
-          <span v-else class="version-tag version-tag--draft">
-            草稿
-          </span>
-        </div>
+    <!-- Card Content Body (Kaggle Editorial Hierarchy) -->
+    <div class="card-content">
+      <div class="card-title-row">
+        <h3 class="card-title" :title="app.appName || '未命名应用'">
+          {{ app.appName || '未命名应用' }}
+        </h3>
+        <span v-if="codeTypeBadge" class="arch-chip" :class="codeTypeBadge.className">
+          {{ codeTypeBadge.label }}
+        </span>
       </div>
-      <div v-if="!featured" class="card-footer-actions" @click.stop>
-        <a-tooltip :title="isFeaturedApp ? '已在精选画廊中，点击取消精选' : '推荐到精选应用画廊'">
+
+      <p class="card-summary" :title="app.initPrompt || ''">
+        {{ app.initPrompt || '通过 Epiph-code AI 工作台生成的交互式应用工程。' }}
+      </p>
+    </div>
+
+    <!-- Card Hairline Footer -->
+    <div class="card-footer">
+      <div class="footer-author">
+        <a-avatar class="author-avatar" :src="app.user?.userAvatar" :size="24">
+          {{ authorName.charAt(0).toUpperCase() }}
+        </a-avatar>
+        <span class="author-name">{{ authorName }}</span>
+        <span class="footer-dot">·</span>
+        <span v-if="app.deployKey" class="ver-text ver-text--live">线上 V{{ app.deployedVersionNo || 1 }}</span>
+        <span v-else-if="app.workingVersionNo" class="ver-text">V{{ app.workingVersionNo }}</span>
+        <span v-else class="ver-text">草稿</span>
+      </div>
+
+      <div v-if="!featured" class="footer-actions" @click.stop>
+        <a-tooltip :title="isFeaturedApp ? '已在精选画廊中，点击取消精选' : '推荐到精选画廊'">
           <a-button
             type="text"
             size="small"
-            class="card-star-btn"
-            :class="{ 'card-star-btn--active': isFeaturedApp }"
+            class="icon-action-btn"
+            :class="{ 'is-starred': isFeaturedApp }"
             @click.stop="handleToggleFeatured"
           >
             <template #icon>
@@ -121,20 +105,13 @@
           </a-button>
         </a-tooltip>
         <a-popconfirm
-          title="删除后数据将在数据库保留 30 天，到期后将彻底清理数据库记录及本地产物，确认删除？"
+          title="删除后数据将在数据库保留 30 天，到期后将彻底清理，确认删除？"
           ok-text="确认删除"
           cancel-text="取消"
           ok-type="danger"
           @confirm="handleDelete"
         >
-          <a-button
-            type="text"
-            size="small"
-            danger
-            class="card-delete-btn"
-            title="删除应用"
-            @click.stop
-          >
+          <a-button type="text" size="small" danger class="icon-action-btn" title="删除应用" @click.stop>
             <template #icon><DeleteOutlined /></template>
           </a-button>
         </a-popconfirm>
@@ -197,9 +174,7 @@ const previewUrl = computed(() => {
 })
 
 const iframeSrc = computed(() => {
-  if (!previewUrl.value) {
-    return ''
-  }
+  if (!previewUrl.value) return ''
   return `${previewUrl.value}?v=${previewRevision.value}`
 })
 
@@ -215,7 +190,6 @@ watch(
       previewStatus.value = 'missing'
       return
     }
-
     try {
       const response = await fetch(url, { method: 'HEAD', cache: 'no-store' })
       if (currentCheck === checkId) {
@@ -237,172 +211,117 @@ watch(
   },
 )
 
-const handleViewChat = () => {
-  emit('view-chat', props.app.id)
-}
-
-const handleViewWork = () => {
-  emit('view-work', props.app)
-}
+const handleViewChat = () => emit('view-chat', props.app.id)
+const handleViewWork = () => emit('view-work', props.app)
+const handleDelete = () => emit('delete-app', props.app.id)
+const handleToggleFeatured = () => emit('toggle-featured', props.app)
 
 const isFeaturedApp = computed(() => (props.app.priority ?? 0) >= 99)
 
 const codeTypeBadge = computed(() => {
   const type = props.app.codeGenType
-  if (type === CodeGenTypeEnum.VUE_PROJECT) {
-    return { label: 'Vue 工程', className: 'type-badge--vue' }
-  }
-  if (type === CodeGenTypeEnum.MULTI_FILE) {
-    return { label: '多文件', className: 'type-badge--multi' }
-  }
-  if (type === CodeGenTypeEnum.HTML) {
-    return { label: 'HTML', className: 'type-badge--html' }
-  }
+  if (type === CodeGenTypeEnum.VUE_PROJECT) return { label: 'Vue 3', className: 'arch-chip--vue' }
+  if (type === CodeGenTypeEnum.MULTI_FILE) return { label: '多文件', className: 'arch-chip--multi' }
+  if (type === CodeGenTypeEnum.HTML) return { label: 'HTML', className: 'arch-chip--html' }
   return null
 })
-
-const handleDelete = () => {
-  emit('delete-app', props.app.id)
-}
-
-const handleToggleFeatured = () => {
-  emit('toggle-featured', props.app)
-}
 </script>
 
 <style scoped>
-.app-card {
-  position: relative;
+.kaggle-card {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 18px;
+  border: 1px solid #DADCE0;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-.app-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(37, 99, 235, 0.35);
-  box-shadow: 0 14px 32px -8px rgba(15, 23, 42, 0.1), 0 4px 12px -2px rgba(37, 99, 235, 0.08);
+.kaggle-card:hover {
+  border-color: #202124;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(32, 33, 36, 0.08);
 }
 
-.card-preview {
-  position: relative;
+.card-media {
   display: flex;
   flex-direction: column;
-  background: #F8FAFC;
-  border-bottom: 1px solid #EEF2F6;
+  background: #F8F9FA;
+  border-bottom: 1px solid #E8EAED;
 }
 
-.browser-topbar {
+.media-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  height: 34px;
+  gap: 8px;
+  height: 32px;
   padding: 0 12px;
-  background: #F1F5F9;
-  border-bottom: 1px solid #E2E8F0;
+  background: #F8F9FA;
+  border-bottom: 1px solid #E8EAED;
 }
 
-.window-controls {
+.media-dots {
   display: flex;
   align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
-.control-dot {
-  width: 8.5px;
-  height: 8.5px;
-  border-radius: 50%;
-}
-
-.dot--close {
-  background: #FB7185;
-}
-
-.dot--min {
-  background: #FBBF24;
-}
-
-.dot--max {
-  background: #34D399;
-}
-
-.browser-address-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 4px;
+}
+
+.m-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #DADCE0;
+}
+
+.media-domain {
   flex: 1;
-  max-width: 210px;
-  height: 21px;
-  padding: 0 9px;
-  background: #FFFFFF;
-  border-radius: 6px;
-  border: 1px solid rgba(15, 23, 42, 0.07);
-}
-
-.address-lock {
-  font-size: 9px;
-  opacity: 0.7;
-}
-
-.address-text {
   font-size: 11px;
-  color: #64748B;
+  color: #80868B;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.browser-status {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.status-pill {
+.media-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
   padding: 1px 7px;
   border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.status-pill--live {
-  background: #DCFCE7;
-  color: #059669;
+.media-pill--live {
+  background: #E6F4EA;
+  color: #137333;
 }
 
-.status-pill--preview {
-  background: #DBEAFE;
-  color: #2563EB;
+.media-pill--ready {
+  background: #E6F8FF;
+  color: #008ABC;
 }
 
-.status-pill--draft {
-  background: #E2E8F0;
-  color: #64748B;
+.media-pill--draft {
+  background: #F1F3F4;
+  color: #5F6368;
 }
 
-.pulse-beacon {
+.live-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #10B981;
+  background: #1E8E3E;
 }
 
-.preview-screen {
+.media-stage {
   position: relative;
-  height: 204px;
+  height: 186px;
   overflow: hidden;
   background: #FFFFFF;
 }
@@ -410,22 +329,14 @@ const handleToggleFeatured = () => {
 .preview-cover {
   width: 100%;
   height: 100%;
-  border: 0;
   object-fit: cover;
   pointer-events: none;
-  transition: transform 0.35s ease;
-}
-
-.app-card:hover .preview-cover {
-  transform: scale(1.03);
 }
 
 .preview-iframe-viewport {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  position: relative;
-  background: #FFFFFF;
 }
 
 .preview-iframe {
@@ -438,62 +349,32 @@ const handleToggleFeatured = () => {
 }
 
 .preview-empty {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 20px;
-  text-align: center;
-  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+  gap: 10px;
+  background: #F8F9FA;
 }
 
-.blueprint-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(37, 99, 235, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(37, 99, 235, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
-  pointer-events: none;
-}
-
-.empty-code-icon {
-  position: relative;
+.empty-geo-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
   background: #FFFFFF;
-  border: 1px solid rgba(37, 99, 235, 0.16);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-  font-size: 18px;
-  color: #2563EB;
-  margin-bottom: 10px;
+  border: 1px solid #DADCE0;
+  color: #202124;
+  font-size: 17px;
 }
 
 .empty-title {
-  position: relative;
-  font-size: 13px;
-  font-weight: 700;
-  color: #1E293B;
-}
-
-.empty-desc {
-  position: relative;
-  margin: 5px 0 0;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: #64748B;
-  max-width: 240px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #5F6368;
 }
 
 .card-overlay {
@@ -503,181 +384,168 @@ const handleToggleFeatured = () => {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: rgba(15, 23, 42, 0.62);
-  backdrop-filter: blur(4px);
+  background: rgba(32, 33, 36, 0.56);
+  backdrop-filter: blur(2px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.16s ease;
 }
 
-.app-card:hover .card-overlay {
+.kaggle-card:hover .card-overlay {
   opacity: 1;
   pointer-events: auto;
 }
 
-.action-btn {
+.overlay-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 16px;
-  border-radius: 10px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   border: none;
-  transition: all 0.18s ease;
+  transition: transform 0.15s ease;
 }
 
-.action-btn--primary {
-  background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
-}
-
-.action-btn--primary:hover {
-  background: #1D4ED8;
+.overlay-btn:hover {
   transform: translateY(-1px);
 }
 
-.action-btn--secondary {
-  background: rgba(255, 255, 255, 0.96);
-  color: #0F172A;
+.overlay-btn--dark {
+  background: #202124;
+  color: #FFFFFF;
 }
 
-.action-btn--secondary:hover {
+.overlay-btn--light {
   background: #FFFFFF;
-  transform: translateY(-1px);
+  color: #202124;
 }
 
-.card-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 15px 16px;
-}
-
-.card-avatar {
-  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
-  color: #FFFFFF;
-  font-weight: 600;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.card-meta-wrap {
-  min-width: 0;
+.card-content {
   flex: 1;
+  padding: 16px 16px 12px;
 }
 
 .card-title-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .card-title {
   margin: 0;
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 700;
-  color: #0F172A;
+  color: #202124;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.card-prompt-excerpt {
-  margin: 3px 0 6px;
-  font-size: 12px;
-  color: #64748B;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.arch-chip {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.card-tags {
+.arch-chip--vue {
+  background: #E6F4EA;
+  color: #137333;
+}
+
+.arch-chip--multi {
+  background: #E6F8FF;
+  color: #008ABC;
+}
+
+.arch-chip--html {
+  background: #FEF7E0;
+  color: #B06000;
+}
+
+.card-summary {
+  margin: 7px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #5F6368;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 39px;
+}
+
+.card-footer {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 4px;
-  font-size: 12px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #E8EAED;
+  background: #FFFFFF;
 }
 
-.card-author {
-  color: #64748B;
-  font-weight: 500;
+.footer-author {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+  color: #5F6368;
+}
+
+.author-avatar {
+  background: #202124;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.author-name {
+  font-weight: 600;
+  color: #3C4043;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 90px;
 }
 
-.card-dot-sep {
-  color: #CBD5E1;
+.footer-dot {
+  color: #BDC1C6;
 }
 
-.version-tag {
-  font-size: 11px;
+.ver-text {
   font-weight: 600;
-  padding: 1px 7px;
-  border-radius: 6px;
+  color: #5F6368;
 }
 
-.version-tag--live {
-  background: #ECFDF5;
-  color: #059669;
+.ver-text--live {
+  color: #137333;
 }
 
-.version-tag--working {
-  background: #EFF6FF;
-  color: #2563EB;
-}
-
-.version-tag--draft {
-  background: #F1F5F9;
-  color: #64748B;
-}
-
-.type-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 1px 8px;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-
-.type-badge--vue {
-  background: #ECFDF5;
-  color: #047857;
-}
-
-.type-badge--multi {
-  background: #EFF6FF;
-  color: #1D4ED8;
-}
-
-.type-badge--html {
-  background: #FFFBEB;
-  color: #B45309;
-}
-
-.card-footer-actions {
+.footer-actions {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 0;
 }
 
-.card-star-btn {
-  color: #94A3B8;
+.icon-action-btn {
+  color: #80868B;
 }
 
-.card-star-btn:hover {
-  color: #F59E0B;
-  background: #FEF3C7 !important;
+.icon-action-btn:hover {
+  color: #202124;
+  background: #F1F3F4 !important;
 }
 
-.card-star-btn--active {
-  color: #F59E0B;
+.icon-action-btn.is-starred {
+  color: #F9AB00;
 }
 </style>

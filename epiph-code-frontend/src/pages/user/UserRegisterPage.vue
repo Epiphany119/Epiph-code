@@ -194,13 +194,13 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
 
 .auth-card {
   display: grid;
-  grid-template-columns: minmax(360px, 1.08fr) minmax(380px, 0.92fr);
-  width: min(1020px, 100%);
-  min-height: 600px;
+  grid-template-columns: minmax(360px, 1.06fr) minmax(380px, 0.94fr);
+  width: min(980px, 100%);
+  min-height: 580px;
   background: #FFFFFF;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 24px;
-  box-shadow: var(--shadow-lg);
+  border: 1px solid #DADCE0;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(32, 33, 36, 0.06);
   overflow: hidden;
 }
 
@@ -210,9 +210,9 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 48px;
-  background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 55%, #172554 100%);
-  color: #F8FAFC;
+  padding: 46px;
+  background: #202124;
+  color: #FFFFFF;
   overflow: hidden;
 }
 
@@ -222,29 +222,29 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-size: 28px 28px;
   pointer-events: none;
 }
 
 .showcase-glow {
   position: absolute;
-  width: 340px;
-  height: 340px;
+  width: 300px;
+  height: 300px;
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(70px);
   pointer-events: none;
 }
 
 .showcase-glow--top {
   top: -120px;
   left: -80px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(32, 190, 255, 0.28) 0%, transparent 70%);
 }
 
 .showcase-glow--bottom {
   bottom: -120px;
   right: -80px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(52, 168, 83, 0.2) 0%, transparent 70%);
 }
 
 .showcase-content {
@@ -256,46 +256,44 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 13px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
+  padding: 4px 12px;
+  background: rgba(32, 190, 255, 0.14);
+  border: 1px solid rgba(32, 190, 255, 0.3);
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 600;
-  color: #93C5FD;
-  margin-bottom: 24px;
+  font-weight: 700;
+  color: #20BEFF;
+  margin-bottom: 22px;
 }
 
 .tag-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #60A5FA;
-  box-shadow: 0 0 8px #60A5FA;
+  background: #20BEFF;
 }
 
 .showcase-title {
   margin: 0;
   font-size: 32px;
   font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.025em;
+  line-height: 1.24;
+  letter-spacing: -0.03em;
   color: #FFFFFF;
 }
 
 .showcase-desc {
-  margin: 16px 0 0;
+  margin: 14px 0 0;
   font-size: 14px;
   line-height: 1.7;
-  color: #CBD5E1;
+  color: #BDC1C6;
 }
 
 .feature-bullets {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin: 28px 0 0;
+  gap: 10px;
+  margin: 26px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -304,31 +302,31 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 9px 13px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 13px;
   font-weight: 500;
-  color: #F1F5F9;
+  color: #F1F3F4;
 }
 
 .bullet-icon {
-  color: #60A5FA;
+  color: #20BEFF;
   font-size: 15px;
 }
 
 .showcase-footer {
-  margin-top: 34px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .showcase-ver {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #94A3B8;
+  color: #9AA0A6;
 }
 
 /* Right Form */
@@ -336,7 +334,7 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 48px;
+  padding: 46px;
   background: #FFFFFF;
 }
 
@@ -344,35 +342,35 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #2563EB;
+  color: #008ABC;
 }
 
 .panel-title {
   margin: 6px 0 0;
   font-size: 26px;
-  font-weight: 700;
-  color: #0F172A;
+  font-weight: 800;
+  color: #202124;
   letter-spacing: -0.025em;
 }
 
 .panel-desc {
-  margin: 6px 0 28px;
+  margin: 6px 0 26px;
   font-size: 13.5px;
-  color: #64748B;
+  color: #5F6368;
 }
 
 .auth-form :deep(.ant-form-item-label > label) {
   font-size: 13px;
   font-weight: 600;
-  color: #0F172A;
+  color: #202124;
 }
 
 .auth-input {
-  border-radius: 11px !important;
+  border-radius: 10px !important;
 }
 
 .input-icon {
-  color: #94A3B8;
+  color: #80868B;
   font-size: 15px;
   margin-right: 4px;
 }
@@ -387,25 +385,25 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
 }
 
 .hint-text {
-  color: #64748B;
+  color: #5F6368;
 }
 
 .link-highlight {
-  color: #2563EB;
-  font-weight: 600;
+  color: #008ABC;
+  font-weight: 700;
 }
 
 .link-highlight:hover {
-  color: #1D4ED8;
+  color: #202124;
   text-decoration: underline;
 }
 
 .submit-button {
   width: 100%;
   height: 44px;
-  border-radius: 11px;
+  border-radius: 999px;
   font-size: 14.5px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @media (max-width: 820px) {

@@ -1,182 +1,218 @@
 <template>
   <div id="homePage">
-    <!-- Hero & Flagship AI Composer Section -->
-    <section class="hero-section">
-      <div class="hero-bg-grid" aria-hidden="true"></div>
-      <div class="hero-glow hero-glow--left" aria-hidden="true"></div>
-      <div class="hero-glow hero-glow--right" aria-hidden="true"></div>
-
-      <div class="hero-content">
-        <div class="hero-pill">
-          <span class="hero-pill-dot"></span>
-          <span class="hero-pill-text">Epiph-code Studio · 双引擎 AI 全栈构建平台</span>
-          <span class="hero-pill-badge">v2.0</span>
-        </div>
-
+    <!-- Kaggle-Style Editorial Split Hero -->
+    <section class="kaggle-hero">
+      <div class="hero-left">
         <h1 class="hero-title">
-          一句话灵感，构建
-          <span class="hero-gradient-title">可运行、可部署的真实应用</span>
+          用自然语言，构建<br />真正可运行的 AI 应用
         </h1>
-
         <p class="hero-subtitle">
-          融合结构化 TODO 规划、长对话三层上下文记忆、可视化点选编辑与不可变版本快照。<br />
-          从一句自然语言开始，让 AI 全栈工程师为你完成编码、预览与公网发布。
+          从一句话灵感出发，Epiph-code Studio 自动完成 TODO 任务规划、多架构工程编码、实时沙箱预览与公网一键部署。
         </p>
 
-        <!-- Feature Capabilities -->
-        <div class="hero-capabilities">
-          <div class="capability-item">
-            <ThunderboltOutlined class="capability-icon" />
-            <span>HTML / 多文件 / Vue 3 架构</span>
+        <div class="hero-cta-row">
+          <a-button type="primary" size="large" class="cta-black-pill" @click="scrollToPrompt">
+            <template #icon><RocketOutlined /></template>
+            开始构建应用
+          </a-button>
+          <a-button type="default" size="large" class="cta-outline-pill" @click="scrollToGallery">
+            浏览精选画廊
+          </a-button>
+        </div>
+
+        <!-- Kaggle-Style 3-Column Bold Stat Strip -->
+        <div class="hero-stats">
+          <div class="hero-stat-item">
+            <span class="stat-num">3<span class="stat-unit">种</span></span>
+            <span class="stat-label">HTML · 多文件 · Vue 3 工程</span>
           </div>
-          <div class="capability-item">
-            <FireOutlined class="capability-icon" />
-            <span>TODO 任务分解与透明工具流</span>
+          <div class="hero-stat-item">
+            <span class="stat-num">100<span class="stat-unit">%</span></span>
+            <span class="stat-label">透明思考流与 Token 统计</span>
           </div>
-          <div class="capability-item">
-            <EyeOutlined class="capability-icon" />
-            <span>实时沙箱预览与可视化点选微调</span>
-          </div>
-          <div class="capability-item">
-            <CloudUploadOutlined class="capability-icon" />
-            <span>多版本 Diff 对比与一键部署</span>
+          <div class="hero-stat-item">
+            <span class="stat-num">V<span class="stat-unit">n</span></span>
+            <span class="stat-label">不可变版本快照与 Diff 对比</span>
           </div>
         </div>
       </div>
 
-      <!-- Flagship AI Prompt Composer Card -->
-      <div id="projectPrompt" class="prompt-studio-shell">
-        <div class="prompt-studio-card">
-          <div class="studio-card-header">
-            <div class="studio-header-title">
-              <span class="studio-header-dot"></span>
-              <h3>AI 应用构建台</h3>
-              <span class="studio-header-sub">Prompt Composer</span>
-            </div>
-            <div class="studio-header-controls">
-              <span class="agent-label">推理模型</span>
-              <a-select
-                v-model:value="selectedAgent"
-                class="agent-select"
-                size="small"
-                :disabled="creating"
-              >
-                <a-select-option value="default">默认 Agent · 极速构建</a-select-option>
-                <a-select-option value="deepseek">DeepSeek Flash · 深度推理</a-select-option>
-              </a-select>
-            </div>
-          </div>
+      <!-- Kaggle-Style Bold Geometric Hero Illustration -->
+      <div class="hero-visual" aria-hidden="true">
+        <svg viewBox="0 0 460 340" fill="none" xmlns="http://www.w3.org/2000/svg" class="hero-svg">
+          <!-- Soft geometric background shapes -->
+          <circle cx="355" cy="95" r="78" fill="#E6F8FF" />
+          <rect x="44" y="216" width="126" height="92" rx="18" fill="#FEF7E0" />
+          <circle cx="88" cy="84" r="34" fill="#E6F4EA" />
 
-          <div class="studio-card-body">
-            <a-textarea
-              v-model:value="userPrompt"
-              placeholder="描述你想要构建的网站或应用：功能模块、视觉风格、目标受众或交互细节……（按 Ctrl/⌘ + Enter 快速生成）"
-              :rows="4"
-              :maxlength="1000"
-              class="studio-prompt-input"
+          <!-- Subtle dot matrix -->
+          <g fill="#DADCE0">
+            <circle cx="34" cy="148" r="2.5" /><circle cx="50" cy="148" r="2.5" /><circle cx="66" cy="148" r="2.5" />
+            <circle cx="34" cy="164" r="2.5" /><circle cx="50" cy="164" r="2.5" /><circle cx="66" cy="164" r="2.5" />
+            <circle cx="34" cy="180" r="2.5" /><circle cx="50" cy="180" r="2.5" /><circle cx="66" cy="180" r="2.5" />
+            <circle cx="394" cy="240" r="2.5" /><circle cx="410" cy="240" r="2.5" /><circle cx="426" cy="240" r="2.5" />
+            <circle cx="394" cy="256" r="2.5" /><circle cx="410" cy="256" r="2.5" /><circle cx="426" cy="256" r="2.5" />
+          </g>
+
+          <!-- Main Browser Window Card -->
+          <rect x="86" y="42" width="302" height="218" rx="16" fill="#FFFFFF" stroke="#202124" stroke-width="2" />
+          <path d="M86 58C86 49.1634 93.1634 42 102 42H372C380.837 42 388 49.1634 388 58V76H86V58Z" fill="#F8F9FA" />
+          <line x1="86" y1="76" x2="388" y2="76" stroke="#202124" stroke-width="1.5" />
+          <circle cx="106" cy="59" r="4.5" fill="#202124" />
+          <circle cx="121" cy="59" r="4.5" fill="#20BEFF" />
+          <circle cx="136" cy="59" r="4.5" fill="#F9AB00" />
+          <rect x="166" y="51" width="144" height="16" rx="8" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.2" />
+
+          <!-- Code / UI Blocks inside Browser -->
+          <rect x="108" y="96" width="114" height="74" rx="10" fill="#202124" />
+          <rect x="120" y="110" width="46" height="6" rx="3" fill="#20BEFF" />
+          <rect x="120" y="124" width="76" height="5" rx="2.5" fill="#9AA0A6" />
+          <rect x="120" y="136" width="60" height="5" rx="2.5" fill="#34A853" />
+          <rect x="120" y="148" width="84" height="5" rx="2.5" fill="#F9AB00" />
+
+          <!-- Preview UI Card inside Browser -->
+          <rect x="234" y="96" width="132" height="142" rx="10" fill="#F8F9FA" stroke="#DADCE0" stroke-width="1.5" />
+          <rect x="248" y="110" width="104" height="44" rx="8" fill="#20BEFF" />
+          <rect x="248" y="166" width="64" height="8" rx="4" fill="#202124" />
+          <rect x="248" y="182" width="96" height="6" rx="3" fill="#BDC1C6" />
+          <rect x="248" y="196" width="82" height="6" rx="3" fill="#BDC1C6" />
+          <rect x="248" y="212" width="54" height="16" rx="8" fill="#202124" />
+
+          <!-- Floating Version Pill Badge -->
+          <rect x="108" y="184" width="114" height="54" rx="10" fill="#E6F8FF" stroke="#20BEFF" stroke-width="1.5" />
+          <circle cx="128" cy="211" r="10" fill="#20BEFF" />
+          <path d="M124 211L127 214L133 208" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <rect x="146" y="201" width="60" height="7" rx="3.5" fill="#202124" />
+          <rect x="146" y="214" width="44" height="5" rx="2.5" fill="#5F6368" />
+
+          <!-- Bottom Floating Live Deploy Badge -->
+          <rect x="164" y="276" width="196" height="40" rx="20" fill="#202124" />
+          <circle cx="186" cy="296" r="5" fill="#34A853" />
+          <rect x="200" y="292" width="92" height="8" rx="4" fill="#FFFFFF" />
+          <rect x="304" y="287" width="42" height="18" rx="9" fill="#20BEFF" />
+        </svg>
+      </div>
+    </section>
+
+    <!-- Crisp Kaggle-Style AI Prompt Studio -->
+    <section id="projectPrompt" class="prompt-studio-section">
+      <div class="prompt-studio-card">
+        <div class="studio-top-bar">
+          <div class="studio-title-wrap">
+            <span class="studio-cyan-dot"></span>
+            <h2 class="studio-heading">AI 应用构建台</h2>
+            <span class="studio-sub-tag">输入需求即可自动规划、编码并运行</span>
+          </div>
+          <div class="studio-model-select">
+            <span class="model-label">推理模型</span>
+            <a-select
+              v-model:value="selectedAgent"
+              size="small"
+              class="agent-select"
               :disabled="creating"
-              @keydown.meta.enter.prevent="createApp"
-              @keydown.ctrl.enter.prevent="createApp"
-            />
-
-            <!-- Quick Inspiration Templates -->
-            <div class="inspiration-box">
-              <span class="inspiration-label">精选模板预设：</span>
-              <div class="inspiration-chips">
-                <button
-                  v-for="item in promptIdeas"
-                  :key="item.label"
-                  type="button"
-                  class="idea-chip"
-                  @click="setPrompt(item.prompt)"
-                >
-                  <span class="idea-chip-tag">{{ item.category }}</span>
-                  <span>{{ item.label }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="studio-card-footer">
-            <div class="footer-left-meta">
-              <div class="prompt-length-hint">
-                <span :class="{ 'text-warn': userPrompt.length > 900 }">{{ userPrompt.length }}</span>
-                <span class="dim">/ 1000 字</span>
-              </div>
-              <span class="meta-sep">·</span>
-              <span class="shortcut-hint">
-                <kbd>⌘</kbd> + <kbd>Enter</kbd> 快速启动
-              </span>
-            </div>
-
-            <a-button
-              type="primary"
-              size="large"
-              class="start-generate-btn"
-              :loading="creating"
-              @click="createApp"
             >
-              <template #icon>
-                <RocketOutlined />
-              </template>
-              <span>{{ creating ? '正在初始化工程...' : '立即开始构建' }}</span>
-            </a-button>
+              <a-select-option value="default">默认 Agent（极速构建）</a-select-option>
+              <a-select-option value="deepseek">DeepSeek Flash（深度推理）</a-select-option>
+            </a-select>
           </div>
+        </div>
+
+        <div class="studio-input-area">
+          <a-textarea
+            v-model:value="userPrompt"
+            placeholder="例如：创建一个现代化的数据分析仪表盘，包含顶部 KPI 指标卡片、趋势图表、筛选工具栏与暗色模式切换……（Ctrl / ⌘ + Enter 快速开始）"
+            :rows="4"
+            :maxlength="1000"
+            class="studio-textarea"
+            :disabled="creating"
+            @keydown.meta.enter.prevent="createApp"
+            @keydown.ctrl.enter.prevent="createApp"
+          />
+        </div>
+
+        <div class="studio-templates-row">
+          <span class="templates-label">灵感预设</span>
+          <div class="templates-chips">
+            <button
+              v-for="item in promptIdeas"
+              :key="item.label"
+              type="button"
+              class="kaggle-chip"
+              @click="setPrompt(item.prompt)"
+            >
+              <span class="chip-cat">{{ item.category }}</span>
+              <span>{{ item.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="studio-bottom-bar">
+          <div class="studio-meta-left">
+            <span :class="{ 'char-warn': userPrompt.length > 900 }">{{ userPrompt.length }}</span>
+            <span class="char-dim">/ 1000 字</span>
+            <span class="meta-dot">·</span>
+            <span class="shortcut-tip"><kbd>⌘</kbd> + <kbd>Enter</kbd> 直接创建</span>
+          </div>
+
+          <a-button
+            type="primary"
+            size="large"
+            class="build-submit-btn"
+            :loading="creating"
+            @click="createApp"
+          >
+            <template #icon><RocketOutlined /></template>
+            <span>{{ creating ? '正在初始化工程...' : '立即开始构建' }}</span>
+          </a-button>
         </div>
       </div>
     </section>
 
-    <!-- Workspace Section (My Apps) -->
-    <section class="section-container">
-      <div class="section-header">
-        <div class="section-title-group">
-          <div class="section-badge">
-            <FolderOpenOutlined />
-            <span>MY WORKSPACE</span>
+    <!-- My Workspace Section (Kaggle Explorer Layout) -->
+    <section id="myWorkspaceSection" class="explorer-section">
+      <div class="explorer-header">
+        <div class="explorer-heading-block">
+          <div class="explorer-title-row">
+            <h2 class="explorer-title">我的作品</h2>
+            <span class="count-pill">{{ myAppsPage.total }}</span>
           </div>
-          <div class="section-heading-row">
-            <h2 class="section-title">我的应用工作区</h2>
-            <span class="stat-pill">{{ myAppsPage.total }} 个项目</span>
-          </div>
-          <p class="section-desc">管理你创建的全部应用，随时恢复对话迭代、对比历史版本或发布上线。</p>
+          <p class="explorer-desc">继续与 AI 对话迭代、管理历史版本快照或一键发布至公网。</p>
         </div>
 
-        <div v-if="loginUserStore.loginUser.id" class="section-toolbar">
-          <div class="arch-filter-pills" role="tablist" aria-label="按架构筛选我的作品">
-            <button
-              v-for="tab in archFilterTabs"
-              :key="tab.value"
-              type="button"
-              class="arch-pill-btn"
-              :class="{ 'arch-pill-btn--active': myAppsFilter.codeGenType === tab.value }"
-              @click="setMyAppsArchFilter(tab.value)"
-            >
-              {{ tab.label }}
-            </button>
+        <div v-if="loginUserStore.loginUser.id" class="explorer-controls">
+          <div class="kaggle-search-pill">
+            <SearchOutlined class="pill-search-icon" />
+            <input
+              v-model="myAppsFilter.appName"
+              type="text"
+              placeholder="搜索我的作品..."
+              @keydown.enter="triggerMyAppsSearch"
+              @input="onMyAppsSearchClear"
+            />
           </div>
-          <a-input
-            v-model:value="myAppsFilter.appName"
-            placeholder="搜索我的应用..."
-            allow-clear
-            class="section-search-input"
-            @pressEnter="triggerMyAppsSearch"
-            @change="onMyAppsSearchClear"
-          >
-            <template #prefix>
-              <SearchOutlined class="search-prefix-icon" />
-            </template>
-          </a-input>
         </div>
       </div>
 
+      <!-- Horizontal Filter Chips (Kaggle Style) -->
+      <div v-if="loginUserStore.loginUser.id" class="filter-chip-bar">
+        <button
+          v-for="tab in archFilterTabs"
+          :key="tab.value"
+          type="button"
+          class="filter-chip"
+          :class="{ 'filter-chip--active': myAppsFilter.codeGenType === tab.value }"
+          @click="setMyAppsArchFilter(tab.value)"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
       <!-- Not Logged In State -->
-      <div v-if="!loginUserStore.loginUser.id" class="login-prompt-card">
-        <div class="login-prompt-badge">WORKSPACE LOCKED</div>
-        <div class="login-prompt-content">
-          <h4>登录以开启你的专属 AI 应用工作台</h4>
-          <p>登录后即可永久保存 Agent 对话历史、多版本快照与 Token 用量统计，并支持一键部署公网站点。</p>
-        </div>
-        <a-button type="primary" size="large" @click="goToLogin">立即登录 / 免费注册</a-button>
+      <div v-if="!loginUserStore.loginUser.id" class="kaggle-empty-card">
+        <div class="empty-badge">MY WORKSPACE</div>
+        <h3>登录以查看你的专属作品集</h3>
+        <p>登录后可永久保留全部 Agent 对话记录、Token 用量统计与多版本快照。</p>
+        <a-button type="primary" size="large" @click="goToLogin">立即登录 / 注册</a-button>
       </div>
 
       <!-- App Grid -->
@@ -193,26 +229,23 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="empty-state-card">
-        <div class="empty-icon-circle">
-          <FolderOpenOutlined class="empty-icon" />
-        </div>
-        <h3>{{ hasMyAppsFilter ? '没有找到匹配的应用' : '还没有创建任何应用' }}</h3>
+      <div v-else class="kaggle-empty-card">
+        <FolderOpenOutlined class="empty-line-icon" />
+        <h3>{{ hasMyAppsFilter ? '没有找到匹配的作品' : '暂无作品' }}</h3>
         <p>
           {{
             hasMyAppsFilter
-              ? '尝试切换架构分类或清空搜索关键词以查看全部作品。'
-              : '在上方 AI 应用构建台输入一句描述，即可自动规划并生成你的第一个网站。'
+              ? '尝试切换架构筛选或清空搜索关键词。'
+              : '在上方 AI 应用构建台输入一句描述，即可自动生成你的第一个应用。'
           }}
         </p>
-        <a-button v-if="hasMyAppsFilter" @click="resetMyAppsFilter">重置筛选条件</a-button>
-        <a-button v-else type="primary" ghost @click="scrollToPrompt">
+        <a-button v-if="hasMyAppsFilter" @click="resetMyAppsFilter">重置筛选</a-button>
+        <a-button v-else type="primary" @click="scrollToPrompt">
           <template #icon><PlusOutlined /></template>
-          立即创建第一个应用
+          创建第一个应用
         </a-button>
       </div>
 
-      <!-- Pagination -->
       <div v-if="myApps.length && myAppsPage.total > myAppsPage.pageSize" class="pagination-wrap">
         <a-pagination
           v-model:current="myAppsPage.current"
@@ -224,47 +257,42 @@
       </div>
     </section>
 
-    <!-- Featured Gallery Section -->
-    <section class="section-container">
-      <div class="section-header">
-        <div class="section-title-group">
-          <div class="section-badge section-badge--indigo">
-            <CompassOutlined />
-            <span>COMMUNITY SHOWCASE</span>
+    <!-- Community Featured Gallery Section -->
+    <section id="featuredGallerySection" class="explorer-section">
+      <div class="explorer-header">
+        <div class="explorer-heading-block">
+          <div class="explorer-title-row">
+            <h2 class="explorer-title">精选应用画廊</h2>
+            <span class="count-pill">{{ featuredAppsPage.total }}</span>
           </div>
-          <div class="section-heading-row">
-            <h2 class="section-title">精选应用画廊</h2>
-            <span class="stat-pill">{{ featuredAppsPage.total }} 个精选</span>
-          </div>
-          <p class="section-desc">探索社区创作者通过 Epiph-code 生成的交互站点、效率工具与完整 Vue 工程。</p>
+          <p class="explorer-desc">探索社区创作者使用 Epiph-code 生成的交互站点、效率工具与完整工程。</p>
         </div>
 
-        <div class="section-toolbar">
-          <div class="arch-filter-pills" role="tablist" aria-label="按架构筛选精选应用">
-            <button
-              v-for="tab in archFilterTabs"
-              :key="tab.value"
-              type="button"
-              class="arch-pill-btn"
-              :class="{ 'arch-pill-btn--active': featuredFilter.codeGenType === tab.value }"
-              @click="setFeaturedArchFilter(tab.value)"
-            >
-              {{ tab.label }}
-            </button>
+        <div class="explorer-controls">
+          <div class="kaggle-search-pill">
+            <SearchOutlined class="pill-search-icon" />
+            <input
+              v-model="featuredFilter.appName"
+              type="text"
+              placeholder="搜索精选画廊..."
+              @keydown.enter="triggerFeaturedSearch"
+              @input="onFeaturedSearchClear"
+            />
           </div>
-          <a-input
-            v-model:value="featuredFilter.appName"
-            placeholder="搜索精选作品..."
-            allow-clear
-            class="section-search-input"
-            @pressEnter="triggerFeaturedSearch"
-            @change="onFeaturedSearchClear"
-          >
-            <template #prefix>
-              <SearchOutlined class="search-prefix-icon" />
-            </template>
-          </a-input>
         </div>
+      </div>
+
+      <div class="filter-chip-bar">
+        <button
+          v-for="tab in archFilterTabs"
+          :key="tab.value"
+          type="button"
+          class="filter-chip"
+          :class="{ 'filter-chip--active': featuredFilter.codeGenType === tab.value }"
+          @click="setFeaturedArchFilter(tab.value)"
+        >
+          {{ tab.label }}
+        </button>
       </div>
 
       <div v-if="featuredApps.length" class="app-grid">
@@ -278,16 +306,14 @@
         />
       </div>
 
-      <div v-else class="empty-state-card">
-        <div class="empty-icon-circle">
-          <CompassOutlined class="empty-icon" />
-        </div>
+      <div v-else class="kaggle-empty-card">
+        <CompassOutlined class="empty-line-icon" />
         <h3>{{ hasFeaturedFilter ? '未找到匹配的精选作品' : '暂无精选应用' }}</h3>
         <p>
           {{
             hasFeaturedFilter
-              ? '尝试切换筛选标签或清空搜索词查看更多社区作品。'
-              : '你可以在「我的应用工作区」点击卡片右下角的星标按钮，将优秀作品推荐至精选画廊。'
+              ? '尝试更换关键词或选择「全部」查看所有精选应用。'
+              : '你可以在「我的作品」点击卡片星标，将优秀站点推荐到社区精选画廊。'
           }}
         </p>
         <a-button v-if="hasFeaturedFilter" @click="resetFeaturedFilter">查看全部精选</a-button>
@@ -307,8 +333,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, reactive, ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/loginUser'
 import { addApp, deleteApp, listGoodAppVoByPage, listMyAppVoByPage, toggleAppFeatured } from '@/api/appController'
@@ -317,16 +343,13 @@ import { CodeGenTypeEnum } from '@/utils/codeGenTypes'
 import AppCard from '@/components/AppCard.vue'
 import {
   RocketOutlined,
-  ThunderboltOutlined,
-  FireOutlined,
-  EyeOutlined,
-  CloudUploadOutlined,
   FolderOpenOutlined,
   CompassOutlined,
   PlusOutlined,
   SearchOutlined,
 } from '@ant-design/icons-vue'
 
+const route = useRoute()
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
 
@@ -335,10 +358,10 @@ const selectedAgent = ref('default')
 const creating = ref(false)
 
 const archFilterTabs = [
-  { label: '全部', value: '' },
-  { label: 'HTML', value: CodeGenTypeEnum.HTML },
-  { label: '多文件', value: CodeGenTypeEnum.MULTI_FILE },
-  { label: 'Vue 工程', value: CodeGenTypeEnum.VUE_PROJECT },
+  { label: '全部架构', value: '' },
+  { label: 'HTML 单页', value: CodeGenTypeEnum.HTML },
+  { label: '原生多文件', value: CodeGenTypeEnum.MULTI_FILE },
+  { label: 'Vue 3 工程', value: CodeGenTypeEnum.VUE_PROJECT },
 ]
 
 const myApps = ref<API.AppVO[]>([])
@@ -368,40 +391,40 @@ const hasFeaturedFilter = computed(() => Boolean(featuredFilter.appName.trim() |
 
 const promptIdeas = [
   {
-    category: '内容博客',
+    category: '博客',
     label: '现代极客博客',
     prompt:
       '创建一个现代化的个人技术博客网站，包含精选文章瀑布流、标签分类过滤、即时搜索框、代码块高亮展示、阅读进度条、暗色模式切换和作者名片。采用清爽现代排版，支持响应式布局。',
   },
   {
-    category: 'SaaS 落地页',
-    label: 'AI 产品官网',
+    category: '官网',
+    label: 'AI SaaS 落地页',
     prompt:
-      '设计一个极具高级感的 AI SaaS 产品官网，包含动态渐变 Hero 首屏、核心功能 Bento Grid 矩阵、交互式价格方案对比表（支持月付/年付切换）、客户证言轮播以及常见问题折叠面板。',
+      '设计一个极具高级感的 AI SaaS 产品官网，包含高对比度 Hero 首屏、核心功能矩阵、交互式价格方案对比表（支持月付/年付切换）、客户证言轮播以及常见问题折叠面板。',
   },
   {
-    category: '电商零售',
+    category: '商城',
     label: '潮玩数码商城',
     prompt:
       '构建一个现代风格的数码潮玩商城，包含顶部促销横幅、分类筛选栏、商品卡片网格（支持快速预览与规格选择）、右侧滑出购物车抽屉、实时优惠计算与模拟结算弹窗。',
   },
   {
-    category: '创意展示',
-    label: '设计师作品集',
+    category: '作品集',
+    label: '设计师画廊',
     prompt:
-      '制作一个视觉设计师与摄影师作品集网站，采用沉浸式画廊布局，支持按作品类型筛选、点击大图灯箱预览、个人技能雷达/时间轴履历以及合作联系表单。',
+      '制作一个视觉设计师与摄影师作品集网站，采用沉浸式画廊布局，支持按作品类型筛选、点击大图灯箱预览、个人技能时间轴履历以及合作联系表单。',
   },
   {
-    category: '数据看板',
-    label: '运营分析工作台',
+    category: '数据',
+    label: '运营分析看板',
     prompt:
       '开发一个企业级 SaaS 运营数据分析仪表盘，包含核心 KPI 指标卡片（带环比增长徽章）、营收趋势折线图、渠道转化分布、最近订单状态表格以及时间区间筛选器。',
   },
   {
-    category: '效率工具',
-    label: '番茄钟与任务板',
+    category: '工具',
+    label: '番茄钟任务板',
     prompt:
-      '构建一个沉浸式专注生产力工具，左侧为环形倒计时番茄钟（支持专注/短休/长休模式切换与音效提示），右侧为四象限待办任务看板（支持新增、完成勾选、优先级标签与专注统计）。',
+      '构建一个沉浸式专注生产力工具，左侧为环形倒计时番茄钟（支持专注/短休/长休模式切换），右侧为四象限待办任务看板（支持新增、完成勾选、优先级标签与专注统计）。',
   },
 ]
 
@@ -486,6 +509,18 @@ const loadFeaturedApps = async () => {
     console.error('加载精选应用失败：', error)
   }
 }
+
+watch(
+  () => route.query.q,
+  (q) => {
+    if (typeof q === 'string' && q.trim()) {
+      featuredFilter.appName = q.trim()
+      featuredAppsPage.current = 1
+      loadFeaturedApps()
+    }
+  },
+  { immediate: true },
+)
 
 const setMyAppsArchFilter = (codeGenType: string) => {
   myAppsFilter.codeGenType = codeGenType
@@ -588,6 +623,10 @@ const scrollToPrompt = () => {
   document.getElementById('projectPrompt')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
+const scrollToGallery = () => {
+  document.getElementById('featuredGallerySection')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 const goToLogin = async () => {
   await router.push('/user/login')
 }
@@ -602,536 +641,432 @@ onMounted(() => {
 #homePage {
   display: flex;
   flex-direction: column;
-  gap: 64px;
+  gap: 56px;
 }
 
-/* Hero Section */
-.hero-section {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+/* Kaggle Editorial Split Hero */
+.kaggle-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
   align-items: center;
-  text-align: center;
-  padding: 36px 24px 32px;
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.65) 100%);
-  border: 1px solid rgba(15, 23, 42, 0.07);
-  box-shadow: 0 4px 24px -6px rgba(15, 23, 42, 0.04);
-  overflow: hidden;
-}
-
-.hero-bg-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
-  background-size: 36px 36px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 25%, #000 35%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 25%, #000 35%, transparent 100%);
-  pointer-events: none;
-}
-
-.hero-glow {
-  position: absolute;
-  width: 440px;
-  height: 440px;
-  border-radius: 50%;
-  filter: blur(70px);
-  pointer-events: none;
-  opacity: 0.55;
-}
-
-.hero-glow--left {
-  top: -180px;
-  left: -80px;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, transparent 70%);
-}
-
-.hero-glow--right {
-  top: -160px;
-  right: -80px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%);
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 820px;
-}
-
-.hero-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 12px 5px 10px;
-  background: #FFFFFF;
-  border: 1px solid rgba(37, 99, 235, 0.22);
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
-  margin-bottom: 22px;
-}
-
-.hero-pill-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
-}
-
-.hero-pill-text {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #1E3A8A;
-}
-
-.hero-pill-badge {
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 1px 7px;
-  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
-  color: #FFFFFF;
-  border-radius: 999px;
+  gap: 40px;
+  padding: 20px 0 8px;
 }
 
 .hero-title {
   margin: 0;
-  font-size: clamp(32px, 4.2vw, 50px);
+  font-size: clamp(34px, 3.8vw, 48px);
   font-weight: 800;
-  line-height: 1.16;
+  line-height: 1.15;
   letter-spacing: -0.035em;
-  color: #0F172A;
-}
-
-.hero-gradient-title {
-  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #0EA5E9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #202124;
 }
 
 .hero-subtitle {
-  max-width: 680px;
-  margin: 16px auto 0;
-  font-size: 15.5px;
-  line-height: 1.7;
-  color: #475569;
+  max-width: 560px;
+  margin: 18px 0 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #5F6368;
 }
 
-.hero-capabilities {
+.hero-cta-row {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.cta-black-pill,
+.cta-outline-pill {
+  height: 44px;
+  padding: 0 24px;
+  font-size: 14.5px;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 34px;
+  padding-top: 24px;
+  border-top: 1px solid #E8EAED;
+}
+
+.hero-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-num {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #202124;
+  line-height: 1.1;
+}
+
+.stat-unit {
+  font-size: 14px;
+  font-weight: 700;
+  color: #008ABC;
+  margin-left: 2px;
+}
+
+.stat-label {
+  font-size: 12.5px;
+  color: #5F6368;
+  line-height: 1.4;
+}
+
+.hero-visual {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-top: 24px;
 }
 
-.capability-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 13px;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: #334155;
-  box-shadow: var(--shadow-xs);
+.hero-svg {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
 }
 
-.capability-icon {
-  color: #2563EB;
-  font-size: 13px;
-}
-
-/* Flagship Prompt Composer */
-.prompt-studio-shell {
-  position: relative;
-  z-index: 1;
-  width: min(880px, 100%);
-  margin-top: 32px;
-  padding: 3px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(79, 70, 229, 0.18), rgba(14, 165, 233, 0.2));
-  box-shadow: 0 18px 44px -12px rgba(15, 23, 42, 0.1), 0 4px 16px -4px rgba(37, 99, 235, 0.08);
-  transition: all 0.25s ease;
-}
-
-.prompt-studio-shell:focus-within {
-  background: linear-gradient(135deg, #2563EB, #4F46E5, #0EA5E9);
-  box-shadow: 0 22px 50px -12px rgba(37, 99, 235, 0.22), 0 0 0 4px rgba(37, 99, 235, 0.1);
-}
-
+/* Crisp Kaggle-Style Prompt Studio */
 .prompt-studio-card {
   background: #FFFFFF;
-  border-radius: 21px;
+  border: 1.5px solid #DADCE0;
+  border-radius: 20px;
   overflow: hidden;
-  text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.studio-card-header {
+.prompt-studio-card:focus-within {
+  border-color: #202124;
+  box-shadow: 0 8px 28px rgba(32, 33, 36, 0.08);
+}
+
+.studio-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 13px 20px;
-  background: #F8FAFC;
-  border-bottom: 1px solid #EEF2F6;
+  gap: 16px;
+  padding: 14px 22px;
+  background: #F8F9FA;
+  border-bottom: 1px solid #E8EAED;
 }
 
-.studio-header-title {
+.studio-title-wrap {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
 }
 
-.studio-header-dot {
-  width: 8px;
-  height: 8px;
+.studio-cyan-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #4F46E5);
+  background: #20BEFF;
 }
 
-.studio-header-title h3 {
+.studio-heading {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: #0F172A;
+  color: #202124;
 }
 
-.studio-header-sub {
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748B;
-  padding: 1px 7px;
-  background: #E2E8F0;
-  border-radius: 6px;
+.studio-sub-tag {
+  font-size: 12.5px;
+  color: #5F6368;
 }
 
-.studio-header-controls {
+.studio-model-select {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.agent-label {
+.model-label {
   font-size: 12px;
-  font-weight: 500;
-  color: #64748B;
+  font-weight: 600;
+  color: #5F6368;
 }
 
 .agent-select {
-  min-width: 210px;
+  min-width: 200px;
 }
 
-.studio-card-body {
-  padding: 18px 20px 14px;
+.studio-input-area {
+  padding: 18px 22px 10px;
 }
 
-.studio-prompt-input {
+.studio-textarea {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
   font-size: 15px;
   line-height: 1.65;
-  color: #0F172A;
-  border: 1px solid transparent !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  color: #202124;
   resize: none;
-  padding: 0;
 }
 
-.studio-prompt-input:focus {
-  box-shadow: none !important;
-}
-
-.inspiration-box {
+.studio-templates-row {
   display: flex;
-  align-items: flex-start;
-  flex-direction: column;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px dashed #E2E8F0;
+  padding: 10px 22px 16px;
 }
 
-.inspiration-label {
+.templates-label {
   font-size: 12px;
-  font-weight: 600;
-  color: #64748B;
+  font-weight: 700;
+  color: #5F6368;
+  margin-right: 4px;
 }
 
-.inspiration-chips {
+.templates-chips {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 7px;
 }
 
-.idea-chip {
+.kaggle-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 11px 5px 7px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 999px;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.16s ease;
-}
-
-.idea-chip-tag {
-  padding: 1px 6px;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #2563EB;
-  background: #EFF6FF;
-  border-radius: 999px;
-}
-
-.idea-chip:hover {
-  background: #EFF6FF;
-  border-color: #93C5FD;
-  color: #1D4ED8;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.1);
-}
-
-.studio-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background: #F8FAFC;
-  border-top: 1px solid #EEF2F6;
-}
-
-.footer-left-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: #64748B;
-}
-
-.prompt-length-hint .dim {
-  color: #94A3B8;
-  margin-left: 3px;
-}
-
-.prompt-length-hint .text-warn {
-  color: #DC2626;
-  font-weight: 700;
-}
-
-.meta-sep {
-  color: #CBD5E1;
-}
-
-.shortcut-hint kbd {
-  display: inline-block;
-  padding: 1px 5px;
-  font-size: 11px;
-  font-family: inherit;
-  color: #475569;
+  padding: 5px 12px 5px 7px;
   background: #FFFFFF;
-  border: 1px solid #CBD5E1;
-  border-radius: 4px;
-  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.08);
-}
-
-.start-generate-btn {
-  height: 42px;
-  padding: 0 22px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-/* Sections */
-.section-container {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.section-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.section-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #2563EB;
-  letter-spacing: 0.08em;
-  margin-bottom: 6px;
-}
-
-.section-badge--indigo {
-  color: #4F46E5;
-}
-
-.section-heading-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.section-title {
-  margin: 0;
-  font-size: 23px;
-  font-weight: 700;
-  color: #0F172A;
-  letter-spacing: -0.025em;
-}
-
-.section-desc {
-  margin: 5px 0 0;
-  font-size: 13.5px;
-  color: #64748B;
-}
-
-.stat-pill {
-  padding: 2px 10px;
-  background: #EFF6FF;
-  border: 1px solid rgba(37, 99, 235, 0.18);
+  border: 1px solid #DADCE0;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #2563EB;
-}
-
-.section-toolbar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.arch-filter-pills {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px;
-  background: #F1F5F9;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 10px;
-}
-
-.arch-pill-btn {
-  padding: 5px 12px;
-  border: none;
-  border-radius: 7px;
-  background: transparent;
-  color: #475569;
+  color: #202124;
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.arch-pill-btn:hover {
-  color: #0F172A;
+.chip-cat {
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #008ABC;
+  background: #E6F8FF;
+  border-radius: 999px;
 }
 
-.arch-pill-btn--active {
+.kaggle-chip:hover {
+  border-color: #202124;
+  background: #F8F9FA;
+}
+
+.studio-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 22px;
+  background: #F8F9FA;
+  border-top: 1px solid #E8EAED;
+}
+
+.studio-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #5F6368;
+}
+
+.char-dim {
+  color: #80868B;
+}
+
+.char-warn {
+  color: #D93025;
+  font-weight: 700;
+}
+
+.meta-dot {
+  color: #BDC1C6;
+}
+
+.shortcut-tip kbd {
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  color: #202124;
   background: #FFFFFF;
-  color: #2563EB;
+  border: 1px solid #DADCE0;
+  border-radius: 5px;
+}
+
+.build-submit-btn {
+  height: 40px;
+  padding: 0 22px;
+  font-size: 14px;
+}
+
+/* Explorer Sections (Kaggle Datasets / Models Layout) */
+.explorer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.explorer-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.explorer-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.explorer-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #202124;
+}
+
+.count-pill {
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5F6368;
+  background: #F1F3F4;
+  border-radius: 999px;
+}
+
+.explorer-desc {
+  margin: 5px 0 0;
+  font-size: 14px;
+  color: #5F6368;
+}
+
+.kaggle-search-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 260px;
+  height: 38px;
+  padding: 0 14px;
+  background: #FFFFFF;
+  border: 1px solid #DADCE0;
+  border-radius: 999px;
+  transition: border-color 0.15s ease;
+}
+
+.kaggle-search-pill:focus-within {
+  border-color: #202124;
+}
+
+.pill-search-icon {
+  color: #5F6368;
+  font-size: 14px;
+}
+
+.kaggle-search-pill input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: #202124;
+}
+
+.filter-chip-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+.filter-chip {
+  height: 32px;
+  padding: 0 15px;
+  border: 1px solid #DADCE0;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #3C4043;
+  font-size: 13px;
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.section-search-input {
-  width: 210px;
+.filter-chip:hover {
+  background: #F8F9FA;
+  border-color: #202124;
 }
 
-.search-prefix-icon {
-  color: #94A3B8;
+.filter-chip--active {
+  background: #202124;
+  border-color: #202124;
+  color: #FFFFFF;
+}
+
+.filter-chip--active:hover {
+  background: #3C4043;
+  border-color: #3C4043;
+  color: #FFFFFF;
 }
 
 .app-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 20px;
 }
 
-.login-prompt-card,
-.empty-state-card {
+.kaggle-empty-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 52px 24px;
-  background: #FFFFFF;
-  border: 1px dashed #CBD5E1;
-  border-radius: 20px;
+  gap: 10px;
+  padding: 48px 24px;
+  background: #F8F9FA;
+  border: 1px solid #E8EAED;
+  border-radius: 16px;
   text-align: center;
-  box-shadow: var(--shadow-xs);
 }
 
-.login-prompt-badge {
+.empty-badge {
   padding: 3px 10px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #2563EB;
-  background: #EFF6FF;
+  color: #008ABC;
+  background: #E6F8FF;
   border-radius: 999px;
 }
 
-.login-prompt-content h4 {
+.empty-line-icon {
+  font-size: 30px;
+  color: #80868B;
+}
+
+.kaggle-empty-card h3 {
   margin: 0;
   font-size: 17px;
   font-weight: 700;
-  color: #0F172A;
+  color: #202124;
 }
 
-.login-prompt-content p {
-  margin: 6px 0 4px;
-  font-size: 13.5px;
-  color: #64748B;
-  max-width: 500px;
-}
-
-.empty-icon-circle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: #EFF6FF;
-  color: #2563EB;
-  margin-bottom: 4px;
-}
-
-.empty-icon {
-  font-size: 26px;
-}
-
-.empty-state-card h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #0F172A;
-}
-
-.empty-state-card p {
+.kaggle-empty-card p {
   margin: 0 0 8px;
   font-size: 13.5px;
-  color: #64748B;
+  color: #5F6368;
   max-width: 440px;
 }
 
@@ -1141,32 +1076,31 @@ onMounted(() => {
   margin-top: 8px;
 }
 
-@media (max-width: 768px) {
-  .hero-section {
-    padding: 24px 16px;
+@media (max-width: 1024px) {
+  .kaggle-hero {
+    grid-template-columns: 1fr;
+    gap: 28px;
   }
 
-  .studio-header-controls,
-  .shortcut-hint,
-  .meta-sep {
+  .hero-visual {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .studio-sub-tag,
+  .studio-model-select,
+  .shortcut-tip,
+  .meta-dot {
     display: none;
   }
 
-  .studio-card-footer {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
+  .hero-stats {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
-  .start-generate-btn {
-    width: 100%;
-  }
-
-  .section-toolbar {
-    width: 100%;
-  }
-
-  .section-search-input {
+  .kaggle-search-pill {
     width: 100%;
   }
 

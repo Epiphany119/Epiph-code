@@ -2115,7 +2115,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   padding: 8px 14px 12px;
-  background: #F1F5F9;
+  background: #F8F9FA;
   overflow: hidden;
 }
 
@@ -2128,9 +2128,8 @@ onUnmounted(() => {
   padding: 6px 14px;
   margin-bottom: 10px;
   background: #FFFFFF;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid #DADCE0;
   border-radius: 14px;
-  box-shadow: var(--shadow-xs);
   flex-shrink: 0;
 }
 
@@ -2284,10 +2283,10 @@ onUnmounted(() => {
 }
 
 .copilot-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #4F46E5);
+  background: #20BEFF;
 }
 
 .chat-pane-sub {
@@ -2383,19 +2382,18 @@ onUnmounted(() => {
   max-width: 84%;
   padding: 11px 15px;
   border-radius: 16px 4px 16px 16px;
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  background: #202124;
   color: #FFFFFF;
   font-size: 13.5px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.18);
 }
 
 .user-msg-avatar {
-  background: linear-gradient(135deg, #2563EB, #4F46E5);
+  background: #202124;
   color: #FFFFFF;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .ai-message {

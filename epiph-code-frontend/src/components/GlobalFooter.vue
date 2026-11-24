@@ -1,19 +1,14 @@
 <template>
-  <footer class="site-footer">
+  <footer class="kaggle-footer">
     <div class="footer-inner">
-      <div class="footer-brand">
-        <span class="footer-logo-dot"></span>
-        <span class="footer-brand-title">Epiph-code Studio</span>
-        <span class="footer-tagline">LangChain4j + LangGraph4j 双引擎 AI 全栈应用工作台</span>
-      </div>
-      <div class="footer-meta">
-        <span class="footer-stack-pill">HTML · Multi-File · Vue 3</span>
-        <span class="footer-status">
-          <span class="status-pulse-dot"></span>
-          <span>生成引擎就绪</span>
-        </span>
+      <div class="footer-left">
+        <span class="footer-logo">epiph<span>-code</span></span>
         <span class="footer-sep">·</span>
-        <span>© {{ currentYear }} Epiph-code</span>
+        <span class="footer-desc">AI 全栈应用构建与版本管理工作台</span>
+      </div>
+      <div class="footer-right">
+        <span class="footer-engine-pill">LangChain4j · LangGraph4j · Vue 3</span>
+        <span>© {{ currentYear }} Epiph-code Studio</span>
       </div>
     </div>
   </footer>
@@ -24,12 +19,11 @@ const currentYear = new Date().getFullYear()
 </script>
 
 <style scoped>
-.site-footer {
+.kaggle-footer {
   width: 100%;
   margin-top: auto;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(8px);
+  border-top: 1px solid #E8EAED;
+  background: #FFFFFF;
 }
 
 .footer-inner {
@@ -37,89 +31,62 @@ const currentYear = new Date().getFullYear()
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  width: min(1360px, calc(100vw - 48px));
+  width: min(1240px, calc(100% - 64px));
   min-height: 60px;
   margin: 0 auto;
   padding: 14px 0;
-  color: #64748B;
+  color: #5F6368;
   font-size: 13px;
 }
 
-.footer-brand {
+.footer-left {
   display: inline-flex;
   align-items: center;
   gap: 10px;
 }
 
-.footer-logo-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #4F46E5);
+.footer-logo {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #20BEFF;
 }
 
-.footer-brand-title {
-  color: #0F172A;
-  font-weight: 600;
-}
-
-.footer-tagline {
-  color: #64748B;
-  font-size: 12.5px;
-}
-
-.footer-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-stack-pill {
-  padding: 2px 10px;
-  background: #F1F5F9;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: #475569;
+.footer-logo span {
+  color: #202124;
 }
 
 .footer-sep {
-  color: #CBD5E1;
+  color: #DADCE0;
 }
 
-.footer-status {
+.footer-right {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  background: #ECFDF5;
-  border: 1px solid rgba(5, 150, 105, 0.18);
-  border-radius: 999px;
-  color: #059669;
-  font-size: 12px;
-  font-weight: 600;
+  gap: 14px;
 }
 
-.status-pulse-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10B981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+.footer-engine-pill {
+  padding: 2px 10px;
+  background: #F8F9FA;
+  border: 1px solid #E8EAED;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #5F6368;
 }
 
 @media (max-width: 768px) {
   .footer-inner {
-    width: calc(100vw - 32px);
+    width: calc(100% - 32px);
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
     text-align: center;
+    gap: 8px;
   }
 
-  .footer-tagline,
-  .footer-stack-pill {
+  .footer-desc,
+  .footer-sep,
+  .footer-engine-pill {
     display: none;
   }
 }
