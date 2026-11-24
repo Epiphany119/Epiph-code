@@ -1,16 +1,17 @@
 <template>
-  <article class="app-card" :class="{ 'app-card--featured': featured }">
+  <article class="app-card" :class="{ 'app-card--featured': featured }" @click="handleViewChat">
     <!-- Browser Mockup Window -->
     <div class="card-preview">
       <!-- Browser Topbar -->
-      <div class="browser-topbar">
+      <div class="browser-topbar" @click.stop>
         <div class="window-controls">
           <span class="control-dot dot--close"></span>
           <span class="control-dot dot--min"></span>
           <span class="control-dot dot--max"></span>
         </div>
-        <div class="browser-address-bar">
-          <span class="address-text">{{ app.appName || 'app-preview' }}</span>
+        <div class="browser-address-bar" :title="previewUrl || app.appName || 'studio.epiph.ai'">
+          <span class="address-lock">🔒</span>
+          <span class="address-text">studio.epiph.ai/{{ app.deployKey || app.id || 'preview' }}</span>
         </div>
         <div class="browser-status">
           <span v-if="app.deployKey" class="status-pill status-pill--live">
@@ -18,7 +19,10 @@
             LIVE
           </span>
           <span v-else-if="hasLivePreview" class="status-pill status-pill--preview">
-            PREVIEW
+            READY
+          </span>
+          <span v-else class="status-pill status-pill--draft">
+            DRAFT
           </span>
         </div>
       </div>
@@ -33,36 +37,38 @@
           loading="lazy"
         />
 
-        <iframe
-          v-else-if="hasLivePreview"
-          class="preview-iframe"
-          :src="iframeSrc"
-          :title="`${app.appName || '应用'}实时预览`"
-          loading="lazy"
-          sandbox="allow-scripts allow-forms allow-popups"
-          tabindex="-1"
-          aria-hidden="true"
-        ></iframe>
+        <div v-else-if="hasLivePreview" class="preview-iframe-viewport">
+          <iframe
+            class="preview-iframe"
+            :src="iframeSrc"
+            :title="`${app.appName || '应用'}实时预览`"
+            loading="lazy"
+            sandbox="allow-scripts allow-forms allow-popups"
+            tabindex="-1"
+            aria-hidden="true"
+          ></iframe>
+        </div>
 
         <div v-else class="preview-empty">
+          <div class="blueprint-grid" aria-hidden="true"></div>
           <div class="empty-code-icon">
             <CodeOutlined />
           </div>
           <span class="empty-title">
-            {{ previewStatus === 'checking' ? '正在连接页面...' : '等待构建首个版本' }}
+            {{ previewStatus === 'checking' ? '正在同步预览画布...' : (app.appName || 'AI 应用工程') }}
           </span>
-          <p class="empty-desc">{{ app.initPrompt || '生成完成后，这里会展示真实的运行页面' }}</p>
+          <p class="empty-desc">{{ app.initPrompt || '点击进入工作台，实时查看与迭代生成页面' }}</p>
         </div>
 
         <!-- Hover Overlay -->
-        <div class="card-overlay">
+        <div class="card-overlay" @click.stop>
           <button type="button" class="action-btn action-btn--primary" @click="handleViewChat">
             <span>进入工作台</span>
             <ArrowRightOutlined />
           </button>
           <button v-if="app.deployKey" type="button" class="action-btn action-btn--secondary" @click="handleViewWork">
             <EyeOutlined />
-            <span>访问站点</span>
+            <span>访问线上站点</span>
           </button>
         </div>
       </div>
@@ -70,13 +76,18 @@
 
     <!-- Card Info Footer -->
     <div class="card-body">
-      <a-avatar class="card-avatar" :src="app.user?.userAvatar" :size="36">
+      <a-avatar class="card-avatar" :src="app.user?.userAvatar" :size="38">
         {{ authorName.charAt(0).toUpperCase() }}
       </a-avatar>
       <div class="card-meta-wrap">
-        <h3 class="card-title" :title="app.appName || '未命名应用'">
-          {{ app.appName || '未命名应用' }}
-        </h3>
+        <div class="card-title-row">
+          <h3 class="card-title" :title="app.appName || '未命名应用'">
+            {{ app.appName || '未命名应用' }}
+          </h3>
+        </div>
+        <p v-if="app.initPrompt" class="card-prompt-excerpt" :title="app.initPrompt">
+          {{ app.initPrompt }}
+        </p>
         <div class="card-tags">
           <span class="card-author">{{ authorName }}</span>
           <span class="card-dot-sep">·</span>
@@ -84,7 +95,7 @@
             {{ codeTypeBadge.label }}
           </span>
           <span v-if="app.deployKey" class="version-tag version-tag--live">
-            已部署 V{{ app.deployedVersionNo || 1 }}
+            线上 V{{ app.deployedVersionNo || 1 }}
           </span>
           <span v-else-if="app.workingVersionNo" class="version-tag version-tag--working">
             工作 V{{ app.workingVersionNo }}
@@ -94,8 +105,8 @@
           </span>
         </div>
       </div>
-      <div v-if="!featured" class="card-footer-actions">
-        <a-tooltip :title="isFeaturedApp ? '已在精选展示中，点击取消精选' : '添加到精选应用展示'">
+      <div v-if="!featured" class="card-footer-actions" @click.stop>
+        <a-tooltip :title="isFeaturedApp ? '已在精选画廊中，点击取消精选' : '推荐到精选应用画廊'">
           <a-button
             type="text"
             size="small"
@@ -265,71 +276,81 @@ const handleToggleFeatured = () => {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  border-radius: 24px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-card:hover {
-  transform: translateY(-3px);
-  border-color: #A8C7FA;
-  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.08);
+  transform: translateY(-4px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 14px 32px -8px rgba(15, 23, 42, 0.1), 0 4px 12px -2px rgba(37, 99, 235, 0.08);
 }
 
 .card-preview {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #F8F9FA;
-  border-bottom: 1px solid #E3E3E3;
+  background: #F8FAFC;
+  border-bottom: 1px solid #EEF2F6;
 }
 
 .browser-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   height: 34px;
-  padding: 0 14px;
-  background: #F8F9FA;
-  border-bottom: 1px solid #E3E3E3;
+  padding: 0 12px;
+  background: #F1F5F9;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .window-controls {
   display: flex;
   align-items: center;
   gap: 5px;
+  flex-shrink: 0;
 }
 
 .control-dot {
-  width: 9px;
-  height: 9px;
+  width: 8.5px;
+  height: 8.5px;
   border-radius: 50%;
 }
 
 .dot--close {
-  background: #FDA4AF;
+  background: #FB7185;
 }
 
 .dot--min {
-  background: #FDE68A;
+  background: #FBBF24;
 }
 
 .dot--max {
-  background: #86EFAC;
+  background: #34D399;
 }
 
 .browser-address-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 160px;
-  height: 20px;
-  padding: 0 8px;
+  gap: 4px;
+  flex: 1;
+  max-width: 210px;
+  height: 21px;
+  padding: 0 9px;
   background: #FFFFFF;
-  border-radius: 4px;
-  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+}
+
+.address-lock {
+  font-size: 9px;
+  opacity: 0.7;
 }
 
 .address-text {
@@ -343,6 +364,7 @@ const handleToggleFeatured = () => {
 .browser-status {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .status-pill {
@@ -351,19 +373,24 @@ const handleToggleFeatured = () => {
   gap: 4px;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  padding: 1px 6px;
-  border-radius: 4px;
+  letter-spacing: 0.05em;
+  padding: 1px 7px;
+  border-radius: 999px;
 }
 
 .status-pill--live {
-  background: rgba(16, 185, 129, 0.12);
+  background: #DCFCE7;
   color: #059669;
 }
 
 .status-pill--preview {
-  background: #E8F0FE;
-  color: #0B57D0;
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.status-pill--draft {
+  background: #E2E8F0;
+  color: #64748B;
 }
 
 .pulse-beacon {
@@ -375,21 +402,43 @@ const handleToggleFeatured = () => {
 
 .preview-screen {
   position: relative;
-  height: 190px;
+  height: 204px;
   overflow: hidden;
   background: #FFFFFF;
 }
 
-.preview-cover,
-.preview-iframe {
+.preview-cover {
   width: 100%;
   height: 100%;
   border: 0;
   object-fit: cover;
   pointer-events: none;
+  transition: transform 0.35s ease;
+}
+
+.app-card:hover .preview-cover {
+  transform: scale(1.03);
+}
+
+.preview-iframe-viewport {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  background: #FFFFFF;
+}
+
+.preview-iframe {
+  width: 200%;
+  height: 200%;
+  border: 0;
+  transform: scale(0.5);
+  transform-origin: top left;
+  pointer-events: none;
 }
 
 .preview-empty {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -397,26 +446,49 @@ const handleToggleFeatured = () => {
   height: 100%;
   padding: 20px;
   text-align: center;
-  background: radial-gradient(circle at center, #F8FAFC 0%, #EEF2F6 100%);
+  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+}
+
+.blueprint-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(37, 99, 235, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 99, 235, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
 }
 
 .empty-code-icon {
-  font-size: 24px;
-  color: #94A3B8;
-  margin-bottom: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+  font-size: 18px;
+  color: #2563EB;
+  margin-bottom: 10px;
 }
 
 .empty-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
+  position: relative;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E293B;
 }
 
 .empty-desc {
-  margin: 4px 0 0;
-  font-size: 11px;
-  color: #94A3B8;
-  max-width: 220px;
+  position: relative;
+  margin: 5px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #64748B;
+  max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -431,7 +503,7 @@ const handleToggleFeatured = () => {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(15, 23, 42, 0.62);
   backdrop-filter: blur(4px);
   opacity: 0;
   pointer-events: none;
@@ -447,9 +519,9 @@ const handleToggleFeatured = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 12px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   border: none;
@@ -457,18 +529,19 @@ const handleToggleFeatured = () => {
 }
 
 .action-btn--primary {
-  background: #0B57D0;
+  background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
   color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
 .action-btn--primary:hover {
-  background: #0842A0;
+  background: #1D4ED8;
   transform: translateY(-1px);
 }
 
 .action-btn--secondary {
   background: rgba(255, 255, 255, 0.96);
-  color: #1E293B;
+  color: #0F172A;
 }
 
 .action-btn--secondary:hover {
@@ -478,16 +551,17 @@ const handleToggleFeatured = () => {
 
 .card-body {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 14px 18px;
+  padding: 15px 16px;
 }
 
 .card-avatar {
-  background: #0B57D0;
+  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
   color: #FFFFFF;
   font-weight: 600;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .card-meta-wrap {
@@ -495,11 +569,26 @@ const handleToggleFeatured = () => {
   flex: 1;
 }
 
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .card-title {
   margin: 0;
-  font-size: 14px;
-  font-weight: 650;
-  color: #1F1F1F;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-prompt-excerpt {
+  margin: 3px 0 6px;
+  font-size: 12px;
+  color: #64748B;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -508,6 +597,7 @@ const handleToggleFeatured = () => {
 .card-tags {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 4px;
   font-size: 12px;
@@ -515,6 +605,7 @@ const handleToggleFeatured = () => {
 
 .card-author {
   color: #64748B;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -528,46 +619,46 @@ const handleToggleFeatured = () => {
 .version-tag {
   font-size: 11px;
   font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 1px 7px;
+  border-radius: 6px;
 }
 
 .version-tag--live {
-  background: rgba(16, 185, 129, 0.1);
+  background: #ECFDF5;
   color: #059669;
 }
 
 .version-tag--working {
-  background: rgba(99, 102, 241, 0.1);
-  color: #0B57D0;
+  background: #EFF6FF;
+  color: #2563EB;
 }
 
 .version-tag--draft {
   background: #F1F5F9;
-  color: #94A3B8;
+  color: #64748B;
 }
 
 .type-badge {
   font-size: 11px;
   font-weight: 600;
-  padding: 1px 7px;
-  border-radius: 999px;
+  padding: 1px 8px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
 .type-badge--vue {
-  background: #E6F4EA;
-  color: #146C2E;
+  background: #ECFDF5;
+  color: #047857;
 }
 
 .type-badge--multi {
-  background: #E8F0FE;
-  color: #0B57D0;
+  background: #EFF6FF;
+  color: #1D4ED8;
 }
 
 .type-badge--html {
-  background: #FEF3E6;
-  color: #B06000;
+  background: #FFFBEB;
+  color: #B45309;
 }
 
 .card-footer-actions {
@@ -578,15 +669,15 @@ const handleToggleFeatured = () => {
 }
 
 .card-star-btn {
-  color: #747775;
+  color: #94A3B8;
 }
 
 .card-star-btn:hover {
-  color: #F9AB00;
-  background: #FEF7E0 !important;
+  color: #F59E0B;
+  background: #FEF3C7 !important;
 }
 
 .card-star-btn--active {
-  color: #F9AB00;
+  color: #F59E0B;
 }
 </style>

@@ -1,78 +1,121 @@
 <template>
   <div id="appChatPage">
-    <!-- 顶部栏 -->
+    <!-- 顶部 IDE 工作台导航栏 -->
     <div class="header-bar">
       <div class="header-left">
-        <h1 class="app-name">{{ appInfo?.appName || '网站生成器' }}</h1>
-        <a-tag v-if="appInfo?.codeGenType" color="blue" class="code-gen-type-tag">
-          {{ formatCodeGenType(appInfo.codeGenType) }}
-        </a-tag>
-        <a-tag v-if="deployedVersion" color="green">线上 V{{ deployedVersion.versionNo }}</a-tag>
-        <a-tag v-if="isWorkflowLocked" color="gold">工作流锁定</a-tag>
+        <button type="button" class="back-workspace-btn" title="返回工作台首页" @click="goBackWorkspace">
+          <ArrowLeftOutlined />
+          <span>工作台</span>
+        </button>
+        <span class="header-sep"></span>
+        <div class="app-title-group" @click="showAppDetail">
+          <h1 class="app-name" :title="appInfo?.appName || '网站生成器'">
+            {{ appInfo?.appName || '网站生成器' }}
+          </h1>
+          <a-tag v-if="appInfo?.codeGenType" class="code-gen-type-tag">
+            {{ formatCodeGenType(appInfo.codeGenType) }}
+          </a-tag>
+          <a-tag v-if="deployedVersion" color="green" class="status-meta-tag">
+            线上 V{{ deployedVersion.versionNo }}
+          </a-tag>
+          <a-tag v-if="isWorkflowLocked" color="gold" class="status-meta-tag">
+            工作流锁定
+          </a-tag>
+        </div>
       </div>
+
       <div class="header-right">
-        <a-button v-if="isOwner || isAdmin" @click="versionsDrawerOpen = true">
-          网页版本
-          <a-tag v-if="workingVersion" color="blue">工作 V{{ workingVersion.versionNo }}</a-tag>
+        <a-button v-if="isOwner || isAdmin" class="toolbar-btn" @click="versionsDrawerOpen = true">
+          <template #icon><HistoryOutlined /></template>
+          <span>版本历史</span>
+          <span v-if="workingVersion" class="btn-version-pill">V{{ workingVersion.versionNo }}</span>
         </a-button>
-        <a-button type="default" @click="showAppDetail">
+        <a-button type="default" class="toolbar-btn" @click="showAppDetail">
           <template #icon>
             <InfoCircleOutlined />
           </template>
-          应用详情
+          应用信息
         </a-button>
         <a-button
-            type="primary"
-            ghost
-            @click="downloadCode"
-            :loading="downloading"
-            :disabled="!isOwner"
+          type="default"
+          class="toolbar-btn"
+          @click="downloadCode"
+          :loading="downloading"
+          :disabled="!isOwner"
         >
           <template #icon>
             <DownloadOutlined />
           </template>
-          下载代码
+          下载源码
         </a-button>
-        <a-button type="primary" @click="deployApp" :loading="deploying" :disabled="!(isOwner || isAdmin) || !workingVersion">
+        <a-button
+          type="primary"
+          class="deploy-primary-btn"
+          @click="deployApp"
+          :loading="deploying"
+          :disabled="!(isOwner || isAdmin) || !workingVersion"
+        >
           <template #icon>
             <CloudUploadOutlined />
           </template>
-          部署
+          发布上线
         </a-button>
       </div>
     </div>
 
-    <!-- 主要内容区域 -->
+    <!-- 主要双栏 IDE 工作区域 -->
     <div ref="mainContentRef" class="main-content" :class="{ 'is-resizing': isResizingSplit }">
-      <!-- 左侧对话区域 -->
+      <!-- 左侧 AI Copilot 对话区域 -->
       <div v-show="!isPreviewFullscreen" class="chat-section" :style="chatPaneStyle">
+        <div class="chat-pane-header">
+          <div class="chat-pane-title">
+            <span class="copilot-dot"></span>
+            <span>AI Copilot 对话流</span>
+          </div>
+          <span class="chat-pane-sub">{{ messages.length }} 条消息记录</span>
+        </div>
+
         <!-- 消息区域 -->
         <div class="messages-container" ref="messagesContainer" @scroll="handleMessagesScroll">
           <!-- 加载更多按钮 -->
           <div v-if="hasMoreHistory" class="load-more-container">
             <a-button type="link" @click="loadMoreHistory" :loading="loadingHistory" size="small">
-              加载更多历史消息
+              ↑ 加载更早的历史对话
             </a-button>
           </div>
+
+          <div v-if="!messages.length && !loadingHistory" class="chat-welcome-card">
+            <div class="welcome-badge">AI ENGINEER READY</div>
+            <h4>开始迭代你的应用</h4>
+            <p>你可以用自然语言描述新增页面、调整配色排版，或开启右侧「可视化点选」直接指定任意 DOM 元素进行局部修改。</p>
+          </div>
+
           <div v-for="(message, index) in messages" :key="index" class="message-item">
             <div v-if="message.type === 'user'" class="user-message">
               <div class="message-content">{{ message.content }}</div>
               <div class="message-avatar">
-                <a-avatar :src="loginUserStore.loginUser.userAvatar" class="user-msg-avatar">
+                <a-avatar :src="loginUserStore.loginUser.userAvatar" :size="32" class="user-msg-avatar">
                   {{ displayUserName.charAt(0).toUpperCase() }}
                 </a-avatar>
               </div>
             </div>
             <div v-else class="ai-message">
               <div class="message-avatar">
-                <a-avatar :src="aiAvatar" />
+                <a-avatar :src="aiAvatar" :size="32" />
               </div>
               <div class="message-content">
+                <div class="ai-msg-meta">
+                  <span class="ai-author-name">Epiph AI</span>
+                  <span class="ai-role-pill">Full-Stack Agent</span>
+                </div>
+
                 <!-- 计划进度面板：仅在最后一条AI消息上展示 -->
                 <div v-if="currentPlan.length > 0 && index === messages.length - 1" class="plan-panel">
                   <div class="plan-header">
-                    <span class="plan-title">生成计划</span>
-                    <span class="plan-progress">{{ currentPlan.filter(i => i.status === 'completed').length }}/{{ currentPlan.length }}</span>
+                    <span class="plan-title">TODO 构建计划</span>
+                    <span class="plan-progress">
+                      {{ currentPlan.filter(i => i.status === 'completed').length }}/{{ currentPlan.length }}
+                    </span>
                   </div>
                   <div class="plan-items">
                     <div
@@ -98,33 +141,42 @@
                     </div>
                   </div>
                   <div class="plan-bar">
-                    <div class="plan-bar-fill" :style="{ width: (currentPlan.filter(i => i.status === 'completed').length / currentPlan.length * 100) + '%' }"></div>
+                    <div
+                      class="plan-bar-fill"
+                      :style="{
+                        width: (currentPlan.filter(i => i.status === 'completed').length / currentPlan.length * 100) + '%',
+                      }"
+                    ></div>
                   </div>
                 </div>
+
                 <ProcessTimeline
                   v-if="message.processEvents?.length"
                   :events="message.processEvents"
                 />
+
                 <div v-if="message.content" class="final-reply">
                   <div class="final-reply-header" @click="toggleFinalReply(index)">
                     <span class="final-reply-toggle">{{ !collapsedReplies.has(index) ? '▼' : '▶' }}</span>
-                    <span class="final-reply-title">最终回复</span>
+                    <span class="final-reply-title">最终回复与交付说明</span>
                   </div>
                   <div v-show="!collapsedReplies.has(index)" class="final-reply-body">
                     <MarkdownRenderer :content="message.content" />
                   </div>
                 </div>
+
                 <div v-if="message.loading" class="loading-indicator">
                   <a-spin size="small" />
-                  <span>AI 正在思考...</span>
+                  <span>AI 正在规划与编写代码...</span>
                 </div>
+
                 <a-tag
                   v-if="message.turnId && versionForTurn(message.turnId)"
                   color="green"
                   class="turn-version-tag"
                   @click="previewTurnVersion(message.turnId)"
                 >
-                  生成了 V{{ versionForTurn(message.turnId)?.versionNo }}
+                  ✨ 已生成快照 V{{ versionForTurn(message.turnId)?.versionNo }} · 点击预览
                 </a-tag>
               </div>
             </div>
@@ -133,17 +185,17 @@
 
         <!-- 选中元素信息展示 -->
         <a-alert
-            v-if="selectedElementInfo"
-            class="selected-element-alert"
-            type="info"
-            closable
-            @close="clearSelectedElement"
+          v-if="selectedElementInfo"
+          class="selected-element-alert"
+          type="info"
+          closable
+          @close="clearSelectedElement"
         >
           <template #message>
             <div class="selected-element-info">
               <div class="element-header">
                 <span class="element-tag">
-                  选中元素：{{ selectedElementInfo.tagName.toLowerCase() }}
+                  已锁定元素：&lt;{{ selectedElementInfo.tagName.toLowerCase() }}&gt;
                 </span>
                 <span v-if="selectedElementInfo.id" class="element-id">
                   #{{ selectedElementInfo.id }}
@@ -154,11 +206,11 @@
               </div>
               <div class="element-details">
                 <div v-if="selectedElementInfo.textContent" class="element-item">
-                  内容: {{ selectedElementInfo.textContent.substring(0, 50) }}
+                  文本: {{ selectedElementInfo.textContent.substring(0, 50) }}
                   {{ selectedElementInfo.textContent.length > 50 ? '...' : '' }}
                 </div>
                 <div v-if="selectedElementInfo.pagePath" class="element-item">
-                  页面路径: {{ selectedElementInfo.pagePath }}
+                  路径: {{ selectedElementInfo.pagePath }}
                 </div>
                 <div class="element-item">
                   选择器:
@@ -175,22 +227,40 @@
             <div class="input-dock-meta">
               <div class="input-agent-bar">
                 <span class="input-agent-label">模型</span>
-                <a-select v-model:value="selectedAgent" size="small" :bordered="false" :disabled="isGenerating || !isOwner">
+                <a-select
+                  v-model:value="selectedAgent"
+                  size="small"
+                  :bordered="false"
+                  :disabled="isGenerating || !isOwner"
+                >
                   <a-select-option value="default">默认 Agent</a-select-option>
                   <a-select-option value="deepseek">DeepSeek Flash</a-select-option>
                 </a-select>
               </div>
 
               <div v-if="isOwner || isAdmin" class="chat-metrics-compact" aria-label="对话用量指标">
-                <a-tooltip :title="`输入 ${formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.inputTokens)} · 输出 ${formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.outputTokens)}${lastTurnAgentLabel ? ' (' + lastTurnAgentLabel + ')' : ''}`">
+                <a-tooltip
+                  :title="`输入 ${formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.inputTokens)} · 输出 ${formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.outputTokens)}${lastTurnAgentLabel ? ' (' + lastTurnAgentLabel + ')' : ''}`"
+                >
                   <span class="metric-pill">
                     Token: <strong>{{ formatMetricTokens(chatMetrics?.lastTurnTokenUsage?.totalTokens) }}</strong>
                   </span>
                 </a-tooltip>
                 <a-tooltip :title="`${contextMetricCaption}（按约 3 字符 = 1 token 估算）`">
                   <span class="metric-pill metric-pill--context">
-                    <span>上下文: <strong>{{ chatMetrics ? `~${formatMetricTokens(chatMetrics.contextTokensEstimate)}` : '读取中' }}</strong></span>
-                    <span class="context-meter" role="progressbar" :aria-valuenow="contextProgressPercent" aria-valuemin="0" aria-valuemax="100">
+                    <span>
+                      上下文:
+                      <strong>{{
+                        chatMetrics ? `~${formatMetricTokens(chatMetrics.contextTokensEstimate)}` : '读取中'
+                      }}</strong>
+                    </span>
+                    <span
+                      class="context-meter"
+                      role="progressbar"
+                      :aria-valuenow="contextProgressPercent"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
                       <span :style="{ width: `${contextProgressPercent}%` }"></span>
                     </span>
                   </span>
@@ -198,35 +268,36 @@
               </div>
 
               <div v-if="isOwner && modificationBaseVersion" class="version-base-bar">
-                <span>基于 <strong>V{{ modificationBaseVersion.versionNo }}</strong></span>
-                <a-button type="link" size="small" @click="versionsDrawerOpen = true">更换基线</a-button>
+                <span>基线 <strong>V{{ modificationBaseVersion.versionNo }}</strong></span>
+                <a-button type="link" size="small" @click="versionsDrawerOpen = true">切换</a-button>
               </div>
             </div>
-            <a-tooltip v-if="!isOwner" title="无法在别人的作品下对话哦~" placement="top">
+
+            <a-tooltip v-if="!isOwner" title="仅支持在自己创建的应用中发起对话迭代" placement="top">
               <a-textarea
-                  v-model:value="userInput"
-                  :placeholder="getInputPlaceholder()"
-                  :rows="4"
-                  :maxlength="1000"
-                  @keydown.enter.prevent="sendMessage"
-                  :disabled="isGenerating || !isOwner"
+                v-model:value="userInput"
+                :placeholder="getInputPlaceholder()"
+                :rows="3"
+                :maxlength="1000"
+                @keydown.enter.exact.prevent="sendMessage"
+                :disabled="isGenerating || !isOwner"
               />
             </a-tooltip>
             <a-textarea
-                v-else
-                v-model:value="userInput"
-                :placeholder="getInputPlaceholder()"
-                :rows="4"
-                :maxlength="1000"
-                @keydown.enter.prevent="sendMessage"
-                :disabled="isGenerating"
+              v-else
+              v-model:value="userInput"
+              :placeholder="getInputPlaceholder()"
+              :rows="3"
+              :maxlength="1000"
+              @keydown.enter.exact.prevent="sendMessage"
+              :disabled="isGenerating"
             />
             <div class="input-actions">
               <a-button
-                  type="primary"
-                  @click="sendMessage"
-                  :loading="isGenerating"
-                  :disabled="!isOwner"
+                type="primary"
+                @click="sendMessage"
+                :loading="isGenerating"
+                :disabled="!isOwner"
               >
                 <template #icon>
                   <SendOutlined />
@@ -250,60 +321,116 @@
         <span class="split-resizer-handle"></span>
       </div>
 
-      <!-- 右侧网页展示区域 -->
+      <!-- 右侧网页实时沙箱预览区域 -->
       <div class="preview-section">
         <div class="preview-header">
           <div class="preview-heading">
-            <span class="preview-heading-icon">↗</span>
-            <div>
-              <h3>页面预览</h3>
+            <div class="browser-dots" aria-hidden="true">
+              <span class="b-dot b-dot--red"></span>
+              <span class="b-dot b-dot--amber"></span>
+              <span class="b-dot b-dot--green"></span>
+            </div>
+            <div class="preview-title-meta">
+              <h3>实时沙箱</h3>
               <span class="preview-heading-caption">
-                {{ previewVersion ? `预览 V${previewVersion.versionNo}` : '当前工作区' }}
-                <template v-if="previewVersion?.deployed"> · 线上版本</template>
+                {{ previewVersion ? `V${previewVersion.versionNo}` : '工作区' }}
+                <template v-if="previewVersion?.deployed"> · 线上</template>
               </span>
             </div>
+            <span v-if="previewUrl" class="preview-status preview-status--ready">
+              <i></i> {{ isGenerating || deploying ? '同步中' : '运行中' }}
+            </span>
+            <span v-else-if="isGenerating" class="preview-status">
+              <i></i> 构建中
+            </span>
           </div>
-          <span v-if="previewUrl" class="preview-status preview-status--ready">
-            <i></i> {{ isGenerating || deploying ? '正在更新' : '实时预览' }}
-          </span>
-          <span v-else-if="isGenerating" class="preview-status">
-            <i></i> 正在生成
-          </span>
+
+          <!-- 中部：设备视口切换器 & 模拟地址栏 -->
+          <div class="preview-center-bar">
+            <div class="device-switcher" role="group" aria-label="切换预览设备尺寸">
+              <button
+                type="button"
+                class="device-btn"
+                :class="{ 'device-btn--active': previewDevice === 'desktop' }"
+                title="桌面视口 (100%)"
+                @click="previewDevice = 'desktop'"
+              >
+                <DesktopOutlined />
+              </button>
+              <button
+                type="button"
+                class="device-btn"
+                :class="{ 'device-btn--active': previewDevice === 'tablet' }"
+                title="平板视口 (768px)"
+                @click="previewDevice = 'tablet'"
+              >
+                <TabletOutlined />
+              </button>
+              <button
+                type="button"
+                class="device-btn"
+                :class="{ 'device-btn--active': previewDevice === 'mobile' }"
+                title="手机视口 (390px)"
+                @click="previewDevice = 'mobile'"
+              >
+                <MobileOutlined />
+              </button>
+            </div>
+
+            <div class="preview-url-bar">
+              <span class="url-host-badge">LOCAL</span>
+              <span class="url-path-text" :title="previewUrl || '等待生成可运行版本'">
+                {{ previewUrl ? `studio.epiph.ai/app/${appId || ''}` : '等待构建输出...' }}
+              </span>
+              <button
+                v-if="previewUrl"
+                type="button"
+                class="url-refresh-btn"
+                title="刷新预览画面"
+                @click="refreshPreview"
+              >
+                <ReloadOutlined />
+              </button>
+            </div>
+          </div>
+
+          <!-- 右侧操作按钮 -->
           <div class="preview-actions">
-            <a-button
-                v-if="isOwner && previewUrl"
-                type="link"
-                :danger="isEditMode"
-                @click="toggleEditMode"
-                :class="{ 'edit-mode-active': isEditMode }"
-                style="padding: 0; height: auto; margin-right: 12px"
+            <button
+              v-if="isOwner && previewUrl"
+              type="button"
+              class="preview-tool-pill"
+              :class="{ 'preview-tool-pill--active': isEditMode }"
+              @click="toggleEditMode"
             >
-              <template #icon>
-                <EditOutlined />
-              </template>
-              {{ isEditMode ? '退出编辑' : '编辑模式' }}
-            </a-button>
-            <a-button
-                type="link"
-                @click="togglePreviewFullscreen"
-                style="padding: 0; height: auto; margin-right: 12px"
+              <AimOutlined v-if="isEditMode" />
+              <EditOutlined v-else />
+              <span>{{ isEditMode ? '退出点选' : '点选修改' }}</span>
+            </button>
+            <button
+              type="button"
+              class="preview-tool-pill"
+              @click="togglePreviewFullscreen"
             >
-              <template #icon>
-                <FullscreenExitOutlined v-if="isPreviewFullscreen" />
-                <FullscreenOutlined v-else />
-              </template>
-              {{ isPreviewFullscreen ? '退出全屏' : '全屏预览' }}
-            </a-button>
-            <a-button v-if="previewUrl" type="link" @click="openInNewTab">
-              <template #icon>
-                <ExportOutlined />
-              </template>
-              新窗口打开
-            </a-button>
+              <FullscreenExitOutlined v-if="isPreviewFullscreen" />
+              <FullscreenOutlined v-else />
+              <span>{{ isPreviewFullscreen ? '退出全屏' : '全屏' }}</span>
+            </button>
+            <button
+              v-if="previewUrl"
+              type="button"
+              class="preview-tool-pill"
+              title="在新浏览器标签页中打开"
+              @click="openInNewTab"
+            >
+              <ExportOutlined />
+              <span>新窗口</span>
+            </button>
           </div>
         </div>
-        <div class="preview-content">
-          <div v-if="previewUrl" class="preview-frame-wrap">
+
+        <div class="preview-content" :class="`preview-content--${previewDevice}`">
+          <div v-if="previewUrl" class="preview-frame-wrap" :class="`frame-wrap--${previewDevice}`">
             <iframe
               :key="previewUrl"
               :src="previewUrl"
@@ -321,11 +448,12 @@
           </div>
           <div v-else-if="isGenerating || previewStatus === 'checking'" class="preview-loading">
             <a-spin size="large" />
-            <p>{{ isGenerating ? '正在生成页面，完成后会自动预览' : '正在检查可预览版本…' }}</p>
+            <p>{{ isGenerating ? 'AI 正在编译与生成页面文件，完成后将自动渲染预览...' : '正在检查可预览版本…' }}</p>
           </div>
           <div v-else class="preview-placeholder">
             <div class="placeholder-icon">&lt;/&gt;</div>
-            <p>{{ messages.length ? '当前还没有可运行的页面版本' : '发送描述后，生成的页面会显示在这里' }}</p>
+            <h4>画布准备就绪</h4>
+            <p>{{ messages.length ? '当前还没有可运行的页面版本' : '在左侧输入需求后，生成的真实网页将在这里实时运行' }}</p>
             <a-button size="small" @click="refreshPreview">重新检查</a-button>
           </div>
         </div>
@@ -334,23 +462,23 @@
 
     <!-- 应用详情弹窗 -->
     <AppDetailModal
-        v-model:open="appDetailVisible"
-        :app="appInfo"
-        :show-actions="isOwner || isAdmin"
-        @edit="editApp"
-        @delete="deleteApp"
+      v-model:open="appDetailVisible"
+      :app="appInfo"
+      :show-actions="isOwner || isAdmin"
+      @edit="editApp"
+      @delete="deleteApp"
     />
 
     <!-- 部署成功弹窗 -->
     <DeploySuccessModal
-        v-model:open="deployModalVisible"
-        :deploy-url="deployUrl"
-        @open-site="openDeployedSite"
+      v-model:open="deployModalVisible"
+      :deploy-url="deployUrl"
+      @open-site="openDeployedSite"
     />
 
-    <a-drawer v-model:open="versionsDrawerOpen" title="网页版本" placement="right" width="460">
+    <a-drawer v-model:open="versionsDrawerOpen" title="网页版本快照与回溯" placement="right" width="460">
       <div class="version-drawer-intro">
-        <span>每次成功生成都会保存为独立版本。切换预览不会更改修改基线。</span>
+        <span>每次成功生成都会保存为不可变版本快照。切换预览不会更改修改基线。</span>
         <a-button size="small" @click="refreshVersions" :loading="loadingVersions">刷新</a-button>
       </div>
       <a-alert v-if="modificationBaseVersion" type="info" show-icon class="version-current-base">
@@ -366,7 +494,9 @@
             <a-tag v-if="version.deployed" color="green">线上版本</a-tag>
             <a-tag v-if="String(previewVersionId) === String(version.id)" color="purple">正在预览</a-tag>
           </div>
-          <div class="version-item-time">{{ formatVersionTime(version.createTime) }} · {{ formatVersionType(version.versionType) }}</div>
+          <div class="version-item-time">
+            {{ formatVersionTime(version.createTime) }} · {{ formatVersionType(version.versionType) }}
+          </div>
           <div v-if="version.userPrompt" class="version-item-prompt">{{ version.userPrompt }}</div>
           <div class="version-item-meta">
             <span v-if="version.parentVersionId">基于 V{{ versionNoById(version.parentVersionId) }}</span>
@@ -376,8 +506,17 @@
           <div class="version-item-actions">
             <a-button size="small" @click="selectPreviewVersion(version)">预览</a-button>
             <a-button size="small" :disabled="isGenerating" @click="setModificationBase(version)">基于此版本修改</a-button>
-            <a-button size="small" :disabled="!isOwner" @click="openVersionCompare(version)">比较</a-button>
-            <a-button size="small" type="primary" ghost :loading="deploying && deployingVersionId === version.id" :disabled="!(isOwner || isAdmin)" @click="deployVersion(version)">部署此版</a-button>
+            <a-button size="small" :disabled="!isOwner" @click="openVersionCompare(version)">Diff 对比</a-button>
+            <a-button
+              size="small"
+              type="primary"
+              ghost
+              :loading="deploying && deployingVersionId === version.id"
+              :disabled="!(isOwner || isAdmin)"
+              @click="deployVersion(version)"
+            >
+              部署此版
+            </a-button>
           </div>
         </div>
       </div>
@@ -390,20 +529,28 @@
       </div>
     </a-drawer>
 
-    <a-modal v-model:open="compareModalOpen" title="版本比较" width="820px" :footer="null">
+    <a-modal v-model:open="compareModalOpen" title="版本代码 Diff 比较" width="820px" :footer="null">
       <div class="version-compare-controls">
         <a-select v-model:value="compareLeftVersionId" style="min-width: 150px" placeholder="旧版本">
-          <a-select-option v-for="version in versions" :key="version.id" :value="version.id">V{{ version.versionNo }}</a-select-option>
+          <a-select-option v-for="version in versions" :key="version.id" :value="version.id">
+            V{{ version.versionNo }}
+          </a-select-option>
         </a-select>
         <span>对比</span>
         <a-select v-model:value="compareRightVersionId" style="min-width: 150px" placeholder="新版本">
-          <a-select-option v-for="version in versions" :key="version.id" :value="version.id">V{{ version.versionNo }}</a-select-option>
+          <a-select-option v-for="version in versions" :key="version.id" :value="version.id">
+            V{{ version.versionNo }}
+          </a-select-option>
         </a-select>
         <a-button type="primary" :loading="loadingCompare" @click="loadVersionCompare">比较</a-button>
       </div>
       <a-empty v-if="compareFiles.length === 0 && !loadingCompare" description="没有文件差异或尚未比较" />
       <a-collapse v-else :bordered="false">
-        <a-collapse-panel v-for="file in compareFiles" :key="file.path" :header="`${file.path} · ${file.status} · ${file.oldBytes ?? '—'}B → ${file.newBytes ?? '—'}B`">
+        <a-collapse-panel
+          v-for="file in compareFiles"
+          :key="file.path"
+          :header="`${file.path} · ${file.status} · ${file.oldBytes ?? '—'}B → ${file.newBytes ?? '—'}B`"
+        >
           <pre class="version-diff">{{ file.unifiedDiff }}</pre>
         </a-collapse-panel>
       </a-collapse>
@@ -451,6 +598,13 @@ import {
   EditOutlined,
   FullscreenOutlined,
   FullscreenExitOutlined,
+  ArrowLeftOutlined,
+  HistoryOutlined,
+  ReloadOutlined,
+  DesktopOutlined,
+  TabletOutlined,
+  MobileOutlined,
+  AimOutlined,
 } from '@ant-design/icons-vue'
 
 const route = useRoute()
@@ -1932,6 +2086,12 @@ const togglePreviewFullscreen = () => {
   isPreviewFullscreen.value = !isPreviewFullscreen.value
 }
 
+const previewDevice = ref<'desktop' | 'tablet' | 'mobile'>('desktop')
+
+const goBackWorkspace = () => {
+  router.push('/')
+}
+
 // 页面加载时获取应用信息
 onMounted(() => {
   fetchAppInfo()
@@ -1954,18 +2114,23 @@ onUnmounted(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 10px 16px 14px;
-  background: #FFFFFF;
+  padding: 8px 14px 12px;
+  background: #F1F5F9;
   overflow: hidden;
 }
 
-/* 顶部栏 */
+/* 顶部 IDE 工作台导航栏 */
 .header-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   min-height: 48px;
-  padding: 2px 4px 10px;
+  padding: 6px 14px;
+  margin-bottom: 10px;
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  box-shadow: var(--shadow-xs);
   flex-shrink: 0;
 }
 
@@ -1976,23 +2141,67 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-.code-gen-type-tag {
-  font-size: 12px;
-  background: #E8F0FE;
-  color: #0842A0;
-  border-radius: 999px;
-  padding: 1px 10px;
+.back-workspace-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #F8FAFC;
+  color: #475569;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.back-workspace-btn:hover {
+  color: #0F172A;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+.header-sep {
+  width: 1px;
+  height: 18px;
+  background: #E2E8F0;
+}
+
+.app-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  cursor: pointer;
 }
 
 .app-name {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1F1F1F;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
   max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.code-gen-type-tag {
+  font-size: 11.5px;
+  font-weight: 600;
+  background: #EFF6FF;
+  color: #2563EB;
+  border-radius: 6px;
+  padding: 1px 8px;
+  margin: 0;
+}
+
+.status-meta-tag {
+  font-size: 11.5px;
+  border-radius: 6px;
+  margin: 0;
 }
 
 .header-right {
@@ -2000,6 +2209,32 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.toolbar-btn {
+  height: 32px;
+  font-size: 12.5px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-version-pill {
+  margin-left: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563EB;
+  background: #EFF6FF;
+  border-radius: 6px;
+}
+
+.deploy-primary-btn {
+  height: 32px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 8px;
 }
 
 /* 主要内容区域 */
@@ -2015,22 +2250,54 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* 左侧对话区域 */
+/* 左侧 AI Copilot 对话区域 */
 .chat-section {
   min-width: 320px;
   min-height: 0;
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  border-radius: 24px;
-  box-shadow: none;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
+}
+
+.chat-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 16px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #EEF2F6;
+  flex-shrink: 0;
+}
+
+.chat-pane-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.copilot-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563EB, #4F46E5);
+}
+
+.chat-pane-sub {
+  font-size: 11.5px;
+  color: #64748B;
 }
 
 /* 中间可拖拽分栏调节线 */
 .split-resizer {
-  flex: 0 0 14px;
+  flex: 0 0 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2043,32 +2310,66 @@ onUnmounted(() => {
   width: 4px;
   height: 44px;
   border-radius: 999px;
-  background: #DADCE0;
+  background: #CBD5E1;
   transition: background-color 0.16s ease, height 0.16s ease, width 0.16s ease;
 }
 
 .split-resizer:hover .split-resizer-handle,
 .main-content.is-resizing .split-resizer-handle {
   width: 5px;
-  height: 64px;
-  background: #0B57D0;
+  height: 68px;
+  background: #2563EB;
 }
 
 .messages-container {
   flex: 1;
   min-height: 0;
-  padding: 20px 18px;
+  padding: 18px 16px;
   overflow-y: auto;
   scroll-behavior: smooth;
 }
 
 .load-more-container {
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.chat-welcome-card {
+  padding: 20px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: 14px;
+}
+
+.welcome-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #2563EB;
+  background: #FFFFFF;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.chat-welcome-card h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.chat-welcome-card p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #475569;
 }
 
 .message-item {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .user-message {
@@ -2079,19 +2380,20 @@ onUnmounted(() => {
 }
 
 .user-message .message-content {
-  max-width: 82%;
-  padding: 12px 16px;
-  border-radius: 18px 4px 18px 18px;
-  background: #E8F0FE;
-  color: #1F1F1F;
-  font-size: 14px;
+  max-width: 84%;
+  padding: 11px 15px;
+  border-radius: 16px 4px 16px 16px;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  color: #FFFFFF;
+  font-size: 13.5px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.18);
 }
 
 .user-msg-avatar {
-  background: #0B57D0;
+  background: linear-gradient(135deg, #2563EB, #4F46E5);
   color: #FFFFFF;
   font-weight: 600;
 }
@@ -2103,8 +2405,9 @@ onUnmounted(() => {
 }
 
 .ai-message .message-avatar :deep(.ant-avatar) {
-  background: transparent;
-  padding: 0;
+  background: #EFF6FF;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  padding: 3px;
 }
 
 .ai-message .message-content {
@@ -2112,14 +2415,35 @@ onUnmounted(() => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
+}
+
+.ai-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ai-author-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.ai-role-pill {
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4F46E5;
+  background: #EEF2FF;
+  border-radius: 999px;
 }
 
 /* 任务计划面板 */
 .plan-panel {
-  background: #F8F9FA;
-  border: 1px solid #DADCE0;
-  border-radius: 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
   padding: 12px 14px;
 }
 
@@ -2131,16 +2455,16 @@ onUnmounted(() => {
 }
 
 .plan-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1F1F1F;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0F172A;
 }
 
 .plan-progress {
-  font-size: 12px;
-  font-weight: 600;
-  color: #0842A0;
-  background: #E8F0FE;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #2563EB;
+  background: #EFF6FF;
   padding: 1px 8px;
   border-radius: 999px;
 }
@@ -2157,16 +2481,16 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
-  color: #444746;
+  color: #334155;
 }
 
 .plan-item-completed .plan-item-text {
-  color: #747775;
+  color: #94A3B8;
   text-decoration: line-through;
 }
 
 .plan-item-active .plan-item-text {
-  color: #0842A0;
+  color: #2563EB;
   font-weight: 600;
 }
 
@@ -2175,15 +2499,15 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #1E8E3E;
+  color: #059669;
   font-size: 12px;
 }
 
 .plan-item-spinner {
   width: 10px;
   height: 10px;
-  border: 2px solid #D2E3FC;
-  border-top-color: #0B57D0;
+  border: 2px solid #DBEAFE;
+  border-top-color: #2563EB;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -2192,88 +2516,34 @@ onUnmounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #C4C7C5;
+  background: #CBD5E1;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .plan-bar {
   height: 4px;
-  background: #E3E3E3;
+  background: #E2E8F0;
   border-radius: 999px;
   overflow: hidden;
 }
 
 .plan-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0B57D0, #1E8E3E);
+  background: linear-gradient(90deg, #2563EB, #10B981);
   transition: width 0.3s ease;
-}
-
-/* 过程事件时间线 */
-.process-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.process-event {
-  background: #F8F9FA;
-  border: 1px solid #DADCE0;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.event-summary-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 12.5px;
-  color: #444746;
-  list-style: none;
-}
-
-.event-summary-line::-webkit-details-marker {
-  display: none;
-}
-
-.event-summary-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 500;
-}
-
-.event-time {
-  font-size: 11px;
-  color: #747775;
-  flex-shrink: 0;
-}
-
-.event-plain {
-  margin: 0;
-  padding: 10px 14px;
-  background: #F5F8FD;
-  color: #334155;
-  border-top: 1px solid #E6ECF5;
-  font-size: 11.5px;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-height: 280px;
-  overflow: auto;
 }
 
 /* 最终回复 */
 .final-reply {
   background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: var(--shadow-xs);
   overflow: hidden;
 }
 
@@ -2282,28 +2552,28 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 9px 14px;
-  background: #F8F9FA;
-  border-bottom: 1px solid #F0F4F9;
+  background: #F8FAFC;
+  border-bottom: 1px solid #EEF2F6;
   cursor: pointer;
   user-select: none;
 }
 
 .final-reply-toggle {
-  font-size: 11px;
-  color: #747775;
+  font-size: 10px;
+  color: #64748B;
 }
 
 .final-reply-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1F1F1F;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0F172A;
 }
 
 .final-reply-body {
   padding: 14px 16px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.65;
-  color: #1F1F1F;
+  color: #0F172A;
 }
 
 .loading-indicator {
@@ -2311,20 +2581,28 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #FFFFFF;
+  background: #EFF6FF;
+  border: 1px solid rgba(37, 99, 235, 0.16);
   border-radius: 10px;
   font-size: 12.5px;
-  color: #0842A0;
+  font-weight: 500;
+  color: #1D4ED8;
 }
 
 .turn-version-tag {
   align-self: flex-start;
   cursor: pointer;
-  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.2);
 }
 
 .selected-element-alert {
-  margin: 0 14px 8px;
+  margin: 0 12px 8px;
   border-radius: 12px;
 }
 
@@ -2337,16 +2615,16 @@ onUnmounted(() => {
 
 .element-selector-code {
   font-size: 11.5px;
-  background: rgba(26, 115, 232, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   padding: 1px 6px;
   border-radius: 4px;
 }
 
-/* 底部紧凑 Gemini 输入区 */
+/* 底部 AI 输入工作区 */
 .input-container {
-  padding: 10px 14px 14px;
-  background: #FFFFFF;
-  border-top: 1px solid #F0F4F9;
+  padding: 10px 12px 12px;
+  background: #F8FAFC;
+  border-top: 1px solid #EEF2F6;
   flex-shrink: 0;
 }
 
@@ -2355,62 +2633,70 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  border-radius: 22px;
+  border: 1px solid #CBD5E1;
+  border-radius: 16px;
   padding: 8px 12px 10px;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .input-wrapper:focus-within {
-  background: #FFFFFF;
-  border-color: #0B57D0;
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .input-dock-meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 6px 10px;
   padding-bottom: 6px;
   margin-bottom: 6px;
-  border-bottom: 1px solid rgba(196, 199, 197, 0.45);
+  border-bottom: 1px solid #F1F5F9;
   font-size: 12px;
-  color: #444746;
+  color: #475569;
 }
 
 .input-agent-bar {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  background: #F8FAFC;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
 }
 
 .input-agent-label {
-  font-size: 11.5px;
-  color: #747775;
+  font-size: 11px;
+  color: #64748B;
   font-weight: 600;
 }
 
 .chat-metrics-compact {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-left: auto;
 }
 
 .metric-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  color: #444746;
+  gap: 5px;
+  padding: 2px 7px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #475569;
 }
 
 .context-meter {
   display: inline-block;
-  width: 44px;
+  width: 38px;
   height: 4px;
-  background: #DADCE0;
+  background: #E2E8F0;
   border-radius: 999px;
   overflow: hidden;
 }
@@ -2418,7 +2704,7 @@ onUnmounted(() => {
 .context-meter > span {
   display: block;
   height: 100%;
-  background: #0B57D0;
+  background: linear-gradient(90deg, #2563EB, #4F46E5);
   border-radius: 999px;
   transition: width 0.25s ease;
 }
@@ -2427,46 +2713,46 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11.5px;
-  color: #0842A0;
-  background: #E8F0FE;
+  font-size: 11px;
+  color: #2563EB;
+  background: #EFF6FF;
   padding: 1px 8px;
-  border-radius: 999px;
+  border-radius: 6px;
 }
 
 .version-base-bar :deep(.ant-btn-link) {
   padding: 0 2px;
   height: auto;
-  font-size: 11.5px;
+  font-size: 11px;
 }
 
 .input-wrapper :deep(.ant-input) {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 2px 42px 2px 2px !important;
-  font-size: 14px;
+  padding: 4px 42px 2px 2px !important;
+  font-size: 13.5px;
   line-height: 1.55;
-  color: #1F1F1F;
+  color: #0F172A;
   resize: none;
 }
 
 .input-actions {
   position: absolute;
-  right: 12px;
+  right: 10px;
   bottom: 10px;
 }
 
 .input-actions :deep(.ant-btn) {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 右侧预览区域 */
+/* 右侧实时预览沙箱区域 */
 .preview-section {
   flex: 1;
   min-width: 0;
@@ -2474,9 +2760,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  border-radius: 24px;
-  box-shadow: none;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -2484,9 +2770,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  border-bottom: 1px solid #F0F4F9;
-  background: #FFFFFF;
+  gap: 12px;
+  height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid #EEF2F6;
+  background: #F8FAFC;
   flex-shrink: 0;
 }
 
@@ -2494,57 +2782,209 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
-.preview-heading-icon {
+.browser-dots {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: #FFFFFF;
-  color: #0B57D0;
-  font-weight: 700;
+  gap: 5px;
+}
+
+.b-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.b-dot--red {
+  background: #FB7185;
+}
+
+.b-dot--amber {
+  background: #FBBF24;
+}
+
+.b-dot--green {
+  background: #34D399;
+}
+
+.preview-title-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .preview-heading h3 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1F1F1F;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0F172A;
 }
 
 .preview-heading-caption {
   font-size: 11.5px;
-  color: #747775;
+  font-weight: 600;
+  color: #64748B;
 }
 
 .preview-status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #747775;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #FEF3C7;
+  font-size: 11px;
+  font-weight: 600;
+  color: #B45309;
 }
 
 .preview-status i {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #F9AB00;
+  background: #F59E0B;
+}
+
+.preview-status--ready {
+  background: #ECFDF5;
+  color: #059669;
 }
 
 .preview-status--ready i {
-  background: #1E8E3E;
+  background: #10B981;
+}
+
+/* 中部设备切换与 URL 栏 */
+.preview-center-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 440px;
+  min-width: 0;
+}
+
+.device-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: #E2E8F0;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.device-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748B;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.device-btn:hover {
+  color: #0F172A;
+}
+
+.device-btn--active {
+  background: #FFFFFF;
+  color: #2563EB;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+
+.preview-url-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 6px 0 8px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+}
+
+.url-host-badge {
+  padding: 1px 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #2563EB;
+  background: #EFF6FF;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.url-path-text {
+  flex: 1;
+  font-size: 11.5px;
+  color: #64748B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.url-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: #64748B;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.url-refresh-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
 }
 
 .preview-actions {
   display: flex;
   align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.edit-mode-active {
+.preview-tool-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #E2E8F0;
+  border-radius: 7px;
+  background: #FFFFFF;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preview-tool-pill:hover {
+  color: #0F172A;
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+
+.preview-tool-pill--active {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #DC2626;
   font-weight: 600;
 }
 
@@ -2552,13 +2992,43 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   position: relative;
-  background: #F8F9FA;
+  display: flex;
+  justify-content: center;
+  background-color: #F1F5F9;
+  background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+  background-size: 18px 18px;
+  overflow: auto;
+}
+
+.preview-content--tablet,
+.preview-content--mobile {
+  padding: 16px;
 }
 
 .preview-frame-wrap {
   width: 100%;
   height: 100%;
   position: relative;
+  background: #FFFFFF;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.frame-wrap--tablet {
+  width: 768px;
+  max-width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.frame-wrap--mobile {
+  width: 390px;
+  max-width: 100%;
+  border-radius: 24px;
+  border: 4px solid #1E293B;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
 }
 
 .preview-iframe {
@@ -2571,48 +3041,54 @@ onUnmounted(() => {
 .preview-frame-error,
 .preview-loading,
 .preview-placeholder {
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: #747775;
+  gap: 10px;
+  color: #64748B;
   text-align: center;
   padding: 24px;
 }
 
+.preview-placeholder h4 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+}
+
 .placeholder-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
   background: #FFFFFF;
-  border: 1px solid #DADCE0;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   font-weight: 700;
-  color: #0B57D0;
+  color: #2563EB;
 }
 
 /* 版本抽屉与对比弹窗 */
-.drawer-header-actions {
+.version-drawer-intro {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
-}
-
-.drawer-subtitle {
   font-size: 12.5px;
-  color: #747775;
+  color: #64748B;
 }
 
-.base-version-alert {
+.version-current-base {
   margin-bottom: 14px;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .version-list {
@@ -2621,61 +3097,67 @@ onUnmounted(() => {
   gap: 12px;
 }
 
-.version-card {
+.version-item {
   padding: 14px;
-  background: #F8F9FA;
-  border: 1px solid #DADCE0;
-  border-radius: 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  transition: border-color 0.16s ease;
 }
 
-.version-card-header {
+.version-item:hover {
+  border-color: #CBD5E1;
+}
+
+.version-item-heading {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-bottom: 6px;
 }
 
-.version-tags {
-  display: flex;
-  gap: 4px;
+.version-item-time {
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 8px;
 }
 
-.version-meta,
-.version-details {
+.version-item-prompt {
+  padding: 8px 10px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: #0F172A;
+  margin-bottom: 8px;
+}
+
+.version-item-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  font-size: 12px;
-  color: #747775;
-  margin-bottom: 8px;
+  font-size: 11.5px;
+  color: #64748B;
+  margin-bottom: 10px;
 }
 
-.version-prompt {
-  padding: 8px 10px;
-  background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  border-radius: 8px;
-  font-size: 12.5px;
-  color: #1F1F1F;
-  margin-bottom: 8px;
-}
-
-.version-actions {
+.version-item-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
-.compare-toolbar {
+.version-compare-controls {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
 }
 
-.compare-diff {
-  background: #1E1F20;
-  color: #E3E3E3;
+.version-diff {
+  background: #0F172A;
+  color: #E2E8F0;
   padding: 12px;
   border-radius: 10px;
   font-size: 12px;
@@ -2692,8 +3174,15 @@ onUnmounted(() => {
 .deployment-history-item {
   display: flex;
   align-items: center;
-  color: #747775;
+  justify-content: space-between;
+  color: #64748B;
   font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  .preview-center-bar {
+    display: none;
+  }
 }
 
 @media (max-width: 960px) {

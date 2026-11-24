@@ -3,16 +3,18 @@
     <div class="auth-card">
       <!-- Left Brand Showcase -->
       <aside class="auth-showcase">
-        <div class="showcase-glow"></div>
+        <div class="showcase-grid" aria-hidden="true"></div>
+        <div class="showcase-glow showcase-glow--top" aria-hidden="true"></div>
+        <div class="showcase-glow showcase-glow--bottom" aria-hidden="true"></div>
         <div class="showcase-content">
           <div class="showcase-tag">
             <span class="tag-dot"></span>
-            <span>Epiph-code Studio</span>
+            <span>Epiph-code Studio · v2.0</span>
           </div>
 
-          <h1 class="showcase-title">探索 AI 驱动的<br />全栈构建体验</h1>
+          <h1 class="showcase-title">探索 AI 驱动的<br />全栈构建工作流</h1>
           <p class="showcase-desc">
-            登录后即可继续你的应用迭代工作流，管理生成的网页版本、配置模型 Agent 并一键部署至公网。
+            登录后即可继续你的应用迭代工作流，管理生成的网页版本快照、配置推理模型并一键部署至公网。
           </p>
 
           <ul class="feature-bullets">
@@ -35,7 +37,7 @@
           </ul>
 
           <div class="showcase-footer">
-            <span class="showcase-ver">STUDIO ENGINE / v2.0</span>
+            <span class="showcase-ver">LANGCHAIN4J + LANGGRAPH4J ENGINE</span>
           </div>
         </div>
       </aside>
@@ -44,8 +46,8 @@
       <section class="auth-form-panel">
         <div class="panel-header">
           <span class="panel-kicker">WELCOME BACK</span>
-          <h2 class="panel-title">账号登录</h2>
-          <p class="panel-desc">请输入你的平台账号与密码以进入工作台</p>
+          <h2 class="panel-title">登录工作台</h2>
+          <p class="panel-desc">请输入你的平台账号与密码以进入 AI 应用构建台</p>
         </div>
 
         <a-form
@@ -97,7 +99,7 @@
             <a class="forgot-link" @click.prevent="showForgotTip">忘记密码？</a>
             <div class="register-hint">
               <span class="hint-text">还没有账号？</span>
-              <RouterLink to="/user/register" class="link-highlight">立即注册</RouterLink>
+              <RouterLink to="/user/register" class="link-highlight">免费注册</RouterLink>
             </div>
           </div>
 
@@ -109,7 +111,7 @@
               class="submit-button"
               :loading="loading"
             >
-              登 录
+              立即登录
             </a-button>
           </a-form-item>
         </a-form>
@@ -138,7 +140,8 @@ const loginUserStore = useLoginUserStore()
 const showForgotTip = () => {
   Modal.info({
     title: '忘记密码怎么办？',
-    content: '请联系平台管理员（如 test 管理员账号）在「用户管理」页面为您重置密码，重置后可使用新密码登录。',
+    content:
+      '请联系平台管理员（如 test 管理员账号）在顶部「用户管理」页面点击「重置密码」，重置后即可使用新密码登录。',
     okText: '我知道了',
   })
 }
@@ -171,18 +174,18 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 200px);
-  padding: 24px 0;
+  padding: 20px 0;
 }
 
 .auth-card {
   display: grid;
-  grid-template-columns: minmax(360px, 1.1fr) minmax(380px, 0.9fr);
-  width: min(1000px, 100%);
-  min-height: 560px;
+  grid-template-columns: minmax(360px, 1.08fr) minmax(380px, 0.92fr);
+  width: min(1020px, 100%);
+  min-height: 570px;
   background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  border-radius: 28px;
-  box-shadow: none;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 
@@ -193,21 +196,40 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   flex-direction: column;
   justify-content: center;
   padding: 48px;
-  background: #F0F4F9;
-  border-right: 1px solid #E3E3E3;
-  color: #1F1F1F;
+  background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 55%, #172554 100%);
+  color: #F8FAFC;
   overflow: hidden;
+}
+
+.showcase-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
 }
 
 .showcase-glow {
   position: absolute;
-  top: -100px;
-  left: -100px;
-  width: 400px;
-  height: 400px;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(11, 87, 208, 0.07) 0%, transparent 70%);
+  filter: blur(60px);
   pointer-events: none;
+}
+
+.showcase-glow--top {
+  top: -120px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%);
+}
+
+.showcase-glow--bottom {
+  bottom: -120px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, transparent 70%);
 }
 
 .showcase-content {
@@ -219,13 +241,14 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
-  background: #FFFFFF;
-  border: 1px solid #DADCE0;
+  padding: 5px 13px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-  color: #0B57D0;
+  color: #93C5FD;
   margin-bottom: 24px;
 }
 
@@ -233,30 +256,31 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #0B57D0;
+  background: #60A5FA;
+  box-shadow: 0 0 8px #60A5FA;
 }
 
 .showcase-title {
   margin: 0;
   font-size: 32px;
-  font-weight: 600;
-  line-height: 1.28;
-  letter-spacing: -0.02em;
-  color: #1F1F1F;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: #FFFFFF;
 }
 
 .showcase-desc {
   margin: 16px 0 0;
   font-size: 14px;
   line-height: 1.7;
-  color: #444746;
+  color: #CBD5E1;
 }
 
 .feature-bullets {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin: 32px 0 0;
+  gap: 12px;
+  margin: 28px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -265,26 +289,31 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   font-size: 13px;
-  color: #1F1F1F;
+  font-weight: 500;
+  color: #F1F5F9;
 }
 
 .bullet-icon {
-  color: #0B57D0;
+  color: #60A5FA;
   font-size: 15px;
 }
 
 .showcase-footer {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #DADCE0;
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .showcase-ver {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #747775;
+  color: #94A3B8;
 }
 
 /* Right Form */
@@ -300,31 +329,31 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #0B57D0;
+  color: #2563EB;
 }
 
 .panel-title {
   margin: 6px 0 0;
   font-size: 26px;
-  font-weight: 600;
-  color: #1F1F1F;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.025em;
 }
 
 .panel-desc {
   margin: 6px 0 28px;
-  font-size: 14px;
-  color: #444746;
+  font-size: 13.5px;
+  color: #64748B;
 }
 
 .auth-form :deep(.ant-form-item-label > label) {
   font-size: 13px;
   font-weight: 600;
-  color: #1F1F1F;
+  color: #0F172A;
 }
 
 .auth-input {
-  border-radius: 14px !important;
+  border-radius: 11px !important;
 }
 
 .input-icon {
@@ -349,34 +378,34 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
 }
 
 .forgot-link {
-  color: #444746;
+  color: #64748B;
   cursor: pointer;
 }
 
 .forgot-link:hover {
-  color: #0B57D0;
+  color: #2563EB;
   text-decoration: underline;
 }
 
 .hint-text {
-  color: #444746;
+  color: #64748B;
 }
 
 .link-highlight {
-  color: #0B57D0;
+  color: #2563EB;
   font-weight: 600;
 }
 
 .link-highlight:hover {
-  color: #0B57D0;
+  color: #1D4ED8;
   text-decoration: underline;
 }
 
 .submit-button {
   width: 100%;
   height: 44px;
-  border-radius: 999px;
-  font-size: 15px;
+  border-radius: 11px;
+  font-size: 14.5px;
   font-weight: 600;
 }
 

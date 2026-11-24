@@ -28,19 +28,20 @@ const isChatPage = computed(() => route.path.startsWith('/app/chat/'))
 .app-shell--chat {
   height: 100vh;
   overflow: hidden;
+  background: #F1F5F9;
 }
 
 .main-content {
-  width: min(1380px, calc(100vw - 48px));
+  width: min(1360px, calc(100vw - 48px));
   flex: 1;
   margin: 0 auto;
-  padding: 32px 0 64px;
+  padding: 28px 0 72px;
 }
 
 .main-content--chat {
   width: 100%;
   max-width: 100%;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 60px);
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -48,8 +49,8 @@ const isChatPage = computed(() => route.path.startsWith('/app/chat/'))
 
 @media (max-width: 768px) {
   .main-content {
-    width: calc(100vw - 24px);
-    padding: 20px 0 40px;
+    width: calc(100vw - 28px);
+    padding: 20px 0 44px;
   }
 }
 </style>

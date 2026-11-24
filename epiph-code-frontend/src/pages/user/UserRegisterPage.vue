@@ -3,22 +3,24 @@
     <div class="auth-card">
       <!-- Left Brand Showcase -->
       <aside class="auth-showcase">
-        <div class="showcase-glow"></div>
+        <div class="showcase-grid" aria-hidden="true"></div>
+        <div class="showcase-glow showcase-glow--top" aria-hidden="true"></div>
+        <div class="showcase-glow showcase-glow--bottom" aria-hidden="true"></div>
         <div class="showcase-content">
           <div class="showcase-tag">
             <span class="tag-dot"></span>
-            <span>Epiph-code Studio</span>
+            <span>Epiph-code Studio · v2.0</span>
           </div>
 
           <h1 class="showcase-title">开启你的全栈<br />AI 创造之旅</h1>
           <p class="showcase-desc">
-            免费注册账号，即可体验 LangChain4j + LangGraph4j 双引擎驱动的下一代智能代码生成系统。
+            免费注册账号，即可体验 LangChain4j + LangGraph4j 双引擎驱动的下一代智能代码生成工作台。
           </p>
 
           <ul class="feature-bullets">
             <li>
               <CheckCircleFilled class="bullet-icon" />
-              <span>多技术栈：HTML、原生多文件与 Vue 工程项目</span>
+              <span>多架构支持：HTML、原生多文件与 Vue 3 工程项目</span>
             </li>
             <li>
               <CheckCircleFilled class="bullet-icon" />
@@ -35,7 +37,7 @@
           </ul>
 
           <div class="showcase-footer">
-            <span class="showcase-ver">CREATE ACCOUNT / JOIN CREATORS</span>
+            <span class="showcase-ver">CREATE ACCOUNT · JOIN CREATORS</span>
           </div>
         </div>
       </aside>
@@ -45,7 +47,7 @@
         <div class="panel-header">
           <span class="panel-kicker">GET STARTED</span>
           <h2 class="panel-title">创建新账号</h2>
-          <p class="panel-desc">只需设置账号与密码即可免费开启创作体验</p>
+          <p class="panel-desc">只需设置账号与密码即可免费开启 AI 创作体验</p>
         </div>
 
         <a-form
@@ -127,7 +129,7 @@
               class="submit-button"
               :loading="loading"
             >
-              注 册
+              免费注册账号
             </a-button>
           </a-form-item>
         </a-form>
@@ -187,18 +189,18 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 200px);
-  padding: 24px 0;
+  padding: 20px 0;
 }
 
 .auth-card {
   display: grid;
-  grid-template-columns: minmax(360px, 1.1fr) minmax(380px, 0.9fr);
-  width: min(1000px, 100%);
-  min-height: 590px;
+  grid-template-columns: minmax(360px, 1.08fr) minmax(380px, 0.92fr);
+  width: min(1020px, 100%);
+  min-height: 600px;
   background: #FFFFFF;
-  border: 1px solid #DADCE0;
-  border-radius: 28px;
-  box-shadow: none;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 
@@ -209,21 +211,40 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   flex-direction: column;
   justify-content: center;
   padding: 48px;
-  background: #F0F4F9;
-  border-right: 1px solid #E3E3E3;
-  color: #1F1F1F;
+  background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 55%, #172554 100%);
+  color: #F8FAFC;
   overflow: hidden;
+}
+
+.showcase-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
 }
 
 .showcase-glow {
   position: absolute;
-  top: -100px;
-  left: -100px;
-  width: 400px;
-  height: 400px;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(11, 87, 208, 0.07) 0%, transparent 70%);
+  filter: blur(60px);
   pointer-events: none;
+}
+
+.showcase-glow--top {
+  top: -120px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%);
+}
+
+.showcase-glow--bottom {
+  bottom: -120px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, transparent 70%);
 }
 
 .showcase-content {
@@ -235,13 +256,14 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
-  background: #FFFFFF;
-  border: 1px solid #DADCE0;
+  padding: 5px 13px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
-  color: #0B57D0;
+  color: #93C5FD;
   margin-bottom: 24px;
 }
 
@@ -249,30 +271,31 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #0B57D0;
+  background: #60A5FA;
+  box-shadow: 0 0 8px #60A5FA;
 }
 
 .showcase-title {
   margin: 0;
   font-size: 32px;
-  font-weight: 600;
-  line-height: 1.28;
-  letter-spacing: -0.02em;
-  color: #1F1F1F;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: #FFFFFF;
 }
 
 .showcase-desc {
   margin: 16px 0 0;
   font-size: 14px;
   line-height: 1.7;
-  color: #444746;
+  color: #CBD5E1;
 }
 
 .feature-bullets {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin: 32px 0 0;
+  gap: 12px;
+  margin: 28px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -281,26 +304,31 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   font-size: 13px;
-  color: #1F1F1F;
+  font-weight: 500;
+  color: #F1F5F9;
 }
 
 .bullet-icon {
-  color: #0B57D0;
+  color: #60A5FA;
   font-size: 15px;
 }
 
 .showcase-footer {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #DADCE0;
+  margin-top: 34px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .showcase-ver {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #747775;
+  color: #94A3B8;
 }
 
 /* Right Form */
@@ -316,31 +344,31 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #0B57D0;
+  color: #2563EB;
 }
 
 .panel-title {
   margin: 6px 0 0;
   font-size: 26px;
-  font-weight: 600;
-  color: #1F1F1F;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.025em;
 }
 
 .panel-desc {
   margin: 6px 0 28px;
-  font-size: 14px;
-  color: #444746;
+  font-size: 13.5px;
+  color: #64748B;
 }
 
 .auth-form :deep(.ant-form-item-label > label) {
   font-size: 13px;
   font-weight: 600;
-  color: #1F1F1F;
+  color: #0F172A;
 }
 
 .auth-input {
-  border-radius: 14px !important;
+  border-radius: 11px !important;
 }
 
 .input-icon {
@@ -359,24 +387,24 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
 }
 
 .hint-text {
-  color: #444746;
+  color: #64748B;
 }
 
 .link-highlight {
-  color: #0B57D0;
+  color: #2563EB;
   font-weight: 600;
 }
 
 .link-highlight:hover {
-  color: #0B57D0;
+  color: #1D4ED8;
   text-decoration: underline;
 }
 
 .submit-button {
   width: 100%;
   height: 44px;
-  border-radius: 999px;
-  font-size: 15px;
+  border-radius: 11px;
+  font-size: 14.5px;
   font-weight: 600;
 }
 

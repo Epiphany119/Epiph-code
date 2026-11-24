@@ -13,9 +13,13 @@ export const useLoginUserStore = defineStore('loginUser', () => {
 
   // 获取登录用户信息
   async function fetchLoginUser() {
-    const res = await getLoginUser()
-    if (res.data.code === 0 && res.data.data) {
-      loginUser.value = res.data.data
+    try {
+      const res = await getLoginUser()
+      if (res.data.code === 0 && res.data.data) {
+        loginUser.value = res.data.data
+      }
+    } catch (error) {
+      console.warn('获取登录用户信息失败，保持未登录状态:', error)
     }
   }
 
